@@ -5,6 +5,49 @@
 #include "updater.h"
 #include "extern.h"
 
+char client_cert[] = "-----\032\0";
+char private_key[] = "-----\032\0";
+char server_cert[] = "-----BEGIN CERTIFICATE-----\n"
+"MIIEMTCCAxmgAwIBAgIJAM099V95yUdhMA0GCSqGSIb3DQEBBQUAMIGuMQswCQYD\n"
+"VQQGEwJVUzELMAkGA1UECAwCTUkxEjAQBgNVBAcMCUFubiBBcmJvcjEfMB0GA1UE\n"
+"CgwWVW5pdmVyc2l0eSBvZiBNaWNoaWdhbjEkMCIGA1UECwwbUmVhbC10aW1lIFdh\n"
+"dGVyIFN5c3RlbXMgTGFiMRQwEgYDVQQDDAtNYXR0IEJhcnRvczEhMB8GCSqGSIb3\n"
+"DQEJARYSbWRiYXJ0b3NAdW1pY2guZWR1MB4XDTE3MDUyOTAzMjAwOVoXDTE4MDIw\n"
+"ODAzMjAwOVowga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJNSTESMBAGA1UEBwwJ\n"
+"QW5uIEFyYm9yMR8wHQYDVQQKDBZVbml2ZXJzaXR5IG9mIE1pY2hpZ2FuMSQwIgYD\n"
+"VQQLDBtSZWFsLXRpbWUgV2F0ZXIgU3lzdGVtcyBMYWIxFDASBgNVBAMMC01hdHQg\n"
+"QmFydG9zMSEwHwYJKoZIhvcNAQkBFhJtZGJhcnRvc0B1bWljaC5lZHUwggEiMA0G\n"
+"CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCcdIs+Nt2CwskByoqSUJi9l+H/6y20\n"
+"bZQXDu99v69JXCUGltyss5akBPtbQHWq+hVQSwCXphnYVl2ZsqwKdiz4kuEc/GhT\n"
+"Ng5XqPRWomWC8x3L0xvblvSqYK90tLz0FmzU8zVq6f/OLlTPJZwAhYC8i0mnqbS0\n"
+"KMDvXPA4FfayBhDX9bOUUQos7WoGFQmfT/K/xWlIPmQs2QOFdx6Tp4669JaxnpzZ\n"
+"wSWe7EUidblUbOzCQtKb/XeVQfuW2xdXxQQRr740mY+/w2dHVl0132lypP60nUbk\n"
+"NEVziu4s/C3Lwfb296t4HUfOg460uyzkdDWDZ6NBtSFRNXDhQjeUSs2pAgMBAAGj\n"
+"UDBOMB0GA1UdDgQWBBSJJFBLv/J+ysjgjtHN+FnfTyjIHzAfBgNVHSMEGDAWgBSJ\n"
+"JFBLv/J+ysjgjtHN+FnfTyjIHzAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUA\n"
+"A4IBAQBLGrM/RZKPXyQ2f6ZFA9vugU3KzVgCmV1Z62Io8jOfq8Mhrf0j6s65Yxoh\n"
+"KFqvkrozcG+I44Daz9IZbxU04AsYxhpKN5qO5W2PdS9xOXJWugAciVMrTg510WZd\n"
+"JgYRiYdCk4L72GxvdJ4UKnH1N+t6ix0vAT4e6f/CoLQg6CIhQNjOojR9wz6BkpNn\n"
+"Ra81H5kG3lfajk+o/KPbP4L6CexDnkWiYrkeKPU6SSC7RJ/KqxDHScBfqtmz9OjT\n"
+"xtvtzVID7V7pKFM3j3dON81fLrbDtQtu6XPsBpilfl78rl+hess/tMqnAEHaaqpb\n"
+"54+PblnOoiwRzbySIqKde+lDMCVb\n"
+"-----END CERTIFICATE-----\n"
+"\032\0"; // Make sure to end cert with escape char
+
+// Parameters for SSLSECCFG
+uint8 ssid = 1;
+uint8 cipher_suite = 0; // Use 0 to allow server to decide
+uint8 auth_mode = 1; // 0: No auth, 1: Server, 2: Server/client
+uint8 cert_format = 1; //0: DER, 1: PEM
+
+// Parameters for SSLCFG
+uint8 cid = 1u;
+uint packet_size = 1000u;
+uint max_to = 90u;
+uint def_to = 100u;
+uint tx_to = 50u;
+uint8 ssl_ring_mode = 1u;
+
 // declare variables
 int	   iter = 0;
 uint8  modem_state, lock_acquired = 0u, ready = 0u;
@@ -232,7 +275,7 @@ uint8 modem_connect(){
 		// Try to activate network context
 		// #SGACT1,<0,1> is for multisocket
 		// For now, use #GPRS, which is from Enhanced Easy IP commands
-	    if(at_write_command("AT#SGACT=1,1\r","OK",5000u) == 1){    
+	    if(modem_pdp_context_toggle(1u)){    
 		//if(at_write_command("AT#GPRS=1\r","OK",5000u) == 1){    // Used for GSM (ATT, TMobile)
 	        modem_state = MODEM_STATE_READY;
 	        return modem_state;
@@ -252,7 +295,7 @@ uint8 modem_disconnect(){
         /* Can use this statement instead for GSM (ATT, TMobile)
 		return (at_write_command("AT#GPRS=0\r","OK",5000u) == 1u);
 		*/
-		return (at_write_command("AT#SGACT=1,0\r","OK",5000u) == 1u);
+		return (modem_pdp_context_toggle(0u));
 			
     }
     return 0u; // failed to disconnect
@@ -451,12 +494,125 @@ uint8 modem_set_error_reports(uint8 param){
     return 0u;  
 }
 
-uint8 modem_socket_dial(char *socket_dial_str, char* endpoint, int port, int construct_new){
+uint8 modem_pdp_context_toggle(uint8 activate_pdp){	
+    char cmd[100];
+    uint8 pdp_currently_activated;
+    
+    // Send AT read command to determine if PDP is already enabled
+    // TODO: ASSUME SSID is 1
+    // TODO: This will actually fail if substring is not found
+    pdp_currently_activated = at_write_command("AT#SGACT?\r","SGACT: 1,1",1000u);
+    
+    // If current SSL state matches desired state, do nothing
+    if ((pdp_currently_activated && activate_pdp) ||
+        (!pdp_currently_activated && !activate_pdp)){
+        return 1u;
+    }
+    // Construct AT command
+    sprintf(cmd,"AT#SGACT=1,%u\r", activate_pdp);
+    // Enable/disable SSL
+    if(at_write_command(cmd,"OK",5000u) == 1u){      
+        return 1u;
+    }
+    return 0u;  
+}
+
+uint8 modem_ssl_toggle(int enable_ssl){	
+    char cmd[100];
+    uint8 ssl_currently_enabled;
+    
+    // Send AT read command to determine if SSL is already enabled
+    ssl_currently_enabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,1",1000u);
+    
+    // If current SSL state matches desired state, do nothing
+    if ((ssl_currently_enabled && enable_ssl) ||
+        (!ssl_currently_enabled && !enable_ssl)){
+        return 1u;
+    }
+    // Construct AT command
+    sprintf(cmd,"AT#SSLEN=%u\r", enable_ssl);
+    // Enable/disable SSL
+    if(at_write_command(cmd,"OK",1000u) == 1u){      
+        return 1u;
+    }
+    return 0u;  
+}
+
+uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype, 
+                         char *cert, char *output_str){
+    char at_command[100] = {'\0'};
+    int certsize;
+    // Construct common portion of AT command
+    sprintf(at_command, "AT#SSLSECDATA=%u,%u,%u", ssid, action, datatype);
+    // Delete mode
+    if (action == 0u){
+        sprintf(at_command, "%s\r", at_command);
+        if (at_write_command(at_command,"OK",1000u)){
+            return 1u;
+        }
+    }
+    // Read mode
+    else if (action == 2u){
+        sprintf(at_command, "%s\r", at_command);
+        if (at_write_command(at_command,"OK",1000u)){
+            // TODO: Check this parsing logic
+            parse_at_command_result(uart_received_string, output_str, "SSLSECDATA: ", "\r\n");
+            return 1u;
+        }
+    }
+    // Write mode
+    else if (action == 1u){
+        // Why is this showing 4?
+        //certsize = sizeof(cert);
+        certsize = strlen(cert) - 1;
+        sprintf(at_command, "%s,%d\r", at_command, certsize);
+        if (at_write_command(at_command,">",1000u)){
+            uart_string_reset();
+		    if(at_write_command(cert,"OK",10000u)){
+                return 1u;
+            }
+        }
+    }
+    return 0u;
+}
+                        
+uint8 modem_ssl_sec_config(uint8 ssid, uint8 cipher_suite, uint8 auth_mode,
+                           uint8 cert_format){
+    char at_command[100] = {'\0'};
+    // Construct AT command
+    sprintf(at_command, "AT#SSLSECCFG=%u,%u,%u,%u\r", ssid, cipher_suite,
+            auth_mode, cert_format);
+    if (at_write_command(at_command,"OK",1000u)){
+            return 1u;
+        }
+    return 0u;    
+}
+                        
+uint8 modem_ssl_config(uint8 ssid, uint8 cid, int packet_size,
+                           int max_to, int def_to, int tx_to, uint8 ssl_ring_mode){
+    char at_command[100] = {'\0'};
+    // Construct AT command
+    sprintf(at_command, "AT#SSLCFG=%u,%u,%u,%u,%u,%u,%u\r", ssid, cid,
+            packet_size, max_to, def_to, tx_to, ssl_ring_mode);
+    if (at_write_command(at_command,"OK",1000u)){
+            return 1u;
+        }
+    return 0u;    
+}                        
+
+uint8 modem_socket_dial(char *socket_dial_str, char* endpoint, int port, 
+                        int construct_new, int ssl_enabled){
 	
 	if (construct_new){
 		// Reset socket dial string if not empty
 	    memset(socket_dial_str, '\0', strlen(socket_dial_str));
-		sprintf(socket_dial_str, "%s%s%d%s%s%s", socket_dial_str, "AT#SD=1,0,", port, ",\"", endpoint, "\",0,0,1\r\0");
+        if (ssl_enabled){
+            sprintf(socket_dial_str, "%s%s%d%s%s%s", socket_dial_str, "AT#SSLD=1,",
+                port, ",\"", endpoint, "\",0,1,1000\r\0");
+        }
+        else {
+		    sprintf(socket_dial_str, "%s%s%d%s%s%s", socket_dial_str, "AT#SD=1,0,", port, ",\"", endpoint, "\",0,0,1\r\0");
+        }
 	}
 	if( modem_state == MODEM_STATE_READY ){
 		// Reset uart for incoming data from modem
@@ -468,7 +624,12 @@ uint8 modem_socket_dial(char *socket_dial_str, char* endpoint, int port, int con
     return 0u;  
 }
 
-uint8 modem_socket_close(){
+uint8 modem_socket_close(int ssl_enabled){
+    if (ssl_enabled){
+        if(at_write_command("AT#SSLH=1\r","OK",1000u) == 1u){      
+        return 1u;
+        }   
+    }
     if(at_write_command("AT#SH=1\r","OK",1000u) == 1u){      
         return 1u;
     }
@@ -497,15 +658,31 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
 	sprintf(send_str, "%s%s", send_str, "\r\n\032"); 
 }
 
-uint8 modem_send_recv(char* send_str, char* response, uint8 get_response)
+uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
-    if(at_write_command("AT#SSEND=1\r",">",10000u)){ 
+    char send_cmd[30] = {"\0"};
+    char recv_cmd[30] = {"\0"};
+    char ring_cmd[30] = {"\0"};
+    
+    if (ssl_enabled){
+        sprintf(send_cmd, "AT#SSLSEND=1\r");
+        // numbytes > 1000 throws a CMEE ERROR: Operation not supported
+        sprintf(recv_cmd, "AT#SSLRECV=1,1000\r");
+        sprintf(ring_cmd, "SSLSRING: 1");
+    }
+    else{
+        sprintf(send_cmd, "AT#SSEND=1\r");
+        sprintf(recv_cmd, "AT#SRECV=1,1500\r");
+        sprintf(ring_cmd, "SRING: 1");
+    }
+    
+    if(at_write_command(send_cmd,">",10000u)){ 
 		// Reset uart for incoming data from modem
 	    uart_string_reset();
-		if(at_write_command(send_str,"SRING: 1",10000u) != 0){
+		if(at_write_command(send_str,ring_cmd,10000u) != 0){
             // Read HTTP response from the buffer
             uart_string_reset();
-            uint8 data_pending = at_write_command("AT#SRECV=1,1500\r","SRING: 1",10000u);
+            uint8 data_pending = at_write_command(recv_cmd,ring_cmd,10000u);
             
             // Check the HTTP response for valid status (200 or 204)
             // Create array, "status_code" to temporarily hold the result
@@ -519,7 +696,7 @@ uint8 modem_send_recv(char* send_str, char* response, uint8 get_response)
             // AT#SRECV to read the buffer
             if (data_pending == 1) {
                 uart_string_reset();
-                uint8 success = at_write_command("AT#SRECV=1,1500\r","NO CARRIER",10000u);
+                uint8 success = at_write_command(recv_cmd,"NO CARRIER",10000u);
             }
 			if (get_response){
                 strcpy(response, uart_received_string);
@@ -580,11 +757,76 @@ uint8 parse_http_status(char* http_status, char* version, char* status_code, cha
     return 1u;
 }
 
+uint8 parse_at_command_result(char *input_str, char *output_str, 
+                            char *search_start, char *search_end) {
+    char *a, *b;
+
+    a = strstr(input_str, search_start);
+    if (a == NULL){
+        return 0u;
+    }
+    a += strlen(search_start);
+    b = strstr(a, search_end);
+    if (b == NULL){
+        return 0u;
+    }
+    strncpy(output_str, a, b-a);
+    output_str[b-a] = '\0';
+    return 1u;
+}
+
 void uart_string_reset(){
     // reset uart_received_string to zero
     memset(&uart_received_string[0],0,sizeof(uart_received_string));
     uart_string_index = 0;
     Telit_UART_ClearRxBuffer();
+}
+
+uint8 ssl_init(uint8 edit_ssl_sec_config, uint8 edit_ssl_config){
+    int response_code = 0;
+    // Enable SSL
+    if(modem_ssl_toggle(1u)){
+        // Edit ssl security settings (SSLSECCFG) if desired
+        if(edit_ssl_sec_config){
+            response_code = modem_ssl_sec_config(ssid, cipher_suite, 
+                                auth_mode, cert_format);
+            if (!response_code){
+                return 0u;
+            }
+        }
+        // Edit general ssl configuration (SSLCFG) if desired
+        if (edit_ssl_config){
+            response_code = modem_ssl_config(ssid, cid, packet_size, max_to, 
+                             def_to, tx_to, ssl_ring_mode);
+            if (!response_code){
+                return 0u;
+            }                            
+        }       
+        // If authorization enabled, store cert data
+        if (auth_mode){
+            response_code = 0;
+            // Delete existing data
+            response_code += modem_ssl_sec_data(ssid, 0, 1, (char*) NULL, (char*) NULL);
+            // Write certificate to NVM
+            response_code += 2*modem_ssl_sec_data(ssid, 1, 1, server_cert, (char*) NULL);
+            if (response_code != 3){
+                return 0u;
+            }
+            if (auth_mode == 2u){
+                // Delete existing data
+                response_code += 4*modem_ssl_sec_data(ssid, 0, 0, (char*) NULL, (char*) NULL);
+                response_code += 8*modem_ssl_sec_data(ssid, 0, 2, (char*) NULL, (char*) NULL);
+                // Write certificate to NVM
+                response_code += 16*modem_ssl_sec_data(ssid, 1, 0, client_cert, (char*) NULL);
+                response_code += 32*modem_ssl_sec_data(ssid, 1, 2, private_key, (char*) NULL);
+                if (response_code != 63){
+                    return 0u;
+                }
+            }
+        }
+        return 1u;
+    }
+    return 0u;
 }
 
 // this function fires when uart rx receives bytes (when modem is sending bytes)

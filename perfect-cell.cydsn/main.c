@@ -4,6 +4,7 @@
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
+//#include "ssl.h"
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
 
@@ -28,6 +29,9 @@ uint8 connection_counter;
 // Misc variables
 int status, ss;
 uint8 data_sent;
+uint8 ssl_initialized = 0u;
+uint8 enable_ssl_config = 1u;
+uint8 enable_ssl_sec_config = 1u;
 char meid[20] = {'\0'};
 
 // Misc function declarations
@@ -66,11 +70,26 @@ void main()
     
     //// Test the valve
     test_valve();
-    
     blink_LED(4u);
-        
+    
+    int testvar = 1;
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)){
+        
+        blink_LED(2u);
+        // Initialize SSL if enabled
+        if (!ssl_enabled){
+            modem_ssl_toggle(ssl_enabled);
+        }
+        else { //TODO change back to ssl_enabled
+            ssl_initialized = ssl_init(enable_ssl_sec_config, 
+                                       enable_ssl_config);
+            // If SSL initialization fails, fall back to unsecured connection
+            if (!ssl_initialized){
+                testvar = 0;
+                ssl_enabled = 0;
+            }
+        }
         
         blink_LED(2u);        
         modem_get_meid(meid);
@@ -127,9 +146,9 @@ void main()
 				                          "", 0, "1.1");
 				
                 // This sends the data
-                modem_socket_dial(socket_dial_str, main_host, main_port, 1);
-				data_sent = modem_send_recv(send_str, response_str, 0);
-                modem_socket_close();
+                modem_socket_dial(socket_dial_str, main_host, main_port, 1, ssl_enabled);
+				data_sent = modem_send_recv(send_str, response_str, 0, ssl_enabled);
+                modem_socket_close(ssl_enabled);
                 
                 if (!data_sent){
                 	// Check & update the database the node should be writing to

@@ -16,10 +16,13 @@ char meta_database[20] = "META_DB";
 
 // Defaults if service.c not used
 int main_port = 8086;
-char main_host[100] = "example.endpoint.com";
+char main_host[100] = "ec2-52-87-156-130.compute-1.amazonaws.com";
 char write_route[60] = "";
 char main_query[300]= {'\0'};
 char main_tags[200] = "source=node";
+
+// Enable/disable SSL
+int ssl_enabled = 1u;
 
 // Set service to use here
 int service_flag = 1u;
@@ -345,7 +348,7 @@ int update_meta(char* meid, char* send_str, char* response_str){
     
     int result = 0, response_code, true_response_code = 15;
     if (modem_startup(&connection_attempt_counter)) {
-        if (modem_socket_dial(send_str, main_host, main_port, 1)){
+        if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
                     "SELECT last(value) from node_id,node_user,node_pass,node_db "
@@ -359,7 +362,7 @@ int update_meta(char* meid, char* send_str, char* response_str){
     	    construct_generic_request(send_str, "", main_host, url_encoded_query,
                                       main_port, "GET", "Close", "", 0, "1.1");
 
-            if(modem_send_recv(send_str, response_str, 1u)){
+            if(modem_send_recv(send_str, response_str, 1u, ssl_enabled)){
                 memset(send_str, '\0', sizeof(*send_str));
     	
         	    // Update variables
@@ -369,6 +372,7 @@ int update_meta(char* meid, char* send_str, char* response_str){
                 clear_str(node_id); clear_str(user); clear_str(pass); clear_str(database);
                 
                 // !!!need a failsafe in case the response is null.
+                // TODO: Look into bit comparison/assignment &=
     	        response_code += 1*strparse_influxdb(node_id, response_str, "node_id");
                 response_code += 2*strparse_influxdb(user, response_str, "node_user"); 
                 response_code += 4*strparse_influxdb(pass, response_str, "node_pass"); 
@@ -378,9 +382,10 @@ int update_meta(char* meid, char* send_str, char* response_str){
             
             // Mandatory free() after using malloc() in url_encode()
             free(url_encoded_query);
+            // TODO: This only seems to be resetting the first char of main_query
             memset(main_query, '\0', sizeof(*main_query));
         }
-        modem_socket_close();
+        modem_socket_close(ssl_enabled);
     }
     
     result = response_code - true_response_code;
@@ -402,7 +407,7 @@ int update_triggers(char* body, char* send_str, char* response_str){
     int response_code = 0, true_response_code = 0, result = 0; 
     if (modem_startup(&connection_attempt_counter)) {
         // Dial socket
-        if (modem_socket_dial(send_str, main_host, main_port, 1)){
+        if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
             memset(send_str, '\0', sizeof(*send_str));
             memset(response_str, '\0', sizeof(*send_str));
     
@@ -446,7 +451,7 @@ int update_triggers(char* body, char* send_str, char* response_str){
             free(url_encoded_query);
             memset(main_query, '\0', sizeof(*main_query));
 	
-            if(modem_send_recv(send_str, response_str, 1u)){
+            if(modem_send_recv(send_str, response_str, 1u, ssl_enabled)){
                 memset(send_str, '\0', sizeof(*send_str));
 
                 // Update variables
@@ -459,7 +464,7 @@ int update_triggers(char* body, char* send_str, char* response_str){
                 response_code += 8*intparse_influxdb(&meta_trigger, response_str, "meta_trigger");
 	        }
 	    }
-        modem_socket_close();
+        modem_socket_close(ssl_enabled);
     }
     
     result = response_code - true_response_code;
@@ -480,7 +485,7 @@ void update_params(char* body, char* send_str, char* response_str){
     
     if (modem_startup(&connection_attempt_counter)) {
 	    // Dial socket
-	    if (modem_socket_dial(send_str, main_host, main_port, 1)){
+	    if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
 	        memset(send_str, '\0', sizeof(*send_str));
             memset(response_str, '\0', sizeof(*send_str));
 
@@ -515,7 +520,7 @@ void update_params(char* body, char* send_str, char* response_str){
             free(url_encoded_query);
             memset(main_query, '\0', sizeof(*main_query));
                         
-	        if(modem_send_recv(send_str, response_str, 1u)){
+	        if(modem_send_recv(send_str, response_str, 1u, ssl_enabled)){
 	            //modem_socket_close();
                 memset(send_str, '\0', sizeof(*send_str));
                 	
@@ -532,7 +537,7 @@ void update_params(char* body, char* send_str, char* response_str){
                 intparse_influxdb(&autosampler_flag, response_str, "autosampler_flag");
             }
 		}
-        modem_socket_close();
+        modem_socket_close(ssl_enabled);
 	}
 }
 
