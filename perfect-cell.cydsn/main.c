@@ -4,6 +4,7 @@
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
+#include "atlas_wq_sensor.h"
 //#include "ssl.h"
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
@@ -72,6 +73,9 @@ void main()
     test_valve();
     blink_LED(4u);
     
+    // Power WQ
+    WQ_Power_Write(1u);
+    
     int testvar = 1;
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)){
@@ -112,6 +116,11 @@ void main()
 			
 			// Reset arrays
 			clear_all_arrays();
+            
+            // Enable I2C
+            I2C_Start();
+            uint8 temp_read;
+            temp_read = temperature_take_reading();
             
             // Turn on optical rain sensor if needed
             if ( (!optical_rain_pwr_Read()) && (optical_rain_flag) ) {
