@@ -120,9 +120,19 @@ void main()
             // Enable I2C
             I2C_Start();
             int test;
-            for(test=0;test<100;test++){
-            float temp_read;
-            temp_read = temperature_take_reading();
+            wq_reading temp;
+            con_reading conair;
+            float orp_reading;
+            float temperature_reading;
+            for(test=0;test<10;test++)
+            {
+            orp_reading = atlas_take_single_reading(ORP);
+            CyDelay(100);
+            temperature_reading = atlas_take_single_reading(TEMPERATURE);
+            CyDelay(100);
+            conair = atlas_con_reading();
+            CyDelay(100);
+//            conair = atlas_con_reading();
             }
             
             // Turn on optical rain sensor if needed
