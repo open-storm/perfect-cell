@@ -13,5 +13,11 @@
 /* [] END OF FILE */
 #include "project.h"
 
-uint8 temperature_take_reading();
+// Sensor function to take reading 
+float temperature_take_reading();
+float do_take_reading();
+float orp_take_reading();
+uint8 conductivity_take_reading();
+float ph_take_reading();
 
+// Additional functionality

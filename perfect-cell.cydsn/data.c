@@ -11,6 +11,7 @@ char database[20] = "HOME_DB";
 
 // Meta user info
 char meta_user[20] = "meta_user";
+
 char meta_pass[50] = "meta_pass";
 char meta_database[20] = "META_DB";
 

@@ -119,8 +119,11 @@ void main()
             
             // Enable I2C
             I2C_Start();
-            uint8 temp_read;
+            int test;
+            for(test=0;test<100;test++){
+            float temp_read;
             temp_read = temperature_take_reading();
+            }
             
             // Turn on optical rain sensor if needed
             if ( (!optical_rain_pwr_Read()) && (optical_rain_flag) ) {
