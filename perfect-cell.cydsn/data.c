@@ -51,7 +51,7 @@ int decagon_flag      = 0u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
-int atlas_flag = 1u;
+int atlas_wq_flag = 1u;
 
 // Flags to trigger devices
 int autosampler_trigger = 0u;
@@ -66,6 +66,7 @@ int optical_rain_loops = 1;
 int decagon_loops = 1;
 
 // Number of vars for each device
+/*
 int modem_vars = 3;
 int vbat_vars = 1;
 int ultrasonic_vars = 1;
@@ -75,325 +76,104 @@ int decagon_vars = 3;
 int autosampler_vars = 2;
 int valve_vars = 2;
 int meta_vars  = 1;
-// Total vars = 15
+int wq_vars = 8;
+// Total vars = 23
+*/
 
 // Other
-uint8 bottle_count = 0u;
+uint8 bottle_count = 0;
 int valve = 0;
 
 // Functions
 
-int take_readings(char *labels[], float readings[], uint8 take_average){
+int take_readings(char *labels[], float readings[], uint8 take_average, uint8 max_size){
     int read_iter = 0;
-    int array_ix = 0;
+    uint8 array_ix = 0;
 
     // Check if the signal strength and number of attempts modem took
     //  to connect during the last transmission is to be reported
     if ( modem_flag == 1u ){
-    	labels[array_ix] = "conn_attempts";
-    	labels[array_ix + 1] = "cell_strength";
-    	labels[array_ix + 2] = "cell_fer";
-    	readings[array_ix] = connection_attempt_counter;
-    	readings[array_ix + 1] = rssi;
-    	readings[array_ix + 2] = fer;
-    	array_ix += 3;
+        zip_modem(labels, readings, &array_ix, max_size);
     }
 
-    // Check if battery voltage measurement is to be taken
+    // Take battery voltage measurement
     if ( vbat_flag == 1u ){
-        float32 vbat = 9999;
-        vbat = read_Vbat();
-        labels[array_ix] = "v_bat";
-        readings[array_ix] = vbat;
-        array_ix++;
+        zip_vbat(labels, readings, &array_ix, max_size);
     }
     
-    // Check if ultrasonic measurement is to be taken
+    // Take ultrasonic measurement
     if ( ultrasonic_flag == 1u ) {
-        
-        // Start the MUX 
-        mux_controller_Wakeup();
-        
-        // Set MUX to read from 1st input
-        mux_controller_Write(0u);
-        
-        // Add to labels
-		labels[array_ix] = "maxbotix_depth";
-        UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
-        uint8 valid;
-        float valid_iter = 0.0;
-        for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
-            valid = ultrasonic_get_reading(&ultrasonic_reading);
-            if ( ultrasonic_reading.valid == 1u){
-                valid_iter++;
-                readings[array_ix] += ultrasonic_reading.depth;
-                // If not taking the average, break the loop at the first valid reading
-                if ( take_average == 0u ) {
-                    array_ix++;
-				    break;
-                }
-            }            
-        }
-        // If taking the average, divide by the number of valid readings
-        if ( take_average == 1u ) {
-			if ( valid_iter > 0 ) {
-                readings[array_ix] = readings[array_ix] / valid_iter;
-                array_ix++;
-			}
-        }
-        
-        // 2017 02 05: Send -1 instead of 9999 to avoid confusion
-        // TODO: Test and then check in this update on GitHub
-		// If there are no valid readings, send 9999
-		if (valid_iter == 0.0) {
-			readings[array_ix] = -1;
-			array_ix++;
-		}
-        
-        // Save MUX configuration + put MUX to sleep
-        mux_controller_Sleep();
-        
+        zip_ultrasonic(labels, readings, &array_ix, 0u, take_average, ultrasonic_loops, max_size);
     }    
 
-    // Check if ultrasonic measurement is to be taken      
+    // Take ultrasonic 2 measurement     
     if ( ultrasonic_2_flag == 1u ) {
-        
-        // Start the MUX
-        mux_controller_Wakeup();
-        
-        // Set MUX to read from 2nd input
-        mux_controller_Write(1u);
-        
-        // Add to labels
-		labels[array_ix] = "maxbotix_2_depth";
-        
-        // Take reading(s)
-        UltrasonicReading ultrasonic_2_reading = {0u, 0u, 0u};
-        uint8 valid;
-        float valid_iter = 0.0;
-        for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
-            valid = ultrasonic_get_reading(&ultrasonic_2_reading);
-            if ( ultrasonic_2_reading.valid == 1u){
-                valid_iter++;
-                readings[array_ix] += ultrasonic_2_reading.depth;
-                // If not taking the average, break the loop at the first valid reading
-                if ( take_average == 0u ) {
-                    array_ix++;
-				    break;
-                }
-            }            
-        }
-        // If taking the average, divide by the number of valid readings
-        if ( take_average == 1u ) {
-			if ( valid_iter > 0 ) {
-                readings[array_ix] = readings[array_ix] / valid_iter;
-                array_ix++;
-			}
-        }
-		// If there are no valid readings, send 9999
-		if (valid_iter == 0.0) {
-			readings[array_ix] = 9999;
-			array_ix++;
-		}
-        
-        // Save MUX configuration + put MUX to sleep
-        mux_controller_Sleep();
+        zip_ultrasonic(labels, readings, &array_ix, 1u, take_average, ultrasonic_loops, max_size);
     }    
     
-    // Check if optical rain measurement is to be taken
+    // Take optical rain measurement
     if ( optical_rain_flag == 1u ) {
-        float optical_rain_reading = 0;
-        optical_rain_reading = 0.01 * optical_rain_get_count();
-        labels[array_ix] = "hydreon_prcp";
-        readings[array_ix] = optical_rain_reading;
-		array_ix++;
+        zip_optical_rain(labels, readings, &array_ix, max_size);
     }
 
-    // Check if soil moisture measurement is to be taken
+    // Take soil moisture measurement
     if ( decagon_flag == 1u ) {
-		labels[array_ix] = "decagon_soil_conduct";
-		labels[array_ix + 1] = "decagon_soil_temp";
-		labels[array_ix + 2] = "decagon_soil_dielec";
-        DecagonGS3 decagon_reading = {0u, 0u, 0u, 0u, 0u};
-        float valid_iter = 0.0;
-        for( read_iter = 0; read_iter < decagon_loops; read_iter++){
-            decagon_reading = Decagon_Take_Reading();
-            if ( decagon_reading.valid == 1u){
-                valid_iter++;
-                readings[array_ix] += decagon_reading.conductivity;
-                readings[array_ix + 1] += decagon_reading.temp;
-                readings[array_ix + 2] += decagon_reading.dielectric;
-                if ( take_average == 0u ) {
-                    array_ix += 3;
-				    break;
-                    }
-                }
-            }
-        if ( take_average == 1u ) {
-			if (valid_iter > 0){
-                readings[array_ix] = readings[array_ix] / valid_iter;
-                readings[array_ix + 1] = readings[array_ix + 1] / valid_iter;
-                readings[array_ix + 2] = readings[array_ix + 2] / valid_iter;
-                array_ix += 3;
-			}
-        }
-		if (valid_iter == 0.0) {
-			readings[array_ix] = 9999;
-			readings[array_ix + 1] = 9999;
-			readings[array_ix + 2] = 9999;
-			array_ix += 3;
-		}
+        zip_decagon(labels, readings, &array_ix, take_average, decagon_loops, max_size);
     }
     
-    if (atlas_flag == 1u){
-        WQ_Power_Write(1u);
-        CyDelay(1000);
-        I2C_Wakeup();
-        I2C_Start();
-        CyDelay(500);
-        uint8 valid;
-        con_reading atlas_conductivity = {-9999, -9999, -9999, -9999};
-        float atlas_water_temp = -9999;
-        float atlas_do = -9999;
-        float atlas_orp = -9999;
-        float atlas_ph = -9999;
-        
-        // Execute readings
-        atlas_take_single_reading(TEMPERATURE, &atlas_water_temp);
-        CyDelay(100);
-        atlas_take_single_reading(DO, &atlas_do);
-        CyDelay(100);
-        atlas_take_single_reading(ORP, &atlas_orp);
-        CyDelay(100);
-        atlas_take_single_reading(PH, &atlas_ph);
-        CyDelay(100);
-        atlas_take_con_reading(&atlas_conductivity);
-        CyDelay(100);
-        
-        // Fill labels
-        labels[array_ix] = "atlas_water_temp";
-		labels[array_ix + 1] = "atlas_dissolved_oxygen";
-		labels[array_ix + 2] = "atlas_orp";
-        labels[array_ix + 3] = "atlas_ph";
-        labels[array_ix + 4] = "atlas_ec";
-        labels[array_ix + 5] = "atlas_tds";
-        labels[array_ix + 6] = "atlas_sal";
-        labels[array_ix + 7] = "atlas_sg";
-        
-        // Fill reading array
-        readings[array_ix] = atlas_water_temp;
-		readings[array_ix + 1] = atlas_do;
-		readings[array_ix + 2] = atlas_orp;
-        readings[array_ix + 3] = atlas_ph;        
-        readings[array_ix + 4] = atlas_conductivity.ec;
-        readings[array_ix + 5] = atlas_conductivity.tds;
-        readings[array_ix + 6] = atlas_conductivity.sal;
-        readings[array_ix + 7] = atlas_conductivity.sg;
-        I2C_Sleep();
-        CyDelay(100);
-        WQ_Power_Write(0u);      
-        array_ix += 8;
-        
+    if (atlas_wq_flag == 1u){
+        zip_atlas_wq(labels, readings, &array_ix, max_size);
     }
+    
+    //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
-		autosampler_trigger = 0u; // Update the value locally
-        labels[array_ix] = "autosampler_trigger"; // Update the database
-        readings[array_ix] = 0;
-		array_ix++;
-        
-        if (bottle_count < MAX_BOTTLE_COUNT) {
-			labels[array_ix] = "isco_bottle";
-            autosampler_start();
-            autosampler_power_on();                                    
-            if (autosampler_take_sample(&bottle_count) ) {
-				readings[array_ix] = bottle_count;
-			}
-			else {
-				// Use -1 to flag when a triggered sample failed
-                readings[array_ix] = -1;
-			}                        
-            autosampler_power_off(); 
-            autosampler_stop();
-			array_ix++;
-		}
-		else {
-            //debug_write("bottle_count >= MAX_BOTTLE_COUNT");
-			}
+        zip_autosampler(labels, readings, &array_ix, &autosampler_trigger, &bottle_count, max_size);
 		
 	}
+    // TODO: Valve 1 and Valve 2 should probably handled using a mux
 	if ((valve_flag == 1u) && (valve_trigger >= 0)){
-		
-        // Ellsworth does not have a potentiometer installed
-        // Simply flip the pins for now and come back to implement
-        // a pulse counter
-        /*        
-        float32 valve_pos;
-		valve = move_valve(valve);
-		valve_pos = 100. * read_Valve_POS();
-		labels[array_ix] = "valve_cmd";
-		labels[array_ix + 1] = "valve_pos";
-		readings[array_ix] = valve;
-		readings[array_ix + 1] = valve_pos;
-		array_ix += 2;
-        */
-        
-        // If zero, open the valve completely
-        // IMPORTANT: If there is a "null" entry,
-        //            intparse_influxdb returns 0
-        //            Make sure default is to open the valve
-        if (valve_trigger == 0) { 
-            Valve_OUT_Write(1u);
-            CyDelay(20000u);
-            Valve_OUT_Write(0u);
-        // Else, if 100, close the valve completely
-        } else if(valve_trigger == 100) {
-            Valve_IN_Write(1u);
-            CyDelay(20000u);
-            Valve_IN_Write(0u);
-        } else {
-            // For now, do nothing for the other cases
-        }
-        
-        // Acknowledge the trigger by updating it to -1
-        // -1, and negative values are reserved for actuator response
-        labels[array_ix] = "valve_trigger";
-        readings[array_ix] = -1;
-        array_ix += 1;
+		zip_valve(labels, readings, &array_ix, &valve_trigger, max_size);
 	}
+    
     // Similar case for the moment for valve_2
 	if ((valve_2_flag == 1u) && (valve_2_trigger >= 0)){
-
-        
-        // If zero, open the valve completely
-        // IMPORTANT: If there is a "null" entry,
-        //            intparse_influxdb returns 0
-        //            Make sure default is to open the valve
-        if (valve_2_trigger == 0) { 
-            Valve_2_OUT_Write(1u);
-            CyDelay(20000u);
-            Valve_2_OUT_Write(0u);
-        // Else, if 100, close the valve completely
-        } else if(valve_2_trigger == 100) {
-            Valve_2_IN_Write(1u);
-            CyDelay(20000u);
-            Valve_2_IN_Write(0u);
-        } else {
-            // For now, do nothing for the other cases
-        }
-        
-        // Acknowledge the trigger by updating it to -1
-        // -1, and negative values are reserved for actuator response
-        labels[array_ix] = "valve_2_trigger";
-        readings[array_ix] = -1;
-        array_ix += 1;
+        zip_valve_2(labels, readings, &array_ix, &valve_2_trigger, max_size);
 	}
+    
+    // Report meta updater status
     if ( meta_flag == 1u ){
-        labels[array_ix] = "meta_trigger";
-        readings[array_ix] = meta_trigger;
-        array_ix++;
+        zip_meta(labels, readings, &array_ix, max_size);
     }
     return array_ix;
+}
+
+uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    labels[*array_ix] = "meta_trigger";
+    readings[*array_ix] = meta_trigger;
+    (*array_ix)++;
+    return *array_ix;
+}
+
+uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 3;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    labels[*array_ix] = "conn_attempts";
+    labels[*array_ix + 1] = "cell_strength";
+    labels[*array_ix + 2] = "cell_fer";
+    readings[*array_ix] = connection_attempt_counter;
+    readings[*array_ix + 1] = rssi;
+    readings[*array_ix + 2] = fer;
+    (*array_ix) += 3;
+    return *array_ix;
 }
 
 int update_meta(char* meid, char* send_str, char* response_str){

@@ -38,7 +38,7 @@ uint8 autosampler_power_off() {
     return 1u;
 }
 
-uint8 autosampler_take_sample(uint8* count){
+uint8 autosampler_take_sample(uint8 *count){
     
     if (*count >= MAX_BOTTLE_COUNT) {        
         return 0;
@@ -78,6 +78,38 @@ uint8 autosampler_take_sample(uint8* count){
     }
     *count = BottleCount_Read();
     return 1u;
+}
+
+uint8 zip_autosampler(char *labels[], float readings[], uint8 *array_ix, int *autosampler_trigger, uint8 *bottle_count, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 2;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    (*autosampler_trigger) = 0u; // Update the value locally
+    labels[*array_ix] = "autosampler_trigger"; // Update the database
+    readings[*array_ix] = 0;
+    (*array_ix)++;
+        
+    if (*bottle_count < MAX_BOTTLE_COUNT) {
+	    labels[*array_ix] = "isco_bottle";
+        autosampler_start();
+        autosampler_power_on();                                    
+        if (autosampler_take_sample(bottle_count) ) {
+			readings[*array_ix] = *bottle_count;
+		}
+		else {
+			// Use -1 to flag when a triggered sample failed
+            readings[*array_ix] = -1;
+		}                        
+        autosampler_power_off(); 
+        autosampler_stop();
+	    (*array_ix)++;
+		}
+	else {
+        //debug_write("bottle_count >= MAX_BOTTLE_COUNT");
+		}
+    return *array_ix;
 }
 
 CY_ISR(isr_SampleCounter){

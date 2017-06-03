@@ -1,4 +1,5 @@
 #include "ultrasonic.h"
+#include <stdio.h>
 
 #define MAX_STRING_LENGTH       128
 #define DEPTH_STRING_LENGTH     4
@@ -91,6 +92,71 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
     }
 	
     return (*reading).valid;
+}
+
+uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 which_ultrasonic, uint8 take_average, int ultrasonic_loops, uint8 max_size){
+
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    
+    uint8 valid = 0u;
+    float valid_iter = 0.0;
+    int read_iter = 0;
+    UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
+    char maxbotix_label[20] = {'\0'};
+        
+    // TODO: This should probably be generalized
+    // May need to include string.h
+    if (which_ultrasonic == 0u){
+        sprintf(maxbotix_label, "maxbotix_depth");
+    }
+    if (which_ultrasonic == 1u){
+        sprintf(maxbotix_label, "maxbotix_2_depth");
+    }
+        
+    // Start the MUX 
+    mux_controller_Wakeup();
+        
+    // Set MUX to read from 1st input
+    mux_controller_Write(which_ultrasonic);
+        
+    // Add to labels
+	labels[*array_ix] = maxbotix_label;
+        
+    for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
+        valid = ultrasonic_get_reading(&ultrasonic_reading);
+        if ( ultrasonic_reading.valid == 1u){
+            valid_iter++;
+            readings[*array_ix] += ultrasonic_reading.depth;
+            // If not taking the average, break the loop at the first valid reading
+            if ( take_average == 0u ) {
+                (*array_ix)++;
+				break;
+            }
+        }            
+    }
+    // If taking the average, divide by the number of valid readings
+    if ( take_average == 1u ) {
+		if ( valid_iter > 0 ) {
+            readings[*array_ix] = readings[*array_ix] / valid_iter;
+            (*array_ix)++;
+		}
+    }
+        
+    // 2017 02 05: Send -1 instead of 9999 to avoid confusion
+    // TODO: Test and then check in this update on GitHub
+	// If there are no valid readings, send 9999
+	if (valid_iter == 0.0) {
+		readings[*array_ix] = -1;
+		(*array_ix)++;
+	}
+        
+    // Save MUX configuration + put MUX to sleep
+    mux_controller_Sleep();
+    return *array_ix;
 }
 
 void uart_ultrasonic_string_reset(){

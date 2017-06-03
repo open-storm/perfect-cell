@@ -16,6 +16,7 @@ struct {
 
 DecagonGS3 Decagon_Take_Reading();
 DecagonGS3 Decagon_Convert_Raw_Reading(char* raw_D);
+uint8 zip_decagon(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, int decagon_loops, uint8 max_size);
 
 
 /* [] END OF FILE */

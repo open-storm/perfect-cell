@@ -11,7 +11,7 @@ uint8 blink_LED(uint8 n_blinks) {
 	return 1u;
 }
 
-float32 read_Vbat() {
+float32 read_vbat() {
 	int32 reading;
 	float32 v_bat;
 	/* flip on the ADC pin */
@@ -33,6 +33,20 @@ float32 read_Vbat() {
     
     AMux_Stop();
 	return v_bat;
+}
+
+uint8 zip_vbat(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    float32 v_bat = -9999;
+    v_bat = read_vbat();
+    labels[*array_ix] = "v_bat";
+    readings[*array_ix] = v_bat;
+    (*array_ix)++;
+    return *array_ix;
 }
 
 void init_pins(){

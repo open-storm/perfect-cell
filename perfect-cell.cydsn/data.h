@@ -13,7 +13,9 @@
 #include "updater.h"
 
 // Function prototypes
-int take_readings(char *labels[], float readings[], uint8 take_average);
+int take_readings(char *labels[], float readings[], uint8 take_average, uint8 max_size);
+uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
+uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 int update_meta(char* meid, char* send_str, char* response_str);
 int update_triggers(char* body, char* send_str, char* response_str);
 void update_params(char* body, char* send_str, char* response_str);

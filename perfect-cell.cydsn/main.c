@@ -8,7 +8,7 @@
 // #include "services.h"
 
 // define global variables
-#define NVARS 14
+#define NVARS 25
 
 // Arrays for request strings
 char body[MAX_PACKET_LENGTH] = {'\0'};
@@ -71,10 +71,6 @@ void main()
     test_valve();
     blink_LED(4u);
     
-    // Power WQ
-//    WQ_Power_Write(1u);
-    
-    int testvar = 1;
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)){
         
@@ -88,7 +84,6 @@ void main()
                                        enable_ssl_config);
             // If SSL initialization fails, fall back to unsecured connection
             if (!ssl_initialized){
-                testvar = 0;
                 ssl_enabled = 0;
             }
         }
@@ -114,27 +109,9 @@ void main()
 			
 			// Reset arrays
 			clear_all_arrays();
-/*            
-            // Enable I2C
-            I2C_Start();
-            int test;
-            wq_reading temp;
-            con_reading conair;
-            float orp_reading;
-            float temperature_reading;
-            for(test=0;test<10;test++)
-            {
-            orp_reading = atlas_take_single_reading(ORP);
-            CyDelay(100);
-            temperature_reading = atlas_take_single_reading(TEMPERATURE);
-            CyDelay(100);
-            conair = atlas_con_reading();
-            CyDelay(100);
-//            conair = atlas_con_reading();
-            }
-              
-            */
-            numFilled = take_readings(labels, readings, 0u);
+
+            // Uncomment if testing sensors
+            // numFilled = take_readings(labels, readings, 0u);
             
             // Turn on optical rain sensor if needed
             if ( (!optical_rain_pwr_Read()) && (optical_rain_flag) ) {
@@ -158,7 +135,7 @@ void main()
                 clear_all_arrays();
                 
                 // Take readings and fill output arrays with labels and values
-                numFilled = take_readings(labels, readings, 0u);  
+                numFilled = take_readings(labels, readings, 0u, NVARS);  
                 
                 // If not using SERVICES use the following code
 			    // Construct the data body
