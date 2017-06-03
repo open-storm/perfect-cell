@@ -38,9 +38,10 @@ struct{
 }typedef wq_reading;
 
 // Sensor function to take reading
-int go_to_sleep(uint8 sensor_address);
-float atlas_take_single_reading(uint8 sensor_address);
-con_reading atlas_con_reading();
-wq_reading atlas_wq_reading();
+int atlas_sensor_sleep(uint8 sensor_address);
+int atlas_sensor_wake(uint8 sensor_address);
+uint8 atlas_take_single_reading(uint8 sensor_address, float *reading);
+uint8 atlas_take_con_reading(con_reading *reading);
+//wq_reading atlas_wq_reading();
 
 // Additional functionality

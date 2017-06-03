@@ -46,11 +46,12 @@ int meta_flag  = 1u;
 int vbat_flag  = 1u;
 int ultrasonic_flag   = 0u;
 int ultrasonic_2_flag = 0u;
-int optical_rain_flag = 1u;
+int optical_rain_flag = 0u;
 int decagon_flag      = 0u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
+int atlas_flag = 1u;
 
 // Flags to trigger devices
 int autosampler_trigger = 0u;
@@ -242,6 +243,57 @@ int take_readings(char *labels[], float readings[], uint8 take_average){
 			readings[array_ix + 2] = 9999;
 			array_ix += 3;
 		}
+    }
+    
+    if (atlas_flag == 1u){
+        WQ_Power_Write(1u);
+        CyDelay(1000);
+        I2C_Wakeup();
+        I2C_Start();
+        CyDelay(500);
+        uint8 valid;
+        con_reading atlas_conductivity = {-9999, -9999, -9999, -9999};
+        float atlas_water_temp = -9999;
+        float atlas_do = -9999;
+        float atlas_orp = -9999;
+        float atlas_ph = -9999;
+        
+        // Execute readings
+        atlas_take_single_reading(TEMPERATURE, &atlas_water_temp);
+        CyDelay(100);
+        atlas_take_single_reading(DO, &atlas_do);
+        CyDelay(100);
+        atlas_take_single_reading(ORP, &atlas_orp);
+        CyDelay(100);
+        atlas_take_single_reading(PH, &atlas_ph);
+        CyDelay(100);
+        atlas_take_con_reading(&atlas_conductivity);
+        CyDelay(100);
+        
+        // Fill labels
+        labels[array_ix] = "atlas_water_temp";
+		labels[array_ix + 1] = "atlas_dissolved_oxygen";
+		labels[array_ix + 2] = "atlas_orp";
+        labels[array_ix + 3] = "atlas_ph";
+        labels[array_ix + 4] = "atlas_ec";
+        labels[array_ix + 5] = "atlas_tds";
+        labels[array_ix + 6] = "atlas_sal";
+        labels[array_ix + 7] = "atlas_sg";
+        
+        // Fill reading array
+        readings[array_ix] = atlas_water_temp;
+		readings[array_ix + 1] = atlas_do;
+		readings[array_ix + 2] = atlas_orp;
+        readings[array_ix + 3] = atlas_ph;        
+        readings[array_ix + 4] = atlas_conductivity.ec;
+        readings[array_ix + 5] = atlas_conductivity.tds;
+        readings[array_ix + 6] = atlas_conductivity.sal;
+        readings[array_ix + 7] = atlas_conductivity.sg;
+        I2C_Sleep();
+        CyDelay(100);
+        WQ_Power_Write(0u);      
+        array_ix += 8;
+        
     }
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){

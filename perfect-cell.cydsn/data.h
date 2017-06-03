@@ -5,6 +5,7 @@
 #include "decagon.h"
 #include "ultrasonic.h"
 #include "optical_rain.h"
+#include "atlas_wq_sensor.h"
 #include "autosampler.h"
 #include "valve.h"
 #include "misc.h"

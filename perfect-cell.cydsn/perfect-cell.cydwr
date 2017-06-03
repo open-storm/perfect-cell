@@ -556,6 +556,7 @@
       <Data key="98c25912-c797-4532-95be-668f773fb40a" value="optical_rain_rx" />
       <Data key="183fa115-4040-42c7-a43d-1b3827ef0197" value="Pin11" />
       <Data key="232f1f8a-9b91-4ce4-bd8a-6419034a1e6e" value="Telit_ON" />
+      <Data key="352ff347-bded-4614-9344-3ffa380adc5e" value="WQ_Power" />
       <Data key="555b93d5-50ad-4b61-b4ad-23355d3f7771" value="VBAT_READ" />
       <Data key="600e5e7b-f973-4db3-94bf-8ebaf40edd89" value="Pin37" />
       <Data key="1673ac03-08fa-4326-b45d-f415ac45714d" value="Pin12" />
@@ -3719,7 +3720,7 @@
     </Group>
     <Group key="5bb13c64-1a40-4955-87a4-164cf70d794a">
       <Group key="0">
-        <Data key="Port Format" value="0,3" />
+        <Data key="Port Format" value="3,5" />
       </Group>
     </Group>
     <Group key="5ef07704-7e8f-4d13-8684-ee129221e829">
@@ -3805,6 +3806,11 @@
     <Group key="232f1f8a-9b91-4ce4-bd8a-6419034a1e6e">
       <Group key="0">
         <Data key="Port Format" value="15,1" />
+      </Group>
+    </Group>
+    <Group key="352ff347-bded-4614-9344-3ffa380adc5e">
+      <Group key="0">
+        <Data key="Port Format" value="0,3" />
       </Group>
     </Group>
     <Group key="555b93d5-50ad-4b61-b4ad-23355d3f7771">
@@ -3949,7 +3955,7 @@
     </Group>
     <Group key="UnAssigned Pins">
       <Group key="8bcff14f-287f-435b-a7ae-7c66a3ac1d10">
-        <Data key="0" value="131408194837259064" />
+        <Data key="0" value="131409314380893884" />
       </Group>
       <Group key="8c2275df-70e6-4d7d-a652-6ee3ab666d68">
         <Data key="0" value="131093825982543586" />
