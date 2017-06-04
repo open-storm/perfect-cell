@@ -1,3 +1,5 @@
+#include <project.h>
+
 extern char node_id[20];
 extern char site_name[10];
 
@@ -22,7 +24,9 @@ extern char write_route[60];
 //extern const char* private_key;
 
 // SSL/TLS enabled?
-extern int ssl_enabled;
+extern uint8 ssl_enabled;
+extern uint8 enable_ssl_config;
+extern uint8 enable_ssl_sec_config;
 
 // Set service to use here
 extern int service_flag;

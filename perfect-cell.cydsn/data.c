@@ -1,29 +1,26 @@
 #include "data.h"
 #include "extern.h"
+#include "config.h"
 
 // Node ID
-char node_id[20] = "example_node";
+char node_id[20] = DEFAULT_NODE_ID;
 
 // Default user info
-char user[20] = "home_user";
-char pass[50] = "home_pass";
-char database[20] = "HOME_DB";
+char user[20] = DEFAULT_HOME_USER;
+char pass[50] = DEFAULT_HOME_PASS;
+char database[20] = DEFAULT_HOME_DB;
 
 // Meta user info
-char meta_user[20] = "meta_user";
-
-char meta_pass[50] = "meta_pass";
-char meta_database[20] = "META_DB";
+char meta_user[20] = DEFAULT_META_USER;
+char meta_pass[50] = DEFAULT_META_PASS;
+char meta_database[20] = DEFAULT_META_DB;
 
 // Defaults if service.c not used
-int main_port = 8086;
-char main_host[100] = "ec2-52-87-156-130.compute-1.amazonaws.com";
+int main_port = DEFAULT_HOME_PORT;
+char main_host[100] = DEFAULT_HOME_HOST;
 char write_route[60] = "";
 char main_query[300]= {'\0'};
 char main_tags[200] = "source=node";
-
-// Enable/disable SSL
-int ssl_enabled = 1u;
 
 // Set service to use here
 int service_flag = 1u;
@@ -39,19 +36,24 @@ int max_conn_attempts = 5;
 int connection_attempt_counter = 0;
 int rssi = 0u;
 int fer  = 0u;
+uint8 enable_ssl_config = 1u;
+uint8 enable_ssl_sec_config = 1u;
+
+// Enable/disable SSL
+uint8 ssl_enabled = 1u;
 
 // Flags to activate devices
 int modem_flag = 1u;
 int meta_flag  = 1u;
 int vbat_flag  = 1u;
-int ultrasonic_flag   = 0u;
+int ultrasonic_flag   = 1u;
 int ultrasonic_2_flag = 0u;
 int optical_rain_flag = 0u;
-int decagon_flag      = 0u;
+int decagon_flag      = 1u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
-int atlas_wq_flag = 1u;
+int atlas_wq_flag = 0u;
 
 // Flags to trigger devices
 int autosampler_trigger = 0u;
@@ -65,21 +67,6 @@ int ultrasonic_loops = 5;
 int optical_rain_loops = 1;
 int decagon_loops = 1;
 
-// Number of vars for each device
-/*
-int modem_vars = 3;
-int vbat_vars = 1;
-int ultrasonic_vars = 1;
-int ultrasonic_2_vars = 1;
-int optical_rain_vars = 1;
-int decagon_vars = 3;
-int autosampler_vars = 2;
-int valve_vars = 2;
-int meta_vars  = 1;
-int wq_vars = 8;
-// Total vars = 23
-*/
-
 // Other
 uint8 bottle_count = 0;
 int valve = 0;
@@ -87,7 +74,6 @@ int valve = 0;
 // Functions
 
 int take_readings(char *labels[], float readings[], uint8 take_average, uint8 max_size){
-    int read_iter = 0;
     uint8 array_ix = 0;
 
     // Check if the signal strength and number of attempts modem took
@@ -176,10 +162,49 @@ uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
     return *array_ix;
 }
 
+uint8 send_readings(char* body, char* send_str, char* response_str, char* socket_dial_str,
+                    char *labels[], float readings[], uint8 nvars){
+    uint8 data_sent = 0u;
+    // If not using SERVICES use the following code
+	// Construct the data body
+    construct_default_body(body, labels, readings, nvars);
+	// Construct POST request
+	construct_generic_request(send_str, body, main_host, write_route,
+		                      main_port, "POST", "Close",
+				              "", 0, "1.1");
+				
+    // This sends the data
+    modem_socket_dial(socket_dial_str, main_host, main_port, 1, ssl_enabled);
+	data_sent = modem_send_recv(send_str, response_str, 0, ssl_enabled);
+    modem_socket_close(ssl_enabled);
+    return data_sent;
+}
+
+uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 get_device_meid){
+    uint8 status;
+    // Only run if meta_trigger and meta_flag are both active
+    if ((meta_trigger == 0u) || (meta_flag == 0u)) {
+        return 0u;
+    }
+    if (modem_startup(&connection_attempt_counter)) {
+        if (get_device_meid){
+            modem_get_meid(meid);
+        }
+        status = update_meta(meid, send_str, response_str);
+        if (status == 1u){
+            construct_route(write_route, "write", user, pass, database);
+            return 1u;
+        }
+    }
+return 0u;
+}
+
 int update_meta(char* meid, char* send_str, char* response_str){
 	// Assumes that send_str and response_str are empty
-    
-    int result = 0, response_code, true_response_code = 15;
+        
+    int result = 0;
+    int response_code = 0;
+    int true_response_code = 15;
     if (modem_startup(&connection_attempt_counter)) {
         if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
             // Build the GET request

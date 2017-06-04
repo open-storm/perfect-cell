@@ -497,15 +497,17 @@ uint8 modem_set_error_reports(uint8 param){
 uint8 modem_pdp_context_toggle(uint8 activate_pdp){	
     char cmd[100];
     uint8 pdp_currently_activated;
+    uint8 pdp_currently_deactivated;
     
     // Send AT read command to determine if PDP is already enabled
     // TODO: ASSUME SSID is 1
     // TODO: This will actually fail if substring is not found
     pdp_currently_activated = at_write_command("AT#SGACT?\r","SGACT: 1,1",1000u);
+    pdp_currently_deactivated = at_write_command("AT#SGACT?\r","SGACT: 1,0",1000u);
     
     // If current SSL state matches desired state, do nothing
     if ((pdp_currently_activated && activate_pdp) ||
-        (!pdp_currently_activated && !activate_pdp)){
+        (pdp_currently_deactivated && !activate_pdp)){
         return 1u;
     }
     // Construct AT command
@@ -518,19 +520,31 @@ uint8 modem_pdp_context_toggle(uint8 activate_pdp){
 }
 
 uint8 modem_ssl_toggle(int enable_ssl){	
-    char cmd[100];
+    char cmd[100] = {'\0'};
     uint8 ssl_currently_enabled;
+    uint8 ssl_currently_disabled;
     
+    // TODO: This is actually not very safe
     // Send AT read command to determine if SSL is already enabled
     ssl_currently_enabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,1",1000u);
+    ssl_currently_disabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,0",1000u);
+    // Temporary
+    uint8 pdp_currently_activated;
+    uint8 pdp_currently_deactivated;
+    
+    // Send AT read command to determine if PDP is already enabled
+    // TODO: ASSUME SSID is 1
+    // TODO: This will actually fail if substring is not found
+    pdp_currently_activated = at_write_command("AT#SGACT?\r","SGACT: 1,1",1000u);
+    pdp_currently_deactivated = at_write_command("AT#SGACT?\r","SGACT: 1,0",1000u);
     
     // If current SSL state matches desired state, do nothing
     if ((ssl_currently_enabled && enable_ssl) ||
-        (!ssl_currently_enabled && !enable_ssl)){
+        (ssl_currently_disabled && !enable_ssl)){
         return 1u;
     }
     // Construct AT command
-    sprintf(cmd,"AT#SSLEN=%u\r", enable_ssl);
+    sprintf(cmd,"AT#SSLEN=1,%u\r", enable_ssl);
     // Enable/disable SSL
     if(at_write_command(cmd,"OK",1000u) == 1u){      
         return 1u;

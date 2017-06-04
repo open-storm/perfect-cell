@@ -106,15 +106,14 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
     float valid_iter = 0.0;
     int read_iter = 0;
     UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
-    char maxbotix_label[20] = {'\0'};
         
     // TODO: This should probably be generalized
     // May need to include string.h
     if (which_ultrasonic == 0u){
-        sprintf(maxbotix_label, "maxbotix_depth");
+        labels[*array_ix] = "maxbotix_depth";
     }
     if (which_ultrasonic == 1u){
-        sprintf(maxbotix_label, "maxbotix_2_depth");
+        labels[*array_ix] = "maxbotix_2_depth";
     }
         
     // Start the MUX 
@@ -122,9 +121,6 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
         
     // Set MUX to read from 1st input
     mux_controller_Write(which_ultrasonic);
-        
-    // Add to labels
-	labels[*array_ix] = maxbotix_label;
         
     for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
         valid = ultrasonic_get_reading(&ultrasonic_reading);

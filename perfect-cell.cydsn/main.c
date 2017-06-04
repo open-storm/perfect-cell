@@ -4,6 +4,7 @@
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
+#include "startup.h"
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
 
@@ -21,17 +22,16 @@ char *labels[NVARS];
 float readings[NVARS];
 
 // Sleeptimer variables
-uint8 awake;
-uint32 wakeup_interval_counter;
-uint8 connection_counter;
+uint8 awake = 1u;
+uint32 wakeup_interval_counter = 0u;
+uint8 connection_counter = 0u;
 
 // Misc variables
-int status, ss;
+int status;
 uint8 data_sent;
 uint8 ssl_initialized = 0u;
-uint8 enable_ssl_config = 1u;
-uint8 enable_ssl_sec_config = 1u;
 char meid[20] = {'\0'};
+int numFilled = 0;
 
 // Misc function declarations
 void clear_all_arrays();
@@ -56,47 +56,23 @@ void main()
 	
 	sleep_isr_StartEx(Wakeup_ISR); // Start Sleep ISR
 	SleepTimer_Start();			   // Start SleepTimer Compnent	
-    
-    // Initialize sleeptimer variables
-    awake			= 1u;
-	wakeup_interval_counter = 0u;
 
 	// Initialize Pins
     init_pins();
-    	
-	// Initialize other variables
-    int numFilled = 0;
     
+    // TODO: Implement generic sensor unit tests here?
     //// Test the valve
     test_valve();
     blink_LED(4u);
     
     // Update metadata (node_id, user, pass, database
-    if (modem_startup(&connection_attempt_counter)){
-        
-        blink_LED(2u);
+    if (modem_startup(&connection_attempt_counter)){        
         // Initialize SSL if enabled
-        if (!ssl_enabled){
-            modem_ssl_toggle(ssl_enabled);
-        }
-        else { //TODO change back to ssl_enabled
-            ssl_initialized = ssl_init(enable_ssl_sec_config, 
-                                       enable_ssl_config);
-            // If SSL initialization fails, fall back to unsecured connection
-            if (!ssl_initialized){
-                ssl_enabled = 0;
-            }
-        }
-        
-        blink_LED(2u);        
-        modem_get_meid(meid);
-        status = update_meta(meid, send_str, response_str);
-        ss = modem_get_socket_status();
+        initialize_ssl(&ssl_enabled, &ssl_initialized);
+        // Update metadata if enabled
+        status = run_meta_subroutine(meid, send_str, response_str, 1u);
         modem_shutdown();
     }
-    
-    // Construct new write route based on user, pass and database
-    construct_route(write_route, "write", user, pass, database);
 
     // Blink the LED to indicate the board is awake and about to 
     // initialize loop
@@ -109,27 +85,18 @@ void main()
 			
 			// Reset arrays
 			clear_all_arrays();
-
-            // Uncomment if testing sensors
-            // numFilled = take_readings(labels, readings, 0u);
             
-            // Turn on optical rain sensor if needed
-            if ( (!optical_rain_pwr_Read()) && (optical_rain_flag) ) {
-	            optical_rain_start();
-            } else if ( (optical_rain_pwr_Read()) && (!optical_rain_flag) ) {
-	            optical_rain_stop();
-            }
-						
+            // Start up sensors that need to remain on continuously
+            counter_sensor_initialize();
+			
+            // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
                                 
                 // Update triggers for autosampler and valve
                 status = update_triggers(body, send_str, response_str);
                 
-                if (meta_trigger){
-                    modem_get_meid(meid);
-                    status = update_meta(meid, send_str, response_str);
-                    construct_route(write_route, "write", user, pass, database);
-                }
+                // Update device metadata
+                status = run_meta_subroutine(meid, send_str, response_str, 1u);
                             
 			    // Reset arrays
                 clear_all_arrays();
@@ -137,25 +104,15 @@ void main()
                 // Take readings and fill output arrays with labels and values
                 numFilled = take_readings(labels, readings, 0u, NVARS);  
                 
-                // If not using SERVICES use the following code
-			    // Construct the data body
-                construct_default_body(body, labels, readings, NVARS);
-			    // Construct POST request
-			    construct_generic_request(send_str, body, main_host, write_route,
-				                          main_port, "POST", "Close",
-				                          "", 0, "1.1");
-				
-                // This sends the data
-                modem_socket_dial(socket_dial_str, main_host, main_port, 1, ssl_enabled);
-				data_sent = modem_send_recv(send_str, response_str, 0, ssl_enabled);
-                modem_socket_close(ssl_enabled);
+                // Send readings to remote endpoint
+                data_sent = send_readings(body, send_str, response_str, socket_dial_str,
+                                          labels, readings, NVARS);
                 
                 if (!data_sent){
                 	// Check & update the database the node should be writing to
-                    modem_get_meid(meid);
-                    update_meta(meid, send_str, response_str);
-                    construct_route(write_route, "write", user, pass, database);
-                } else {								    
+                    status = run_meta_subroutine(meid, send_str, response_str, 1u);
+                }
+                else {								    
 					// Reset the connection attempt counter because data was successfully sent
 					connection_attempt_counter = 0;
                     
@@ -175,8 +132,7 @@ void main()
                 // Every 100 connects, check meta database for updates
                 connection_counter++;
                 if (connection_counter % 100 == 0){
-                    modem_get_meid(meid);
-                    update_meta(meid, send_str, response_str);
+                    status = run_meta_subroutine(meid, send_str, response_str, 1u);
                     connection_counter = 0;
                 }
 				
