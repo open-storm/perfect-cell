@@ -8,7 +8,8 @@ int atlas_sensor_sleep(uint8 sensor_address){
     int iter;
     
     for(iter=0; iter<5;iter++){
-    while(I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT){}}
+    I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER);
+    }
     return 1;
 }
 
@@ -108,11 +109,11 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
         float atlas_ph = -9999;
         
         WQ_Power_Write(1u);
+        WQ_Power_1_Write(1u);
         CyDelay(1000);
         I2C_Wakeup();
         I2C_Start();
         CyDelay(500);
-        
         // Execute readings
         atlas_take_single_reading(TEMPERATURE, &atlas_water_temp);
         CyDelay(100);
@@ -146,7 +147,8 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
         readings[*array_ix + 7] = atlas_conductivity.sg;
         I2C_Sleep();
         CyDelay(100);
-        WQ_Power_Write(0u);      
+        WQ_Power_Write(0u);
+        WQ_Power_1_Write(0u);
         (*array_ix) += 8;
         return *array_ix;
 }

@@ -528,15 +528,6 @@ uint8 modem_ssl_toggle(int enable_ssl){
     // Send AT read command to determine if SSL is already enabled
     ssl_currently_enabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,1",1000u);
     ssl_currently_disabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,0",1000u);
-    // Temporary
-    uint8 pdp_currently_activated;
-    uint8 pdp_currently_deactivated;
-    
-    // Send AT read command to determine if PDP is already enabled
-    // TODO: ASSUME SSID is 1
-    // TODO: This will actually fail if substring is not found
-    pdp_currently_activated = at_write_command("AT#SGACT?\r","SGACT: 1,1",1000u);
-    pdp_currently_deactivated = at_write_command("AT#SGACT?\r","SGACT: 1,0",1000u);
     
     // If current SSL state matches desired state, do nothing
     if ((ssl_currently_enabled && enable_ssl) ||

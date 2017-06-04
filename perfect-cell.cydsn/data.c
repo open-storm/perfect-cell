@@ -28,6 +28,9 @@ int service_flag = 1u;
 // Sleeptimer
 int sleeptimer = 460u; // Number of wakeups before full power: 1172 @ 256ms ~5 min
 
+// Array index
+uint8 array_ix = 0u;
+
 // Modem
 // Number of attempts modem made while trying to establish a connection
 // Initialize to -1 to flag when the node has restarted
@@ -46,14 +49,14 @@ uint8 ssl_enabled = 1u;
 int modem_flag = 1u;
 int meta_flag  = 1u;
 int vbat_flag  = 1u;
-int ultrasonic_flag   = 1u;
+int ultrasonic_flag   = 0u;
 int ultrasonic_2_flag = 0u;
 int optical_rain_flag = 0u;
-int decagon_flag      = 1u;
+int decagon_flag      = 0u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
-int atlas_wq_flag = 0u;
+int atlas_wq_flag = 1u;
 
 // Flags to trigger devices
 int autosampler_trigger = 0u;
@@ -73,65 +76,68 @@ int valve = 0;
 
 // Functions
 
-int take_readings(char *labels[], float readings[], uint8 take_average, uint8 max_size){
-    uint8 array_ix = 0;
+int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, uint8 max_size){
 
     // Check if the signal strength and number of attempts modem took
     //  to connect during the last transmission is to be reported
     if ( modem_flag == 1u ){
-        zip_modem(labels, readings, &array_ix, max_size);
+        zip_modem(labels, readings, array_ix, max_size);
     }
 
     // Take battery voltage measurement
     if ( vbat_flag == 1u ){
-        zip_vbat(labels, readings, &array_ix, max_size);
+        zip_vbat(labels, readings, array_ix, max_size);
     }
     
     // Take ultrasonic measurement
     if ( ultrasonic_flag == 1u ) {
-        zip_ultrasonic(labels, readings, &array_ix, 0u, take_average, ultrasonic_loops, max_size);
+        zip_ultrasonic(labels, readings, array_ix, 0u, take_average, ultrasonic_loops, max_size);
     }    
 
     // Take ultrasonic 2 measurement     
     if ( ultrasonic_2_flag == 1u ) {
-        zip_ultrasonic(labels, readings, &array_ix, 1u, take_average, ultrasonic_loops, max_size);
+        zip_ultrasonic(labels, readings, array_ix, 1u, take_average, ultrasonic_loops, max_size);
     }    
     
     // Take optical rain measurement
     if ( optical_rain_flag == 1u ) {
-        zip_optical_rain(labels, readings, &array_ix, max_size);
+        zip_optical_rain(labels, readings, array_ix, max_size);
     }
 
     // Take soil moisture measurement
     if ( decagon_flag == 1u ) {
-        zip_decagon(labels, readings, &array_ix, take_average, decagon_loops, max_size);
+        zip_decagon(labels, readings, array_ix, take_average, decagon_loops, max_size);
     }
     
+    // Take water quality measurement
     if (atlas_wq_flag == 1u){
-        zip_atlas_wq(labels, readings, &array_ix, max_size);
+        zip_atlas_wq(labels, readings, array_ix, max_size);
     }
-    
+    return (*array_ix);
+}
+
+uint8 exectute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
-        zip_autosampler(labels, readings, &array_ix, &autosampler_trigger, &bottle_count, max_size);
+        zip_autosampler(labels, readings, array_ix, &autosampler_trigger, &bottle_count, max_size);
 		
 	}
     // TODO: Valve 1 and Valve 2 should probably handled using a mux
 	if ((valve_flag == 1u) && (valve_trigger >= 0)){
-		zip_valve(labels, readings, &array_ix, &valve_trigger, max_size);
+		zip_valve(labels, readings, array_ix, &valve_trigger, max_size);
 	}
     
     // Similar case for the moment for valve_2
 	if ((valve_2_flag == 1u) && (valve_2_trigger >= 0)){
-        zip_valve_2(labels, readings, &array_ix, &valve_2_trigger, max_size);
+        zip_valve_2(labels, readings, array_ix, &valve_2_trigger, max_size);
 	}
     
     // Report meta updater status
     if ( meta_flag == 1u ){
-        zip_meta(labels, readings, &array_ix, max_size);
+        zip_meta(labels, readings, array_ix, max_size);
     }
-    return array_ix;
+    return (*array_ix);
 }
 
 uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){

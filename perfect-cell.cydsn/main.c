@@ -34,7 +34,7 @@ char meid[20] = {'\0'};
 int numFilled = 0;
 
 // Misc function declarations
-void clear_all_arrays();
+void clear_all_arrays(uint8 clear_readings_and_labels);
 
 CY_ISR_PROTO(Wakeup_ISR);
 CY_ISR(Wakeup_ISR)
@@ -84,11 +84,15 @@ void main()
 		if ( awake ){
 			
 			// Reset arrays
-			clear_all_arrays();
+			clear_all_arrays(1u);
             
             // Start up sensors that need to remain on continuously
             counter_sensor_initialize();
-			
+            
+            // Take readings and fill output arrays with labels and values
+            //for(;;){
+            numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
+            //}
             // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
                                 
@@ -99,10 +103,13 @@ void main()
                 status = run_meta_subroutine(meid, send_str, response_str, 1u);
                             
 			    // Reset arrays
-                clear_all_arrays();
+                clear_all_arrays(0u);
                 
-                // Take readings and fill output arrays with labels and values
-                numFilled = take_readings(labels, readings, 0u, NVARS);  
+                
+                // Execute triggers and fill output arrays with labels and values
+                numFilled += exectute_triggers(labels, readings, &array_ix, NVARS);
+                // Reset array index for next pass through
+                array_ix = 0u;
                 
                 // Send readings to remote endpoint
                 data_sent = send_readings(body, send_str, response_str, socket_dial_str,
@@ -124,7 +131,7 @@ void main()
 				modem_check_signal_quality(&rssi, &fer);  // This should only be checked while the modem is on/while not idle				
 
 				// Reset arrays
-			    clear_all_arrays();
+			    clear_all_arrays(1u);
 				
 				// Update parameters
 				update_params(body, send_str, response_str);
@@ -185,9 +192,11 @@ void main()
 	
 }
 
-void clear_all_arrays(){
-    memset(labels, '\0', sizeof(labels));
-    memset(readings, 0, sizeof(readings));
+void clear_all_arrays(uint8 clear_readings_and_labels){
+    if (clear_readings_and_labels){
+        memset(labels, '\0', sizeof(labels));
+        memset(readings, 0, sizeof(readings));
+    }
 	memset(socket_dial_str, '\0', sizeof(socket_dial_str));
 	memset(body, '\0', sizeof(body));
 	memset(send_str, '\0', sizeof(send_str));

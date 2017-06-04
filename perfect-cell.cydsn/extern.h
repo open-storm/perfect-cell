@@ -19,6 +19,8 @@ extern char main_http_protocol[4];
 extern char meid[20];
 extern char write_route[60];
 
+extern uint8 array_ix;
+
 //extern const char* server_cert;
 //extern const char* client_cert;
 //extern const char* private_key;
