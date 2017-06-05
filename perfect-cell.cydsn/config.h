@@ -15,4 +15,7 @@
 #define DEFAULT_META_PORT 8086
 #define DEFAULT_META_HOST "ec2-52-87-156-130.compute-1.amazonaws.com"
 
+// GPS
+#define MIN_SATELLITES    5
+#define MAX_GPS_TRIES     6
 /* [] END OF FILE */

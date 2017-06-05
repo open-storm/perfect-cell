@@ -14,7 +14,7 @@
 
 // Function prototypes
 int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, uint8 max_size);
-uint8 exectute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
+uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 get_device_meid);

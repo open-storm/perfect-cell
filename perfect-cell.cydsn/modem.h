@@ -52,4 +52,15 @@ uint8 modem_ssl_sec_config(uint8 ssid, uint8 cipher_suite, uint8 auth_mode,
 uint8 modem_ssl_config(uint8 ssid, uint8 cid, int packet_size,
                            int max_to, int def_to, int tx_to, uint8 ssl_ring_mode);
 uint8 ssl_init(uint8 edit_ssl_sec_config, uint8 edit_ssl_config);
+uint8 modem_gps_power_toggle(uint8 gps_power_on);
+uint8 modem_get_gps_position(float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries);
+uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat);
+uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries);
+uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, uint8 min_satellites, uint8 max_tries, uint8 max_size);
 //[] END OF FILE

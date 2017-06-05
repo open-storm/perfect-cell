@@ -107,7 +107,7 @@ void main()
                 
                 
                 // Execute triggers and fill output arrays with labels and values
-                numFilled += exectute_triggers(labels, readings, &array_ix, NVARS);
+                numFilled += execute_triggers(labels, readings, &array_ix, NVARS);
                 // Reset array index for next pass through
                 array_ix = 0u;
                 

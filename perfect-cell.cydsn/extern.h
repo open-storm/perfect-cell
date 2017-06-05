@@ -53,11 +53,13 @@ extern int optical_rain_flag;
 extern int decagon_flag;
 extern int autosampler_flag;
 extern int valve_flag;
+extern int gps_flag;
 
 extern int autosampler_trigger;
 extern int valve_trigger;
 extern int valve_2_trigger;
 extern int meta_trigger;
+extern int gps_trigger;
 
 // Number of loops for each device
 extern int vbat_loops;

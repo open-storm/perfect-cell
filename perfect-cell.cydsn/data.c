@@ -56,13 +56,15 @@ int decagon_flag      = 0u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
-int atlas_wq_flag = 1u;
+int atlas_wq_flag = 0u;
+int gps_flag = 1u;
 
 // Flags to trigger devices
 int autosampler_trigger = 0u;
 int valve_trigger = -1;
 int valve_2_trigger = -1;
 int meta_trigger = 1;
+int gps_trigger = 1;
 
 // Number of loops for each device
 int vbat_loops = 1;
@@ -116,7 +118,7 @@ int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_
     return (*array_ix);
 }
 
-uint8 exectute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
@@ -132,6 +134,10 @@ uint8 exectute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8
 	if ((valve_2_flag == 1u) && (valve_2_trigger >= 0)){
         zip_valve_2(labels, readings, array_ix, &valve_2_trigger, max_size);
 	}
+    
+    if ((gps_flag == 1u) && (gps_trigger == 1u)){
+        zip_gps(labels, readings, array_ix, &gps_trigger, MIN_SATELLITES, MAX_GPS_TRIES, max_size);
+    }
     
     // Report meta updater status
     if ( meta_flag == 1u ){

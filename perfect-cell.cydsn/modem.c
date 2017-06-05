@@ -1,6 +1,7 @@
 #include <device.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "modem.h"
 #include "updater.h"
 #include "extern.h"
@@ -543,6 +544,159 @@ uint8 modem_ssl_toggle(int enable_ssl){
     return 0u;  
 }
 
+uint8 modem_gps_power_toggle(uint8 gps_power_on){	
+    char cmd[100];
+    uint8 gps_currently_powered;
+    uint8 gps_currently_unpowered;
+    
+    // Send AT read command to determine if GPS Power is already enabled
+    // TODO: ASSUME SSID is 1
+    // TODO: This will actually fail if substring is not found
+    gps_currently_powered = at_write_command("AT$GPSP?\r","GPSP: 1",1000u);
+    gps_currently_unpowered = at_write_command("AT$GPSP?\r","GPSP: 0",1000u);
+    
+    // If current GPS power state matches desired state, do nothing
+    if ((gps_currently_powered && gps_power_on) ||
+        (gps_currently_unpowered && !gps_power_on)){
+        return 1u;
+    }
+    // Construct AT command
+    sprintf(cmd,"AT$GPSP=%u\r", gps_power_on);
+    // Enable/disable GPS power
+    if(at_write_command(cmd,"OK",5000u) == 1u){      
+        return 1u;
+    }
+    return 0u;  
+}
+
+uint8 modem_get_gps_position(float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries){
+    uint8 status;
+    int gps_iter;
+    
+        for(gps_iter=0; gps_iter < max_tries; gps_iter++){
+            status = at_write_command("AT$GPSACP\r", "OK", 10000u);
+            if (status){
+                gps_parse(uart_received_string, lat, lon, hdop, altitude, gps_fix, cog, spkm, spkn, nsat);
+                clear_str(uart_received_string);
+                if (*nsat >= min_satellites){
+                    return 1u;
+                }
+                CyDelay(5000u);
+            }
+        }
+    return 0u;
+}
+                            
+uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat){
+    
+    char substring[100];
+    const char delim[2] = ",";
+    char *output_array[11];
+    int i;
+    char latdeg[3] = {'\0'};
+    char latmin[8] = {'\0'};
+    char londeg[4] = {'\0'};
+    char lonmin[8] = {'\0'};
+    
+    if (parse_at_command_result(gps_string, substring, "GPSACP: ", "\r\n")){
+        output_array[0] = strtok(substring, delim);
+        
+        if(output_array[0] == NULL){
+            return 0u;
+        }
+        
+        for(i=1; i<11; i++){
+            output_array[i] = strtok(NULL, delim);
+            if (output_array[i] == NULL){
+                return 0u;
+            }
+        }
+
+        strncpy(latdeg, output_array[1], 2);
+        strncpy(latmin, output_array[1], 7);
+        strncpy(londeg, output_array[2], 3);
+        strncpy(lonmin, output_array[2], 7);
+        // STILL NEED TO ACCOUNT FOR W/E and N/S
+        
+        *lat = strtof(latdeg, NULL) + (strtof(latmin, NULL) / 6000.0);
+        *lon = strtof(londeg, NULL) + (strtof(lonmin, NULL) / 6000.0);
+        *hdop = strtof(output_array[3], NULL);
+        *altitude = strtof(output_array[4], NULL);
+        *gps_fix = strtod(output_array[5], NULL);
+        *cog = strtof(output_array[6], NULL);
+        *spkm = strtof(output_array[7], NULL);
+        *spkn = strtof(output_array[8], NULL);
+        *nsat = strtod(output_array[10], NULL);
+    return 1u;
+    }
+    return 0u;
+}
+
+uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop, 
+              float *altitude, uint8 *gps_fix, float *cog, 
+              float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries){
+
+    uint8 status;
+    modem_gps_power_toggle(1u);
+    status = modem_get_gps_position(lat, lon, hdop, 
+                                    altitude, gps_fix, cog, 
+                                    spkm, spkn, nsat, min_satellites, max_tries);
+    modem_gps_power_toggle(0u);
+    // For now, always shut gps trigger off
+    (*gps_trigger) = 0u;
+    return status;
+}
+
+uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, 
+              uint8 min_satellites, uint8 max_tries, uint8 max_size){
+    
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 9;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    
+    float lat = -9999;
+    float lon = -9999;
+    float hdop = -9999;
+    float altitude = -9999;
+    uint8 gps_fix = 0;
+    float cog = -9999; 
+    float spkm = -9999;
+    float spkn = -9999;
+    uint8 nsat = 0;
+    
+    labels[*array_ix] = "gps_latitude";
+    labels[*array_ix + 1] = "gps_longitude";
+    labels[*array_ix + 2] = "gps_hdop";
+    labels[*array_ix + 3] = "gps_altitude";
+    labels[*array_ix + 4] = "gps_fix";
+    labels[*array_ix + 5] = "gps_cog";
+    labels[*array_ix + 6] = "gps_spkm";
+    labels[*array_ix + 7] = "gps_spkn";
+    labels[*array_ix + 8] = "gps_nsat";    
+    run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, 
+                    &cog, &spkm, &spkn, &nsat, min_satellites, max_tries);
+    
+    readings[*array_ix] = lat;
+    readings[*array_ix + 1] = lon;
+    readings[*array_ix + 2] = hdop;
+    readings[*array_ix + 3] = altitude;
+    readings[*array_ix + 4] = gps_fix;
+    readings[*array_ix + 5] = cog;
+    readings[*array_ix + 6] = spkm;
+    readings[*array_ix + 7] = spkn;
+    readings[*array_ix + 8] = nsat;    
+    
+    (*array_ix) += nvars;
+    
+    return *array_ix;
+}
+            
 uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype, 
                          char *cert, char *output_str){
     char at_command[100] = {'\0'};
