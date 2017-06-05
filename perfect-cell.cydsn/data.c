@@ -216,7 +216,7 @@ int update_meta(char* meid, char* send_str, char* response_str){
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
                     "SELECT last(value) from node_id,node_user,node_pass,node_db "
-                    "where meid=\'%s\'",
+                    "where meid=\'%s\' AND time < now()",
                     meta_user, meta_pass, meta_database,
                     meid
                     );
@@ -297,7 +297,7 @@ int update_triggers(char* body, char* send_str, char* response_str){
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
                 "SELECT last(value) from %s "
-                "where node_id=\'%s\'",
+                "where node_id=\'%s\' AND time < now()",
                 user, pass, database,
                 body,
                 node_id
@@ -368,7 +368,7 @@ void update_params(char* body, char* send_str, char* response_str){
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
                     "SELECT last(value) from %s "
-                    "where node_id=\'%s\'",
+                    "where node_id=\'%s\' AND time < now()",
                     user, pass, database,
                     body,
                     node_id
