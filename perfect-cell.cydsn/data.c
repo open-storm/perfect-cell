@@ -56,7 +56,7 @@ int decagon_flag      = 0u;
 int autosampler_flag  = 0u;
 int valve_flag   = 0u;
 int valve_2_flag = 0u;
-int atlas_wq_flag = 0u;
+int atlas_wq_flag = 1u;
 int gps_flag = 1u;
 
 // Flags to trigger devices

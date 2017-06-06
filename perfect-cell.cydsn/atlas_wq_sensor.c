@@ -110,6 +110,7 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
         
         WQ_Power_Write(1u);
         WQ_Power_1_Write(1u);
+        WQ_Power_2_Write(1u);
         CyDelay(1000);
         I2C_Wakeup();
         I2C_Start();
@@ -149,6 +150,7 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
         CyDelay(100);
         WQ_Power_Write(0u);
         WQ_Power_1_Write(0u);
+        WQ_Power_2_Write(0u);
         (*array_ix) += 8;
         return *array_ix;
 }
