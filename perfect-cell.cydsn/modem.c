@@ -617,13 +617,13 @@ uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop,
         }
 
         strncpy(latdeg, output_array[1], 2);
-        strncpy(latmin, output_array[1], 7);
+        strncpy(latmin, output_array[1] + 2, 7);
         strncpy(londeg, output_array[2], 3);
-        strncpy(lonmin, output_array[2], 7);
+        strncpy(lonmin, output_array[2] + 3, 7);
         // STILL NEED TO ACCOUNT FOR W/E and N/S
         
-        *lat = strtof(latdeg, NULL) + (strtof(latmin, NULL) / 6000.0);
-        *lon = strtof(londeg, NULL) + (strtof(lonmin, NULL) / 6000.0);
+        *lat = strtof(latdeg, NULL) + (strtof(latmin, NULL) / 60.0);
+        *lon = strtof(londeg, NULL) + (strtof(lonmin, NULL) / 60.0);
         *hdop = strtof(output_array[3], NULL);
         *altitude = strtof(output_array[4], NULL);
         *gps_fix = strtod(output_array[5], NULL);
@@ -631,6 +631,12 @@ uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop,
         *spkm = strtof(output_array[7], NULL);
         *spkn = strtof(output_array[8], NULL);
         *nsat = strtod(output_array[10], NULL);
+        if (strstr(output_array[1], "S") != NULL){
+            (*lat) *= -1.0;
+        }
+        if (strstr(output_array[2], "W") != NULL){
+            (*lon) *= -1.0;
+        }        
     return 1u;
     }
     return 0u;
@@ -641,11 +647,26 @@ uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop,
               float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries){
 
     uint8 status;
+    // Make sure you start with power to GPS off
+    modem_gps_power_toggle(0u);    
+    // Unlock GPS
+    status = at_write_command("AT$GPSLOCK=0\r", "OK", 1000u);
+    if (!status){ return 0u;}
+    CyDelay(100u);
+    // Set antenna path to GPS
+    status = at_write_command("AT$GPSAT=1\r", "OK", 1000u);
+    if (!status){ return 0u;}
+    // Turn on power to GPS
     modem_gps_power_toggle(1u);
+    CyDelay(10000u);
+    // Get GPS Position
     status = modem_get_gps_position(lat, lon, hdop, 
                                     altitude, gps_fix, cog, 
                                     spkm, spkn, nsat, min_satellites, max_tries);
+    // Turn off power to GPS
     modem_gps_power_toggle(0u);
+    // Reset GPS Settings
+    at_write_command("AT$GPSRST\r", "OK", 1000u);
     // For now, always shut gps trigger off
     (*gps_trigger) = 0u;
     return status;
@@ -655,7 +676,7 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigge
               uint8 min_satellites, uint8 max_tries, uint8 max_size){
     
     // Ensure we don't access nonexistent array index
-    uint8 nvars = 9;
+    uint8 nvars = 10;
     if(*array_ix + nvars >= max_size){
         return *array_ix;
     }
@@ -664,11 +685,11 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigge
     float lon = -9999;
     float hdop = -9999;
     float altitude = -9999;
-    uint8 gps_fix = 0;
+    uint8 gps_fix = 0u;
     float cog = -9999; 
     float spkm = -9999;
     float spkn = -9999;
-    uint8 nsat = 0;
+    uint8 nsat = 0u;
     
     labels[*array_ix] = "gps_latitude";
     labels[*array_ix + 1] = "gps_longitude";
@@ -678,7 +699,8 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigge
     labels[*array_ix + 5] = "gps_cog";
     labels[*array_ix + 6] = "gps_spkm";
     labels[*array_ix + 7] = "gps_spkn";
-    labels[*array_ix + 8] = "gps_nsat";    
+    labels[*array_ix + 8] = "gps_nsat";
+    labels[*array_ix + 9] = "gps_trigger";
     run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, 
                     &cog, &spkm, &spkn, &nsat, min_satellites, max_tries);
     
@@ -690,7 +712,8 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigge
     readings[*array_ix + 5] = cog;
     readings[*array_ix + 6] = spkm;
     readings[*array_ix + 7] = spkn;
-    readings[*array_ix + 8] = nsat;    
+    readings[*array_ix + 8] = nsat;
+    readings[*array_ix + 9] = *gps_trigger;
     
     (*array_ix) += nvars;
     
