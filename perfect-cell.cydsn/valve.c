@@ -20,8 +20,7 @@ int test_valve(){
 		Valve_2_IN_Write(1u);
 		CyDelay(200u);
 		Valve_2_IN_Write(0u);
-        
-        
+                
 	}
     return 1;
 }
@@ -32,7 +31,7 @@ float32 read_Valve_POS() {
 	float32 valve_pos, v_bat;
 	
 	/* Get the battery voltage */
-	v_bat = read_Vbat();
+	v_bat = read_vbat();
     
     /* Start the Analog MUX and select second input */
     AMux_Start();
@@ -150,6 +149,81 @@ int move_valve(int valve){
 		return valve_out;						
 		}
     return valve_out;
+}
+
+uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_trigger, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= sizeof(readings)){
+        return *array_ix;
+    }
+        // Ellsworth does not have a potentiometer installed
+        // Simply flip the pins for now and come back to implement
+        // a pulse counter
+        /*        
+        float32 valve_pos;
+		valve = move_valve(valve);
+		valve_pos = 100. * read_Valve_POS();
+		labels[array_ix] = "valve_cmd";
+		labels[array_ix + 1] = "valve_pos";
+		readings[array_ix] = valve;
+		readings[array_ix + 1] = valve_pos;
+		array_ix += 2;
+        */
+        
+        // If zero, open the valve completely
+        // IMPORTANT: If there is a "null" entry,
+        //            intparse_influxdb returns 0
+        //            Make sure default is to open the valve
+        if (*valve_trigger == 0) { 
+            Valve_OUT_Write(1u);
+            CyDelay(20000u);
+            Valve_OUT_Write(0u);
+        // Else, if 100, close the valve completely
+        } else if(*valve_trigger == 100) {
+            Valve_IN_Write(1u);
+            CyDelay(20000u);
+            Valve_IN_Write(0u);
+        } else {
+            // For now, do nothing for the other cases
+        }
+        
+        // Acknowledge the trigger by updating it to -1
+        // -1, and negative values are reserved for actuator response
+        labels[*array_ix] = "valve_trigger";
+        readings[*array_ix] = -1;
+        (*array_ix) += 1;
+        return *array_ix;
+}
+
+uint8 zip_valve_2(char *labels[], float readings[], uint8 *array_ix, int *valve_2_trigger, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+        // If zero, open the valve completely
+        // IMPORTANT: If there is a "null" entry,
+        //            intparse_influxdb returns 0
+        //            Make sure default is to open the valve
+        if (*valve_2_trigger == 0) { 
+            Valve_2_OUT_Write(1u);
+            CyDelay(20000u);
+            Valve_2_OUT_Write(0u);
+        // Else, if 100, close the valve completely
+        } else if(*valve_2_trigger == 100) {
+            Valve_2_IN_Write(1u);
+            CyDelay(20000u);
+            Valve_2_IN_Write(0u);
+        } else {
+            // For now, do nothing for the other cases
+        }
+        
+        // Acknowledge the trigger by updating it to -1
+        // -1, and negative values are reserved for actuator response
+        labels[*array_ix] = "valve_2_trigger";
+        readings[*array_ix] = -1;
+        (*array_ix) += 1;
 }
 
 /* [] END OF FILE */

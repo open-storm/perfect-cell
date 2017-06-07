@@ -1,3 +1,5 @@
+#include <project.h>
+
 extern char node_id[20];
 extern char site_name[10];
 
@@ -16,6 +18,17 @@ extern char main_extra_headers[200];
 extern char main_http_protocol[4];
 extern char meid[20];
 extern char write_route[60];
+
+extern uint8 array_ix;
+
+//extern const char* server_cert;
+//extern const char* client_cert;
+//extern const char* private_key;
+
+// SSL/TLS enabled?
+extern uint8 ssl_enabled;
+extern uint8 enable_ssl_config;
+extern uint8 enable_ssl_sec_config;
 
 // Set service to use here
 extern int service_flag;
@@ -40,11 +53,13 @@ extern int optical_rain_flag;
 extern int decagon_flag;
 extern int autosampler_flag;
 extern int valve_flag;
+extern int gps_flag;
 
 extern int autosampler_trigger;
 extern int valve_trigger;
 extern int valve_2_trigger;
 extern int meta_trigger;
+extern int gps_trigger;
 
 // Number of loops for each device
 extern int vbat_loops;

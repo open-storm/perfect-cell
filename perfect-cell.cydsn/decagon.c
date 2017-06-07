@@ -75,3 +75,49 @@ DecagonGS3 Decagon_Convert_Raw_Reading(char* raw_D){
     return final_reading;
     
 }
+
+uint8 zip_decagon(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, int decagon_loops, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 3;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+        uint8 valid = 0u;
+        float valid_iter = 0.0;
+        int read_iter = 0;
+        DecagonGS3 decagon_reading = {0u, 0u, 0u, 0u, 0u};
+    
+		labels[*array_ix] = "decagon_soil_conduct";
+		labels[*array_ix + 1] = "decagon_soil_temp";
+		labels[*array_ix + 2] = "decagon_soil_dielec";
+        
+        
+        for( read_iter = 0; read_iter < decagon_loops; read_iter++){
+            decagon_reading = Decagon_Take_Reading();
+            if ( decagon_reading.valid == 1u){
+                valid_iter++;
+                readings[*array_ix] += decagon_reading.conductivity;
+                readings[*array_ix + 1] += decagon_reading.temp;
+                readings[*array_ix + 2] += decagon_reading.dielectric;
+                if ( take_average == 0u ) {
+                    (*array_ix) += 3;
+				    break;
+                    }
+                }
+            }
+        if ( take_average == 1u ) {
+			if (valid_iter > 0){
+                readings[*array_ix] = readings[*array_ix] / valid_iter;
+                readings[*array_ix + 1] = readings[*array_ix + 1] / valid_iter;
+                readings[*array_ix + 2] = readings[*array_ix + 2] / valid_iter;
+                (*array_ix) += 3;
+			}
+        }
+		if (valid_iter == 0.0) {
+			readings[*array_ix] = 9999;
+			readings[*array_ix + 1] = 9999;
+			readings[*array_ix + 2] = 9999;
+			(*array_ix) += 3;
+		}
+        return *array_ix;
+}

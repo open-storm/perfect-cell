@@ -28,7 +28,19 @@ void optical_rain_reset_count() {
 	count = 0u;
 }
 
-
+uint8 zip_optical_rain(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    // Ensure we don't access nonexistent array index
+    uint8 nvars = 1;
+    if(*array_ix + nvars >= max_size){
+        return *array_ix;
+    }
+    float optical_rain_reading = 0;
+    optical_rain_reading = 0.01 * optical_rain_get_count();
+    labels[*array_ix] = "hydreon_prcp";
+    readings[*array_ix] = optical_rain_reading;
+	(*array_ix)++;
+    return *array_ix;
+}
 
 
 /* [] END OF FILE */

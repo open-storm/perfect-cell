@@ -20,6 +20,7 @@ uint8 autosampler_start();
 uint8 autosampler_stop();
 uint8 autosampler_power_on();
 uint8 autosampler_power_off();
-uint8 autosampler_take_sample(uint8* count);
+uint8 autosampler_take_sample(uint8 *count);
+uint8 zip_autosampler(char *labels[], float readings[], uint8 *array_ix, int *autosampler_trigger, uint8 *bottle_count, uint8 max_size);
 
 /* [] END OF FILE */

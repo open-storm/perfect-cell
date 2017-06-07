@@ -4,11 +4,12 @@
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
+#include "startup.h"
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
 
 // define global variables
-#define NVARS 14
+#define NVARS 25
 
 // Arrays for request strings
 char body[MAX_PACKET_LENGTH] = {'\0'};
@@ -21,17 +22,19 @@ char *labels[NVARS];
 float readings[NVARS];
 
 // Sleeptimer variables
-uint8 awake;
-uint32 wakeup_interval_counter;
-uint8 connection_counter;
+uint8 awake = 1u;
+uint32 wakeup_interval_counter = 0u;
+uint8 connection_counter = 0u;
 
 // Misc variables
-int status, ss;
+int status;
 uint8 data_sent;
+uint8 ssl_initialized = 0u;
 char meid[20] = {'\0'};
+int numFilled = 0;
 
 // Misc function declarations
-void clear_all_arrays();
+void clear_all_arrays(uint8 clear_readings_and_labels);
 
 CY_ISR_PROTO(Wakeup_ISR);
 CY_ISR(Wakeup_ISR)
@@ -53,34 +56,23 @@ void main()
 	
 	sleep_isr_StartEx(Wakeup_ISR); // Start Sleep ISR
 	SleepTimer_Start();			   // Start SleepTimer Compnent	
-    
-    // Initialize sleeptimer variables
-    awake			= 1u;
-	wakeup_interval_counter = 0u;
 
 	// Initialize Pins
     init_pins();
-    	
-	// Initialize other variables
-    int numFilled = 0;
     
+    // TODO: Implement generic sensor unit tests here?
     //// Test the valve
     test_valve();
-    
     blink_LED(4u);
-        
+ 
     // Update metadata (node_id, user, pass, database
-    if (modem_startup(&connection_attempt_counter)){
-        
-        blink_LED(2u);        
-        modem_get_meid(meid);
-        status = update_meta(meid, send_str, response_str);
-        ss = modem_get_socket_status();
+    if (modem_startup(&connection_attempt_counter)){        
+        // Initialize SSL if enabled
+        initialize_ssl(&ssl_enabled, &ssl_initialized);
+        // Update metadata if enabled
+        status = run_meta_subroutine(meid, send_str, response_str, 1u);
         modem_shutdown();
     }
-    
-    // Construct new write route based on user, pass and database
-    construct_route(write_route, "write", user, pass, database);
 
     // Blink the LED to indicate the board is awake and about to 
     // initialize loop
@@ -92,51 +84,42 @@ void main()
 		if ( awake ){
 			
 			// Reset arrays
-			clear_all_arrays();
+			clear_all_arrays(1u);
             
-            // Turn on optical rain sensor if needed
-            if ( (!optical_rain_pwr_Read()) && (optical_rain_flag) ) {
-	            optical_rain_start();
-            } else if ( (optical_rain_pwr_Read()) && (!optical_rain_flag) ) {
-	            optical_rain_stop();
-            }
-						
+            // Start up sensors that need to remain on continuously
+            counter_sensor_initialize();
+            
+            // Take readings and fill output arrays with labels and values
+           
+            numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
+            
+            // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
                                 
                 // Update triggers for autosampler and valve
                 status = update_triggers(body, send_str, response_str);
                 
-                if (meta_trigger){
-                    modem_get_meid(meid);
-                    status = update_meta(meid, send_str, response_str);
-                    construct_route(write_route, "write", user, pass, database);
-                }
+                // Update device metadata
+                status = run_meta_subroutine(meid, send_str, response_str, 1u);
                             
 			    // Reset arrays
-                clear_all_arrays();
+                clear_all_arrays(0u);
                 
-                // Take readings and fill output arrays with labels and values
-                numFilled = take_readings(labels, readings, 0u);  
                 
-                // If not using SERVICES use the following code
-			    // Construct the data body
-                construct_default_body(body, labels, readings, NVARS);
-			    // Construct POST request
-			    construct_generic_request(send_str, body, main_host, write_route,
-				                          main_port, "POST", "Close",
-				                          "", 0, "1.1");
-				
-                // This sends the data
-                modem_socket_dial(socket_dial_str, main_host, main_port, 1);
-				data_sent = modem_send_recv(send_str, response_str, 0);
-                modem_socket_close();
+                // Execute triggers and fill output arrays with labels and values
+                numFilled += execute_triggers(labels, readings, &array_ix, NVARS);
+                // Reset array index for next pass through
+                array_ix = 0u;
+                
+                // Send readings to remote endpoint
+                data_sent = send_readings(body, send_str, response_str, socket_dial_str,
+                                          labels, readings, NVARS);
                 
                 if (!data_sent){
                 	// Check & update the database the node should be writing to
-                    modem_get_meid(meid);
-                    update_meta(meid, send_str, response_str);
-                    construct_route(write_route, "write", user, pass, database);
-                } else {								    
+                    status = run_meta_subroutine(meid, send_str, response_str, 1u);
+                }
+                else {								    
 					// Reset the connection attempt counter because data was successfully sent
 					connection_attempt_counter = 0;
                     
@@ -148,7 +131,7 @@ void main()
 				modem_check_signal_quality(&rssi, &fer);  // This should only be checked while the modem is on/while not idle				
 
 				// Reset arrays
-			    clear_all_arrays();
+			    clear_all_arrays(1u);
 				
 				// Update parameters
 				update_params(body, send_str, response_str);
@@ -156,8 +139,7 @@ void main()
                 // Every 100 connects, check meta database for updates
                 connection_counter++;
                 if (connection_counter % 100 == 0){
-                    modem_get_meid(meid);
-                    update_meta(meid, send_str, response_str);
+                    status = run_meta_subroutine(meid, send_str, response_str, 1u);
                     connection_counter = 0;
                 }
 				
@@ -210,9 +192,11 @@ void main()
 	
 }
 
-void clear_all_arrays(){
-    memset(labels, '\0', sizeof(labels));
-    memset(readings, 0, sizeof(readings));
+void clear_all_arrays(uint8 clear_readings_and_labels){
+    if (clear_readings_and_labels){
+        memset(labels, '\0', sizeof(labels));
+        memset(readings, 0, sizeof(readings));
+    }
 	memset(socket_dial_str, '\0', sizeof(socket_dial_str));
 	memset(body, '\0', sizeof(body));
 	memset(send_str, '\0', sizeof(send_str));
