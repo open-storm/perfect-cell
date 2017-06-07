@@ -282,6 +282,10 @@ int update_triggers(char* body, char* send_str, char* response_str){
             memset(response_str, '\0', sizeof(*send_str));
     
             // Determine which triggers to include in the request string
+            if (meta_flag){
+                sprintf(body, "%s%s,", body, "meta_trigger");
+                true_response_code += 1;
+            }
 	        if (autosampler_flag){
 	            sprintf(body, "%s%s,", body, "autosampler_trigger");
                 true_response_code += 2;
@@ -294,8 +298,11 @@ int update_triggers(char* body, char* send_str, char* response_str){
                 sprintf(body, "%s%s,", body, "valve_2_trigger");
                 true_response_code += 8;
             }
-            sprintf(body, "%s%s,", body, "meta_trigger");
-            true_response_code += 1;
+            if (gps_flag){
+                sprintf(body, "%s%s,", body, "gps_trigger");
+                true_response_code += 16;
+            }
+
             
             // Remove the trailing "," 
             body[strlen(body)-1] = '\0'; 
@@ -325,13 +332,14 @@ int update_triggers(char* body, char* send_str, char* response_str){
                 memset(send_str, '\0', sizeof(*send_str));
 
                 // Update variables
-                response_code += 1*intparse_influxdb(&autosampler_trigger, response_str, "autosampler_trigger");
-    	        response_code += 2*intparse_influxdb(&valve_trigger, response_str, "valve_trigger");
-                response_code += 4*intparse_influxdb(&valve_2_trigger, response_str, "valve_2_trigger");
-                
+                response_code += 1*intparse_influxdb(&meta_trigger, response_str, "meta_trigger");
+                response_code += 2*intparse_influxdb(&autosampler_trigger, response_str, "autosampler_trigger");
+    	        response_code += 4*intparse_influxdb(&valve_trigger, response_str, "valve_trigger");
+                response_code += 8*intparse_influxdb(&valve_2_trigger, response_str, "valve_2_trigger");
+                response_code += 16*intparse_influxdb(&gps_trigger, response_str, "gps_trigger");
                 // TO DO: Check if metatrigger updates to 0 if the response is null from the server 
                 // Check if node updates correctly. Currently, params must be defined on db before values are written 
-                response_code += 8*intparse_influxdb(&meta_trigger, response_str, "meta_trigger");
+                
 	        }
 	    }
         modem_socket_close(ssl_enabled);
