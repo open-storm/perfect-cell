@@ -18,63 +18,63 @@ char meta_database[20] = DEFAULT_META_DB;
 // Defaults if service.c not used
 int main_port = DEFAULT_HOME_PORT;
 char main_host[100] = DEFAULT_HOME_HOST;
+char main_tags[200] = DEFAULT_GLOBAL_TAGS;
 char write_route[60] = "";
 char main_query[300]= {'\0'};
-char main_tags[200] = "source=node";
 
 // Set service to use here
 int service_flag = 1u;
 
 // Sleeptimer
-int sleeptimer = 460u; // Number of wakeups before full power: 1172 @ 256ms ~5 min
-
-// Array index
-uint8 array_ix = 0u;
+int sleeptimer = SLEEPTIMER; // Number of wakeups before full power: 1172 @ 256ms ~5 min
 
 // Modem
 // Number of attempts modem made while trying to establish a connection
 // Initialize to -1 to flag when the node has restarted
 // (As the code is currently written, this count will always be one reading behind)
-int max_conn_attempts = 5;
+int max_conn_attempts = MAX_CONNECTION_ATTEMPTS;
+uint8 enable_ssl_config     = ENABLE_SSL_CONFIG;
+uint8 enable_ssl_sec_config = ENABLE_SSL_SEC_CONFIG;
+
+// Enable/disable SSL
+uint8 ssl_enabled = SSL_ENABLED;
+
+// Flags to activate devices
+int modem_flag = MODEM_FLAG;
+int meta_flag  = META_FLAG;
+int vbat_flag  = VBAT_FLAG;
+int gps_flag = GPS_FLAG;
+int ultrasonic_flag   = ULTRASONIC_FLAG;
+int ultrasonic_2_flag = ULTRASONIC_2_FLAG;
+int optical_rain_flag = OPTICAL_RAIN_FLAG;
+int decagon_flag      = DECAGON_FLAG;
+int autosampler_flag  = AUTOSAMPLER_FLAG;
+int valve_flag   = VALVE_FLAG;
+int valve_2_flag = VALVE_2_FLAG;
+int atlas_wq_flag = ATLAS_WQ_FLAG;
+
+// Flags to trigger devices
+int autosampler_trigger = AUTOSAMPLER_TRIGGER;
+int valve_trigger = VALVE_TRIGGER;
+int valve_2_trigger = VALVE_2_TRIGGER;
+int meta_trigger = META_TRIGGER;
+int gps_trigger = GPS_TRIGGER;
+
+// Number of loops for each device
+int vbat_loops = VBAT_LOOPS;
+int ultrasonic_loops = ULTRASONIC_LOOPS;
+int optical_rain_loops = OPTICAL_RAIN_LOOPS;
+int decagon_loops = DECAGON_LOOPS;
+
+// Other
 int connection_attempt_counter = 0;
 int rssi = 0u;
 int fer  = 0u;
-uint8 enable_ssl_config = 1u;
-uint8 enable_ssl_sec_config = 1u;
-
-// Enable/disable SSL
-uint8 ssl_enabled = 1u;
-
-// Flags to activate devices
-int modem_flag = 1u;
-int meta_flag  = 1u;
-int vbat_flag  = 1u;
-int ultrasonic_flag   = 0u;
-int ultrasonic_2_flag = 0u;
-int optical_rain_flag = 0u;
-int decagon_flag      = 0u;
-int autosampler_flag  = 0u;
-int valve_flag   = 0u;
-int valve_2_flag = 0u;
-int atlas_wq_flag = 1u;
-int gps_flag = 1u;
-
-// Flags to trigger devices
-int autosampler_trigger = 0u;
-int valve_trigger = -1;
-int valve_2_trigger = -1;
-int meta_trigger = 1;
-int gps_trigger = 1;
-
-// Number of loops for each device
-int vbat_loops = 1;
-int ultrasonic_loops = 5;
-int optical_rain_loops = 1;
-int decagon_loops = 1;
-
-// Other
 uint8 bottle_count = 0;
 int valve = 0;
+
+// Array index
+uint8 array_ix = 0u;
 
 // Functions
 
