@@ -64,7 +64,7 @@ void main()
     //// Test the valve
     test_valve();
     blink_LED(4u);
-    
+ 
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)){        
         // Initialize SSL if enabled
@@ -90,9 +90,9 @@ void main()
             counter_sensor_initialize();
             
             // Take readings and fill output arrays with labels and values
-            //for(;;){
+           
             numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
-            //}
+            
             // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
                                 
