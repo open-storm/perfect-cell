@@ -378,6 +378,7 @@ void update_params(char* body, char* send_str, char* response_str){
             sprintf(body, "%s%s,", body, "valve_flag");
             sprintf(body, "%s%s,", body, "valve_2_flag");
             sprintf(body, "%s%s",  body, "autosampler_flag");
+            sprintf(body, "%s%s",  body, "atlas_wq_flag");
 
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
@@ -413,6 +414,7 @@ void update_params(char* body, char* send_str, char* response_str){
                 intparse_influxdb(&valve_flag, response_str, "valve_flag");
                 intparse_influxdb(&valve_2_flag, response_str, "valve_2_flag");
                 intparse_influxdb(&autosampler_flag, response_str, "autosampler_flag");
+                intparse_influxdb(&atlas_wq_flag, response_str, "atlas_wq_flag");
             }
 		}
         modem_socket_close(ssl_enabled);
