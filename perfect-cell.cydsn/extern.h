@@ -51,6 +51,7 @@ extern int ultrasonic_flag;
 extern int ultrasonic_2_flag;
 extern int optical_rain_flag;
 extern int decagon_flag;
+extern int atlas_wq_flag;
 extern int autosampler_flag;
 extern int valve_flag;
 extern int gps_flag;
