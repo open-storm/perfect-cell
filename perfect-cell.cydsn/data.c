@@ -1,3 +1,10 @@
+/**
+ * @file data.c
+ * @brief Implements the sensor subroutine, metadata updater, trigger updater, and parameter updater.
+ * @author TODO
+ * @version TODO
+ * @date 2017-06-01
+ */
 #include "data.h"
 #include "extern.h"
 #include "config.h"

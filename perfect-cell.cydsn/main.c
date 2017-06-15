@@ -1,3 +1,20 @@
+/**
+ * @file main.c
+ *
+ * @brief Contains the main "operating system" for the sensor node.
+ * At a recurring interval, this program:
+ * - "wakes" the board from sleep mode,
+ * - takes measurements using the attached sensors,
+ * - connects to the cellular network,
+ * - sends sensor data to a web server,
+ * - updates device metadata and onboard parameters,
+ * - triggers attached actuators, and
+ * - puts the board back into sleep mode.
+ *
+ * @author TODO
+ * @version TODO
+ * @date 2017-05-31
+ */
 #include <device.h>
 #include <project.h>
 #include "modem.h"
@@ -53,20 +70,20 @@ void main()
 
     CyGlobalIntEnable; /* Uncomment this line to enable global interrupts. */
 	CyDelay(5u);  // Short delay to make sure device is ready for low power entry
-	
+
 	sleep_isr_StartEx(Wakeup_ISR); // Start Sleep ISR
 	SleepTimer_Start();			   // Start SleepTimer Compnent	
 
 	// Initialize Pins
     init_pins();
-    
+
     // TODO: Implement generic sensor unit tests here?
     //// Test the valve
     test_valve();
     blink_LED(4u);
- 
+
     // Update metadata (node_id, user, pass, database
-    if (modem_startup(&connection_attempt_counter)){        
+    if (modem_startup(&connection_attempt_counter)){
         // Initialize SSL if enabled
         initialize_ssl(&ssl_enabled, &ssl_initialized);
         // Update metadata if enabled
@@ -74,10 +91,10 @@ void main()
         modem_shutdown();
     }
 
-    // Blink the LED to indicate the board is awake and about to 
+    // Blink the LED to indicate the board is awake and about to
     // initialize loop
     blink_LED(4u);
-    
+
     // Initialize loop
     for(;;)
 	{
@@ -85,44 +102,44 @@ void main()
 			
 			// Reset arrays
 			clear_all_arrays(1u);
-            
+
             // Start up sensors that need to remain on continuously
             counter_sensor_initialize();
-            
+
             // Take readings and fill output arrays with labels and values
-           
+
             numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
-            
+
             // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
-                                
+
                 // Update triggers for autosampler and valve
                 status = update_triggers(body, send_str, response_str);
-                
+
                 // Update device metadata
                 status = run_meta_subroutine(meid, send_str, response_str, 1u);
-                            
+
 			    // Reset arrays
                 clear_all_arrays(0u);
-                
-                
+
+
                 // Execute triggers and fill output arrays with labels and values
                 numFilled += execute_triggers(labels, readings, &array_ix, NVARS);
                 // Reset array index for next pass through
                 array_ix = 0u;
-                
+
                 // Send readings to remote endpoint
                 data_sent = send_readings(body, send_str, response_str, socket_dial_str,
                                           labels, readings, NVARS);
-                
+
                 if (!data_sent){
                 	// Check & update the database the node should be writing to
                     status = run_meta_subroutine(meid, send_str, response_str, 1u);
                 }
-                else {								    
+                else {								
 					// Reset the connection attempt counter because data was successfully sent
 					connection_attempt_counter = 0;
-                    
+
                     // Reset the counter for the optical rain sensor because data was successfully sent
                     optical_rain_reset_count();
                 }
@@ -135,7 +152,7 @@ void main()
 				
 				// Update parameters
 				update_params(body, send_str, response_str);
-                
+
                 // Every 100 connects, check meta database for updates
                 connection_counter++;
                 if (connection_counter % 100 == 0){
@@ -144,11 +161,11 @@ void main()
                 }
 				
 			}
-			            
-			modem_shutdown();           
+			
+			modem_shutdown();
 			awake = 0u; // COMMENT TO SKIP GOING TO SLEEP
 		}
-        
+
 		/* If not ready, update the counter for the sleep timer */
 		else {
 			
@@ -180,9 +197,9 @@ void main()
 	            {
 	                wakeup_interval_counter++;
 	            }
-	                
+	
 	        } while (wakeup_interval_counter != 0u);
-	        
+	
 
 	        /* Restore clock configuration */
 	        CyPmRestoreClocks();
