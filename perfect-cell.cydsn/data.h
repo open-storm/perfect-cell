@@ -1,3 +1,10 @@
+/**
+ * @file data.h
+ * @brief Declares the sensor subroutine, metadata updater, trigger updater, and parameter updater.
+ * @author TODO
+ * @version TODO
+ * @date 2017-06-01
+ */
 #include <device.h>
 #include <stdio.h>
 #include <stdlib.h>
