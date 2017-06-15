@@ -1,3 +1,10 @@
+/**
+ * @file modem.c
+ * @brief Implements functions for connecting to the cellular network, and sending/receiving packets.
+ * @author TODO
+ * @version TODO
+ * @date 2017-06-01
+ */
 #include <device.h>
 #include <stdio.h>
 #include <string.h>
