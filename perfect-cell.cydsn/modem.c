@@ -1,7 +1,7 @@
 /**
  * @file modem.c
  * @brief Implements functions for connecting to the cellular network, and sending/receiving packets.
- * @author TODO
+ * @author Brandon Wong and Matt Bartos
  * @version TODO
  * @date 2017-06-01
  */

@@ -1,3 +1,11 @@
+/**
+ * @file optical_rain.c
+ * @brief Implements functions for hydreon optical rain sensor
+ * @author Brandon Wong and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include "optical_rain.h"
 
 uint8 count = 0;

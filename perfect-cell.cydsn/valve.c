@@ -1,3 +1,11 @@
+/**
+ * @file valve.c
+ * @brief Implements functions for operating valve
+ * @author Brandon Wong
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include "valve.h"
 
 int test_valve(){
