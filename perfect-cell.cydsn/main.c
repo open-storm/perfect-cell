@@ -112,10 +112,15 @@ void main()
 
             // Connect to network
 			if (modem_startup(&connection_attempt_counter)) {
-
+                
+                // Get modem connection attempts
+                if ( modem_flag == 1u ){
+                    zip_modem(labels, readings, &array_ix, NVARS);
+                }
+                
                 // Update triggers for autosampler and valve
                 status = update_triggers(body, send_str, response_str);
-
+                                    
                 // Update device metadata
                 status = run_meta_subroutine(meid, send_str, response_str, 1u);
 
