@@ -1,3 +1,11 @@
+/**
+ * @file ultrasonic.c
+ * @brief Implements functions for maxbotix ultrasonic sensor subroutine
+ * @author Brandon Wong and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include "ultrasonic.h"
 #include <stdio.h>
 

@@ -1,3 +1,11 @@
+/**
+ * @file services.c
+ * @brief Declares functions for sending requests to various services including Xively, Thingspeak and CHORDS
+ * @author Matt Bartos and Brandon Wong
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include <project.h>
 #include <stdio.h>
 #include "services.h"
