@@ -1,3 +1,10 @@
+/**
+ * @file atlas_wq_sensor.c
+ * @brief Implements functions for Atlas water quality sensors
+ * @author Abhiramm Mullapudi and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
 #include "atlas_wq_sensor.h"
 #include <stdio.h>
 #include <stdlib.h>

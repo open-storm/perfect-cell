@@ -1,3 +1,10 @@
+/**
+ * @file atlas_wq_sensor.h
+ * @brief Declares functions for Atlas water quality sensors
+ * @author Abhiramm Mullapudi and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
 #include "project.h"
 
 #define CONDUCTIVITY 101
@@ -13,23 +20,55 @@ struct{
     float sg;
 }typedef con_reading;
 
-struct{
-    float temperature;
-    float dissloved_oxygen;
-    float orp;
-    float ph;
-    float ec;
-    float tds;
-    float sal;
-    float sg;
-}typedef wq_reading;
-
-// Sensor function to take reading
+/**
+ * @brief Put Atlas I2C sensor into sleep mode
+ *
+ * @param sensor_address I2C slave address of sensor
+ *
+ * @return 1 on success
+ */
 int atlas_sensor_sleep(uint8 sensor_address);
+
+/**
+ * @brief Wake Atlas I2C sensor from sleep mode
+ *
+ * @param sensor_address I2C slave address of sensor
+ *
+ * @return 1 on success
+ */
 int atlas_sensor_wake(uint8 sensor_address);
+
+/**
+ * @brief Take a single reading from Atlas sensor in I2C mode.
+ * Used for Temperature, DO, ORP and PH
+ *
+ * @param sensor_address I2C slave address of sensor
+ * @param reading Value of reading (to be written to)
+ *
+ * @return 1u on success, and 0u otherwise.
+ */
 uint8 atlas_take_single_reading(uint8 sensor_address, float *reading);
+
+/**
+ * @brief Take a single reading from Atlas sensor in I2C mode.
+ * Used for conductivity sensor.
+ *
+ * @param reading Struct for conductivity reading (to be written to)
+ *
+ * @return 1u on success, and 0u otherwise.
+ */
 uint8 atlas_take_con_reading(con_reading *reading);
+
+/**
+ * @brief Inserts current values of water quality measurements into labels and readings arrays.
+ *
+ * @param labels Array to store labels corresponding to each sensor reading
+ * @param readings Array to store sensor readings as floating point values
+ * @param array_ix Array index to label and readings
+ * @param max_size Maximum size of label and reading arrays (number of entries)
+ *
+ * @return (*array_ix) + number of entries filled
+ */
 uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
-//wq_reading atlas_wq_reading();
 
 // Additional functionality

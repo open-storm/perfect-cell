@@ -1,3 +1,11 @@
+/**
+ * @file updater.h
+ * @brief Implements functions for parsing influxdb responses
+ * @author Brandon Wong
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

@@ -1,3 +1,10 @@
+/**
+ * @file data.c
+ * @brief Implements the sensor subroutine, metadata updater, trigger updater, and parameter updater.
+ * @author Matt Bartos and Brandon Wong
+ * @version TODO
+ * @date 2017-06-01
+ */
 #include "data.h"
 #include "extern.h"
 #include "config.h"
@@ -80,11 +87,13 @@ uint8 array_ix = 0u;
 
 int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, uint8 max_size){
 
+    /*
     // Check if the signal strength and number of attempts modem took
     //  to connect during the last transmission is to be reported
     if ( modem_flag == 1u ){
         zip_modem(labels, readings, array_ix, max_size);
     }
+    */
 
     // Take battery voltage measurement
     if ( vbat_flag == 1u ){

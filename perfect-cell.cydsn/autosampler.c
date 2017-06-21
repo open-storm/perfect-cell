@@ -1,3 +1,11 @@
+/**
+ * @file autosampler.c
+ * @brief Implements functions for ISCO autosampler
+ * @author Brandon Wong and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include <device.h>
 #include <string.h>
 #include "autosampler.h"

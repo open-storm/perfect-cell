@@ -1,3 +1,11 @@
+/**
+ * @file decagon.c
+ * @brief Implements functions for Decagon GS3 soil moisture sensor
+ * @author Brandon Wong and Matt Bartos
+ * @version TODO
+ * @date 2017-06-19
+ */
+
 #include "decagon.h"
 //Global Variable for the number of characters received from the UART reading
 #define RAW_SERIAL_DATA_LENGTH_d 100
