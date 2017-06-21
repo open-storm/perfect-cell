@@ -53,7 +53,6 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading);
  * @brief Take a single reading from Atlas sensor in I2C mode.
  * Used for conductivity sensor.
  *
- * @param sensor_address I2C slave address of sensor
  * @param reading Struct for conductivity reading (to be written to)
  *
  * @return 1u on success, and 0u otherwise.
