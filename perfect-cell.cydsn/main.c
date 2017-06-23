@@ -11,7 +11,7 @@
  * - triggers attached actuators, and
  * - puts the board back into sleep mode.
  *
- * @author TODO
+ * @author Brandon Wong, Matt Bartos, Abhiramm Mullapudi, Branko Kerkez, Ivan Mondragon
  * @version TODO
  * @date 2017-05-31
  */
@@ -81,6 +81,9 @@ void main()
     //// Test the valve
     test_valve();
     blink_LED(4u);
+    
+    // Update influxdb tags
+    status = append_tags(main_tags, "commit_hash", CURRENT_COMMIT);
 
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)){

@@ -18,6 +18,7 @@
 #include "misc.h"
 #include "modem.h"
 #include "updater.h"
+#include "commit.h"
 
 // Function prototypes
 
@@ -186,6 +187,17 @@ void construct_default_body(char *data_packet, char *labels[], float readings[],
  */
 uint8 send_readings(char* body, char* send_str, char* response_str, char* socket_dial_str,
                     char *labels[], float readings[], uint8 nvars);
+
+/**
+ * @brief Append new tags to existing influxdb tags.
+ *
+ * @param main_tags Existing tag string (comma-separated) 
+ * @param appended_label Tag label to append
+ * @param appended_value Tag value to append
+ *
+ * @return 1
+ */
+uint8 append_tags(char *main_tags, char *appended_label, char *appended_value);
 
 /**
  * @brief Return a URL-encoded version of the input string.
