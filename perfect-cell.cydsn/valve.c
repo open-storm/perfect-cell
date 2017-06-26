@@ -162,7 +162,7 @@ int move_valve(int valve){
 uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_trigger, uint8 max_size){
     // Ensure we don't access nonexistent array index
     uint8 nvars = 1;
-    if(*array_ix + nvars >= sizeof(readings)){
+    if(*array_ix + nvars >= max_size){
         return *array_ix;
     }
         // Ellsworth does not have a potentiometer installed
@@ -232,6 +232,7 @@ uint8 zip_valve_2(char *labels[], float readings[], uint8 *array_ix, int *valve_
         labels[*array_ix] = "valve_2_trigger";
         readings[*array_ix] = -1;
         (*array_ix) += 1;
+        return *array_ix;
 }
 
 /* [] END OF FILE */
