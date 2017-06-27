@@ -36,8 +36,8 @@ def get_last_commit_info(log_path, ignore=False):
     else:
         if not ignore:
             raise OSError('''Git log file not found. Please clone repository
-                          using git:\ngit clone
-                          https://github.com/open-storm/perfect-cell\n
+                          using git:
+                          git clone https://github.com/open-storm/perfect-cell
                           or use the --ignore flag''')
     commit_info['PREVIOUS_COMMIT'] = prev_commit
     commit_info['CURRENT_COMMIT'] = current_commit
