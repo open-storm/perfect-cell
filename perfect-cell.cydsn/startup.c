@@ -35,28 +35,4 @@ uint8 initialize_ssl(uint8 *ssl_enabled, uint8 *ssl_initialized){
     return *ssl_initialized;
 }
 
-/*
-int initial_metadata_update(char* send_str, char* response_str, 
-                            uint8 *update_successful, uint8 *socket_status){
-    if (!meta_flag){
-        return 1u;
-    }
-    if (meta_flag){
-        if (modem_startup(&connection_attempt_counter)){
-        
-            blink_LED(2u);
-        
-            blink_LED(2u);        
-            modem_get_meid(meid);
-            (*update_successful) = update_meta(meid, send_str, response_str);
-            (*socket_status) = modem_get_socket_status();
-            modem_shutdown();
-            return 1u;
-        }
-        return 0u;
-    }
-
-}
-*/
-
 /* [] END OF FILE */

@@ -449,7 +449,13 @@ void construct_default_body(char *data_packet, char *labels[], float readings[],
 		}
     }
 }
-						
+
+uint8 append_tags(char *main_tags, char *appended_label, char *appended_value)
+{
+    sprintf(main_tags, "%s,%s=%s", main_tags, appended_label, appended_value);
+    return 1u;
+}                        
+                        
 /* Returns a url-encoded version of str */
 /* IMPORTANT: be sure to free() the returned string after use */
 char *url_encode(char *str) {
