@@ -15,6 +15,7 @@ extern char main_method[5];
 extern char main_connection_type[11];
 extern int main_extra_len;
 extern char main_extra_headers[200];
+extern char main_tags[200];
 extern char main_http_protocol[4];
 extern char meid[20];
 extern char write_route[60];
