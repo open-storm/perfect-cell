@@ -2,6 +2,8 @@
 
 General purpose firmware for cellular-enabled PSoC motes
 
+[![Build Status](http://3936cf9b.ngrok.io/buildStatus/icon?job=perfect-cell%20CI&.png)](http://3936cf9b.ngrok.io/job/perfect-cell%20CI/)
+
 ## Installation
 
 First, set up a [remote server](https://github.com/open-storm/docs.open-storm.org/wiki/Setting-up-the-server-environment) to receive data from the sensor node.
