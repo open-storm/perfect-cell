@@ -12,8 +12,7 @@ String build = "Debug" // Debug | Release, debug build enables testing.
 String arch = "ARM_GCC_541"
 
 pipeline {
-    agent any
-    //checkout scm
+    agent { label 'klab' }
 
     options {
         timeout(time: 30, unit: 'MINUTES')
