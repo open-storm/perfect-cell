@@ -6,12 +6,6 @@
 #include "modem.h"
 #include "startup.h"
 
-struct result_t {
-    int size;
-    char **labels;
-    char **results;
-};
-
 static const char TEST_HOST[] = "ec2-52-87-156-130.compute-1.amazonaws.com";
 static const int TEST_PORT = 8086;
 static const char USERNAME[] = "home_user";
