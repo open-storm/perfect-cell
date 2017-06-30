@@ -1,7 +1,11 @@
 #ifndef TESTS_H
 #define TESTS_H
 
-typedef struct result_t result_t;
+typedef struct result_t {
+    int size;
+    char **labels;
+    char **results;
+} result_t;
 
 void test_run_all(result_t *r);
 void test_post_results(result_t *r);
