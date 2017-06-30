@@ -7,8 +7,8 @@ try:
 except:
     script_path = os.getcwd()
 
-log_path_relative = ['.git','logs', 'HEAD']
-header_path_relative = ['perfect-cell.cydsn', 'commit.h']
+log_path_relative = ['..', '.git','logs', 'HEAD']
+header_path_relative = ['..', 'perfect-cell.cydsn', 'commit.h']
 
 log_path = os.path.join(script_path, *log_path_relative)
 header_path = os.path.join(script_path, *header_path_relative)
