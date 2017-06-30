@@ -386,7 +386,7 @@ void update_params(char* body, char* send_str, char* response_str){
 	        sprintf(body, "%s%s,", body, "decagon_flag");
             sprintf(body, "%s%s,", body, "valve_flag");
             sprintf(body, "%s%s,", body, "valve_2_flag");
-            sprintf(body, "%s%s",  body, "autosampler_flag");
+            sprintf(body, "%s%s,",  body, "autosampler_flag");
             sprintf(body, "%s%s",  body, "atlas_wq_flag");
 
             // Build the GET request
