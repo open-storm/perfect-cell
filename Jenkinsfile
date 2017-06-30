@@ -48,6 +48,8 @@ pipeline {
                         }
                     }
                 }
+                // power off the psoc device after running the tests
+                bat "python build_tools\\psoc_program.py --power-off-device"
             }
         }
     }

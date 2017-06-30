@@ -366,7 +366,7 @@ def ProgramAll(hex_file):
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
-    print('Turning on programmer')
+    print('Turning on device')
     hResult = pp.PowerOn()
     hr = hResult[0]
     m_sLastError = hResult[1]
@@ -550,28 +550,57 @@ def Execute(hex_file):
     ClosePort()
     return hr
 
+def PowerOffDevice():
+    global m_sLastError
+
+    print("Opening Port")
+    hr = OpenPort()
+    if (not SUCCEEDED(hr)): return hr
+
+    #Setup Power - "5.0V" and internal
+    print('Setting Power Voltage to 5.0V')
+    hResult = pp.SetPowerVoltage("5.0")
+    hr = hResult[0]
+    m_sLastError = hResult[1]
+    if (not SUCCEEDED(hr)): return hr
+
+    print('Turning off device')
+    hResult = pp.PowerOff()
+    hr = hResult[0]
+    m_sLastError = hResult[1]
+    if (not SUCCEEDED(hr)): return hr
+
+    print('Closing Port')
+    ClosePort()
+    return hr
+
 #Begin main program
 
-#Use Version Independent Prog ID to instantiate COM-object
-pp = win32com.client.Dispatch("PSoCProgrammerCOM.PSoCProgrammerCOM_Object")
-#For version dependent Prog ID use below commented line, but update there COM-object version (e.g. 14)
-#pp = win32com.client.Dispatch("PSoCProgrammerCOM.PSoCProgrammerCOM_Object.14")
+if __name__ == '__main__':
+    #Use Version Independent Prog ID to instantiate COM-object
+    pp = win32com.client.Dispatch("PSoCProgrammerCOM.PSoCProgrammerCOM_Object")
+    #For version dependent Prog ID use below commented line, but update there COM-object version (e.g. 14)
+    #pp = win32com.client.Dispatch("PSoCProgrammerCOM.PSoCProgrammerCOM_Object.14")
 
-print("Program All using COM-object interface only")
+    if len(sys.argv) == 2 and sys.argv[1] == '--power-off-device':
+        hr = PowerOffDevice()
 
-hex_file = os.path.abspath(sys.argv[1])
-print("Using Hex File:", hex_file)
+    else:
+        print("Program All using COM-object interface only")
 
-hr = Execute(hex_file)
-exit_code = 0
+        hex_file = os.path.abspath(sys.argv[1])
+        print("Using Hex File:", hex_file)
 
-if (SUCCEEDED(hr)):
-    str = "Succeeded!"
-else:
-    str = "Failed! " + m_sLastError
-    exit_code = 1
+        hr = Execute(hex_file)
 
-print(str)
-sys.exit(exit_code)
+    if (SUCCEEDED(hr)):
+        str = "Succeeded!"
+        exit_code = 0
+    else:
+        str = "Failed! " + m_sLastError
+        exit_code = 1
+
+    print(str)
+    sys.exit(exit_code)
 
 #End main function
