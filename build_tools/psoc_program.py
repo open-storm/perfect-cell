@@ -25,6 +25,7 @@ import os
 
 #Define global variables
 m_sLastError = ""
+PY3 = sys.version_info.major == 3
 
 #Distinguishing identifier of PSoC3/5 families
 LEOPARD_ID = 0xE0;
@@ -38,17 +39,23 @@ def GetGenerationByJtagID(hr):
 
 #Check JTAG ID of device - identify family PSoC3 or PSoC5
 def GetGenerationByJtagID(JtagID):
+    if PY3:
+        JtagID = [chr(c) for c in JtagID]
     distinguisher = (((ord(JtagID[0]) & 0x0F) << 4) | (ord(JtagID[1]) >> 4))
     return distinguisher
 
 def IsPSoC3ES3(jtagID):
     global LEOPARD_ID
+    if PY3:
+        jtagID = [chr(c) for c in jtagID]
     if (GetGenerationByJtagID(jtagID) == LEOPARD_ID):
         if ((ord(jtagID[0]) >> 4) >= 0x01): return 1  #silicon version==0x01 saved in bits [4..7]
                                                  #For ES0-2==0x00, ES3==0x01
     return 0
 
 def Is_PSoC5_TM_ID(jtagID):
+    if PY3:
+        jtagID = [chr(c) for c in jtagID]
     return ((ord(jtagID[0]) & 0xFF) == 0x0E) and ((ord(jtagID[1]) & 0xF0) == 0x10) and (ord(jtagID[3]) == 0x69)
 
 def Is_PSoC_5_LP_ID(jtagID):
@@ -56,6 +63,8 @@ def Is_PSoC_5_LP_ID(jtagID):
     #PSoC5LP: 0x1BA01477 (SWD/JTAG read ID read request retuns CM3 ID always)
     #         0x2E1xx069 (LP) - this Device ID must be read from PANTHER_DEVICE_ID reg (0x4008001C)
     #2E0xx069
+    if PY3:
+        jtagID = [chr(c) for c in jtagID]
     return (((ord(jtagID[0]) & 0xFF) >= 0x2E) and ((ord(jtagID[1]) & 0xF0) == 0x10) and (ord(jtagID[3]) == 0x69))
 
 def OpenPort():
@@ -135,6 +144,11 @@ def CheckHexAndDeviceCompatibility():
         listResult.append(result)
         return listResult
     result = 1
+
+    if PY3:
+        hexJtagID = [chr(c) for c in hexJtagID]
+        chipJtagID = [chr(c) for c in chipJtagID]
+
     for i in range(0, 4):
         if(ord(hexJtagID[i]) != ord(chipJtagID[i])):
             result = 0
@@ -195,6 +209,9 @@ def ProgramNvlArrays(nvlArrayType):
             m_sLastError = "Hex file's NVL array differs from corresponding device's one!"
             return -1
         fIdentical = 1
+        if PY3:
+            chipData = [chr(c) for c in chipData]
+            hexData = [chr(c) for c in hexData]
         for i in range(0, arraySize):
             if (ord(chipData[i]) != ord(hexData[i])):
                 fIdentical = 0
@@ -377,7 +394,8 @@ def ProgramAll(hex_file):
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
-    hResult = pp.SetProtocolConnector(1); #10-pin connector
+    #hResult = pp.SetProtocolConnector(1); #10-pin connector
+    hResult = pp.SetProtocolConnector(0); #5-pin connector
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
@@ -473,7 +491,8 @@ def UpgradeBlock():
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
-    hResult = pp.SetProtocolConnector(1); #10-pin connector
+    #hResult = pp.SetProtocolConnector(1); #10-pin connector
+    hResult = pp.SetProtocolConnector(0); #5-pin connector
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
@@ -506,6 +525,8 @@ def UpgradeBlock():
     hResult = pp.PSoC3_ReadRow(arrayID, rowID, 0)
     hr = hResult[0]
     readRow = hResult[1]
+    if PY3:
+        readRow = [chr(c) for c in readRow]
     m_sLastError = hResult[2]
     if (not SUCCEEDED(hr)): return hr
 
