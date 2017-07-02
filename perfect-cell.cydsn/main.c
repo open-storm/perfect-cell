@@ -29,10 +29,10 @@
 #define NVARS 25
 
 // Arrays for request strings
-char body[MAX_PACKET_LENGTH] = {'\0'};
+char body[MAX_SEND_LENGTH] = {'\0'};
 char socket_dial_str[100] = {'\0'};
-char send_str[MAX_PACKET_LENGTH] = {'\0'};
-char response_str[MAX_PACKET_LENGTH] = {'\0'};
+char send_str[MAX_SEND_LENGTH] = {'\0'};
+char response_str[MAX_RECV_LENGTH] = {'\0'};
 
 // Arrays for holding sensor data and labels
 char *labels[NVARS];

@@ -13,6 +13,9 @@
 #define MAX_GET_ATTEMPTS        2
 #define MAX_SEND_ATTEMPTS       1//2
 #define MAX_PACKET_LENGTH       1500
+#define MAX_SEND_LENGTH         5000
+#define MAX_RECV_LENGTH         1500
+#define CHUNK_SIZE              800
 
 extern uint8	modem_state;
 extern uint8	lock_acquired;
@@ -177,6 +180,20 @@ uint8 modem_socket_dial(char *socket_dial_str, char* endpoint, int port,
  * @return 1u on success, 0u otherwise.
  */
 uint8 modem_socket_close(int ssl_enabled);
+
+/**
+ * @brief Breaks request string into packets and sends them.
+ *
+ * @param send_str The request string to be sent
+ * @param chunk Empty buffer for holding string chunks
+ * @param chenk_len The size of the chunks to send
+ * @param send_cmd The AT command used to send data: SSEND, SSENDEXT or SSLSEND
+ * @param ring_cmd The ring command to look for: SRING or SSLRING
+ * @param term_char The termination character to use: '\032' for Telit
+ *
+ * @return 1u on success, 0u otherwise.
+ */
+int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char);
 
 /**
  * @brief TODO
