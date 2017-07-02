@@ -845,7 +845,7 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
             "Content-Length: ", (extra_len + strlen(body)), //11 12 (Extra len should be 2 for flask server)
             "\r\n\r\n", body); // 13 14 15
 	}
-	sprintf(send_str, "%s%s", send_str, "\r\n\r\n"); 
+	sprintf(send_str, "%s%s", send_str, "\r\n"); 
 }
 
 int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char){
