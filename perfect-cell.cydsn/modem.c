@@ -62,6 +62,7 @@ uint8  modem_state, lock_acquired = 0u, ready = 0u;
 uint16 uart_string_index = 0u;
 uint32 feed_id;
 char   uart_received_string[1500] = {'\0'};
+char   request_chunk[CHUNK_SIZE] = {'\0'};
 char*  modem_apn = "epc.tmobile.com";
 
 // prototype modem interrupt
@@ -844,11 +845,49 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
             "Content-Length: ", (extra_len + strlen(body)), //11 12 (Extra len should be 2 for flask server)
             "\r\n\r\n", body); // 13 14 15
 	}
-	sprintf(send_str, "%s%s", send_str, "\r\n\032"); 
+	sprintf(send_str, "%s%s", send_str, "\r\n\r\n"); 
 }
 
+int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char){
+    int i;
+    int status = 0u;
+    char *a;
+    char *b;
+    
+    int str_len = strlen(send_str);
+    int n_chunks = str_len/chunk_len + (str_len % chunk_len != 0);
+    char *str_end = send_str + str_len;
+    
+    for (i = 0; i < n_chunks; i++){
+        status = at_write_command(send_cmd,">",10000u);
+        if ( status == 0u ) {
+            return status;
+        }
+        uart_string_reset();
+        memset(chunk, '\0', chunk_len + 1);
+        a = send_str + i*chunk_len;
+        b = send_str + (i+1)*chunk_len;
+        if (b >= str_end){
+            strncpy(chunk, a, str_end - a);
+            sprintf(chunk, "%s%s", chunk, term_char);
+            status = at_write_command(chunk, ring_cmd, 10000u);
+            uart_string_reset();
+            return status;
+        }
+        strncpy(chunk, a, b - a);
+        sprintf(chunk, "%s%s", chunk, term_char);
+        status = at_write_command(chunk, "OK", 10000u);
+        uart_string_reset();
+        if ( status == 0u ) {
+            return status;
+        }        
+    }
+    return status;
+}                            
+                            
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
+    int status = 0u;
     char send_cmd[30] = {"\0"};
     char recv_cmd[30] = {"\0"};
     char ring_cmd[30] = {"\0"};
@@ -865,38 +904,39 @@ uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ss
         sprintf(ring_cmd, "SRING: 1");
     }
     
-    if(at_write_command(send_cmd,">",10000u)){ 
-		// Reset uart for incoming data from modem
-	    uart_string_reset();
-		if(at_write_command(send_str,ring_cmd,10000u) != 0){
-            // Read HTTP response from the buffer
-            uart_string_reset();
-            uint8 data_pending = at_write_command(recv_cmd,ring_cmd,10000u);
+    // TODO: Should request_chunk be passed in, or global?
+    status = send_chunked_request(send_str, request_chunk, CHUNK_SIZE, send_cmd, ring_cmd, "\032");
+    if( status ){
+        // Read HTTP response from the buffer
+        uart_string_reset();
+        uint8 data_pending = at_write_command(recv_cmd,ring_cmd,10000u);
             
-            // Check the HTTP response for valid status (200 or 204)
-            // Create array, "status_code" to temporarily hold the result
-            char status_code[5] = {"\0"};
-            parse_http_status(uart_received_string, (char*) NULL, status_code, (char*) NULL);
+        // Check the HTTP response for valid status (200 or 204)
+        // Create array, "status_code" to temporarily hold the result
+        char status_code[5] = {"\0"};
+        parse_http_status(uart_received_string, (char*) NULL, status_code, (char*) NULL);
 
-            // InfluxDB sends chunked data, so check again to see if there is an
-            // unsolicited message indicated a suspended connection
-            //
-            // If so, then the query results are stored in the buffer, so issue
-            // AT#SRECV to read the buffer
-            if (data_pending == 1) {
-                uart_string_reset();
-                uint8 success = at_write_command(recv_cmd,"NO CARRIER",10000u);
-            }
-			if (get_response){
-                strcpy(response, uart_received_string);
-			}
-            
-             // return 1 if status code indicates Success, 2xx
-            if( status_code[0] == '2' ){
-                return 1u;
-            }
+        // TODO: Generalize this for N chunks
+        // TODO: Parse for content length
+        // InfluxDB sends chunked data, so check again to see if there is an
+        // unsolicited message indicated a suspended connection
+        //
+        // If so, then the query results are stored in the buffer, so issue
+        // AT#SRECV to read the buffer
+        if (data_pending == 1) {
+            uart_string_reset();
+            status = at_write_command(recv_cmd,"NO CARRIER",10000u);
+        }
+		if (get_response){
+            strcpy(response, uart_received_string);
 		}
-    }   
+            
+        // return 1 if status code indicates Success, 2xx
+        if( status_code[0] == '2' ){
+            return 1u;
+        }
+    }
+       
     return 0u;  
 }
 
