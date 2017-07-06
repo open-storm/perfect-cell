@@ -25,7 +25,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                setBuildStatus("Building...", "PENDING");
+                //setBuildStatus("Building...", "PENDING");
                 // Build the $BUILD version of the project.
                 // Save to perfect-cell.cydsn\CortexM3\$ARCH\$BUILD\
                 bat "${env.CYPRJMGR} -wrk \"${proj}.cydsn\\${proj}.cywrk\" -c ${build} -rebuild"
@@ -33,13 +33,13 @@ pipeline {
         }
         stage('Program') {
             steps {
-                setBuildStatus("Programming...", "PENDING");
+                //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
             }
         }
         stage('Test') {
             steps {
-                setBuildStatus("Testing...", "PENDING");
+                //setBuildStatus("Testing...", "PENDING");
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
@@ -49,7 +49,7 @@ pipeline {
                     }
                 }
                 // power off the psoc device after running the tests
-                bat "python build_tools\\psoc_program.py --power-off-device"
+                //bat "python build_tools\\psoc_program.py --power-off-device"
             }
         }
     }

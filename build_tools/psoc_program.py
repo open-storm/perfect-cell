@@ -80,13 +80,13 @@ def OpenPort():
         return -1
     bFound = 0
     for i in range(0, len(portArray)):
-        if (portArray[i].startswith("MiniProg3") or portArray[i].startswith("DVKProg") or portArray[i].startswith("FirstTouch") or portArray[i].startswith("Gen-FX2LP")):
+        if (portArray[i].startswith("MiniProg3") or portArray[i].startswith("DVKProg") or portArray[i].startswith("FirstTouch") or portArray[i].startswith("Gen-FX2LP") or portArray[i].startswith("KitProg")):
             portName = portArray[i]
             print('FOUND DEVICE:', portName)
             bFound = 1;
             break
     if(bFound == 0):
-        m_sLastError = "Connect any MiniProg3/DVKProg/FirstTouch/Gen-FX2LP device to the PC"
+        m_sLastError = "Connect any MiniProg3/DVKProg/FirstTouch/Gen-FX2LP/KitProg device to the PC"
         return -1
 
     #Port should be opened just once to connect Programmer device (MiniProg1/3,etc).
@@ -383,11 +383,13 @@ def ProgramAll(hex_file):
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
+    '''
     print('Turning on device')
     hResult = pp.PowerOn()
     hr = hResult[0]
     m_sLastError = hResult[1]
     if (not SUCCEEDED(hr)): return hr
+    '''
     #Set protocol, connector and frequency
     print('Setting communication protocols')
     hResult = pp.SetProtocol(enumInterfaces.SWD)
