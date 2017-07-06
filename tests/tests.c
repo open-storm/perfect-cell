@@ -18,12 +18,18 @@ static const char TEST_LABELS[][20] = {
     "test_modem",   "test_data",    "test_valve",      "test_ultrasonic",
     "test_decagon", "test_updater", "test_autosampler"};
 
-typedef char* (*VOID_FN)(void);
+typedef char* (*VOID_FN)(result_t*);
 static const VOID_FN TEST_FNS[TEST_COUNT] = {
-    &test_modem,   &test_data,    &test_valve,      &test_ultrasonic,
+    &test_modem,   &test_data,    &test_valve_run,      &test_ultrasonic,
     &test_decagon, &test_updater, &test_autosampler};
 
+static void save_state() {}
+static void restore_state() {}
+
 void test_run_all(result_t* r) {
+    // save the program's current state
+    save_state();
+
     // initialize our struct to hold all that data
     r->size = TEST_COUNT;
     r->labels = (char**) malloc(sizeof(char*) * TEST_COUNT);
@@ -33,37 +39,9 @@ void test_run_all(result_t* r) {
         r->labels[i] = strdup(TEST_LABELS[i]);
         r->results[i] = TEST_FNS[i](r);
     }
-}
 
-void test_configuration(result_t *r) {
-    const char[][15] var_names = {"cell_fer", "cell_strength", "conn_attempts",
-                                  "v_bat"};
-    const float[] readings = {17f, 0f, 10f, 5.5f};
-
-    char socket_dial_str[100] = {'\0'};
-    char body[MAX_PACKET_LENGTH] = {'\0'};
-    char send_str[MAX_PACKET_LENGTH] = {'\0'};
-    char response_str[MAX_PACKET_LENGTH] = {'\0'};
-
-    // tmp variable to store current config
-    char user_[20] = user;
-    char pass_[50] = pass;
-    char database_[20] = database;
-
-    int main_port_ = main_port;
-    char main_host_[100] = main_host;
-
-    // reuse current config
-    user = USERNAME;
-    pass = PASSWORD;
-    database = DATABASE;
-
-    main_port = TEST_PORT;
-    main_host = TEST_HOST;
-
-    // send phony data
-    send_readings(body, send_str, response_str, socket_dial_str, var_names,
-                  readings, sizeof(var_names));
+    // restore the last saved state
+    restore_state();
 }
 
 void test_free_results(result_t* r) {
@@ -93,21 +71,9 @@ void test_post_results(result_t* r) { return; }
  *
  * @return Results of the test. String must be freed after use.
  */
-char* test_modem() {
-    // Update metadata (node_id, user, pass, database
-    if (modem_startup(&connection_attempt_counter)) {
-        // Initialize SSL if enabled
-        initialize_ssl(&ssl_enabled, &ssl_initialized);
-        // Update metadata if enabled
-        status = run_meta_subroutine(meid, send_str, response_str, 1u);
-        modem_shutdown();
-    }
+char* test_modem() { return NULL; }
 
-    // Blink the LED to indicate the board is awake
-    blink_LED(4u);
-}
-
-char* test_data() { return NULL: }
+char* test_data() { return NULL; }
 
 char* test_valve_run() { return NULL; }
 

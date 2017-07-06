@@ -58,7 +58,7 @@ pipeline {
         always {
             echo 'Build complete'
         }
-
+        /*
         success {
             setBuildStatus("Build complete", "SUCCESS");
         }
@@ -66,6 +66,7 @@ pipeline {
         failure {
             setBuildStatus("Build complete", "FAILURE");
         }
+        */
     }
 }
 
