@@ -2,7 +2,6 @@
 
 General purpose firmware for cellular-enabled PSoC motes
 
-[![Build Status](http://ec2-54-244-212-4.us-west-2.compute.amazonaws.com:8080/buildStatus/icon?job=perfect-cell%20ci)](http://ec2-54-244-212-4.us-west-2.compute.amazonaws.com:8080/job/perfect-cell%20ci/)
 
 ## Installation
 

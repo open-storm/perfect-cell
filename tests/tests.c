@@ -6,11 +6,11 @@
 #include "modem.h"
 #include "startup.h"
 
-static const char TEST_HOST[] = "ec2-52-87-156-130.compute-1.amazonaws.com";
+static const char TEST_HOST[] = "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
 static const int TEST_PORT = 8086;
-static const char USERNAME[] = "home_user";
-static const char PASSWORD[] = "home_password";
-static const char DATABASE[] = "_TEST";
+static const char USERNAME[] = "test_user";
+static const char PASSWORD[] = "test_pass";
+static const char DATABASE[] = "TEST_DB";
 static const int SSL_ENABLED = 1;
 
 static const int TEST_COUNT = 7;
@@ -20,7 +20,7 @@ static const char TEST_LABELS[][20] = {
 
 typedef char* (*VOID_FN)(result_t*);
 static const VOID_FN TEST_FNS[TEST_COUNT] = {
-    &test_modem,   &test_data,    &test_valve_run,      &test_ultrasonic,
+    &test_modem,   &test_data,    &test_valve_run,  &test_ultrasonic,
     &test_decagon, &test_updater, &test_autosampler};
 
 static void save_state() {}
