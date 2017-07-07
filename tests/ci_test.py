@@ -2,18 +2,18 @@ import os
 import sys
 import influxdb
 
-host = "ec2-52-87-156-130.compute-1.amazonaws.com"
+host = "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
 port = 8086
-username = 'home_user'
-password = 'home_password'
-database = '_TEST'
+username = 'test_user'
+password = 'test_pass'
+database = 'TEST_DB'
 ssl_enabled = True
 
 var_ranges = {
     'cell_fer' : [0, 99],
     'cell_strength' : [0, 100],
     'conn_attempts' : [1, 1000],
-    'v_bat' : [1, 10]
+    'v_bat' : [-1, 10]
 }
 
 # Store test results here

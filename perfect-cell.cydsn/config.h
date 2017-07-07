@@ -6,7 +6,7 @@
 #define DEFAULT_HOME_PASS   "home_pass"
 #define DEFAULT_HOME_DB     "HOME_DB"
 #define DEFAULT_HOME_PORT   8086
-#define DEFAULT_HOME_HOST   "ec2-52-87-156-130.compute-1.amazonaws.com"
+#define DEFAULT_HOME_HOST   "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
 
 // Meta user info
 #define DEFAULT_META_USER   "meta_user"

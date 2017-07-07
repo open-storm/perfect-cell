@@ -10,7 +10,6 @@ typedef struct result_t {
 void test_run_all(result_t *r);
 void test_post_results(result_t *r);
 void test_free_results(result_t *r);
-void test_configuration(result_t *r);
 
 char* test_modem();
 char* test_data();
