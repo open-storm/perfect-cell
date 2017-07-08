@@ -2,7 +2,7 @@
 
 General purpose firmware for cellular-enabled PSoC motes
 
-![Build Status](http://ec2-13-58-145-29.us-east-2.compute.amazonaws.com:8080/job/open-storm/job/perfect-cell/job/development/badge/icon)
+![Build Status](http://ec2-13-58-145-29.us-east-2.compute.amazonaws.com:8080/buildStatus/icon?job=open-storm/perfect-cell/development&.png)
 
 ## Installation
 
