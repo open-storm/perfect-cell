@@ -1,6 +1,7 @@
 import sys
 import influxdb
 
+# Database information
 host = "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
 port = 8086
 username = 'test_user'
@@ -8,6 +9,7 @@ password = 'test_pass'
 database = 'TEST_DB'
 ssl_enabled = True
 
+# Target variables and acceptable ranges
 var_ranges = {
     'cell_fer' : [0, 99],
     'cell_strength' : [0, 100],
@@ -28,6 +30,7 @@ var_ranges = {
     'gps_nsat' : [0, 12]
 }
 
+# Variables associated with a trigger
 trigger_vars = {
     'gps_latitude' : 'gps_trigger',
     'gps_longitude' : 'gps_trigger',
@@ -45,10 +48,8 @@ trigger_vars = {
 result_check = {}
 
 # Get commit hash and build timestamp
-#git_commit = os.environ['GIT_COMMIT']
 git_commit = sys.argv[1]
 # Timestamp requires Jenkins Build Timestamp plugin
-#build_timestamp = os.environ['BUILD_TIMESTAMP']
 build_timestamp = sys.argv[2]
 
 if __name__ == '__main__':
@@ -86,12 +87,16 @@ if __name__ == '__main__':
             assert(var_value >= var_ranges[var_name][0])
             assert(var_value <= var_ranges[var_name][1])
         except:
+            # If rejected variable is associated with a trigger, set trigger high
+            # for next try
             if var in trigger_vars:
                 trigger = trigger_vars[var]
                 client.write_points(['{0},node_id=ARB000 value=1'.format(trigger)],
                                      protocol='line')
+            # Raise an error if value is not in acceptable range
             raise ValueError(("{0} does not lie within specified"
                              "range").format(var))
+        # Write passing variable to dictionary
         result_check.update({var_name : var_value})
 
     # Check that all requested variables were received
@@ -100,14 +105,18 @@ if __name__ == '__main__':
     try:
         assert(result_vars == target_vars)
     except:
+        # Determine variables that are missing
         missing_vars = target_vars.difference(result_vars)
+        # Determine trigger variables that are missing
         missing_trigger_vars = missing_vars.intersection(
             set(trigger_vars.keys()))
+        # If trigger variables are missing, set triggers high for next try
         if missing_trigger_vars:
             missing_triggers = set([trigger_vars[var] for var in
                                     missing_trigger_vars])
             client.write_points(['{0},node_id=ARB000 value=1'.format(trigger) for
                                 trigger in missing_triggers], protocol='line')
+        # Raise an error if not all requested variables were returned
         raise KeyError("Did not write variable(s) {0} to database"
                        .format(', '.join(missing_vars)))
 
