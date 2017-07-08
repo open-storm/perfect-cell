@@ -66,7 +66,7 @@ if __name__ == '__main__':
         client.write_points(['sleeptimer,node_id=ARB000 value=100'], protocol='line')
 
     # Create query
-    query_str = (("SELECT last(value) FROM {0} WHERE commit_hash=\'{1}\' AND"
+    query_str = (("SELECT last(value) FROM {0} WHERE commit_hash=\'{1}\' AND "
                  "time > \'{2}\'")
                  .format(','.join(var_ranges.keys()),
                          git_commit,
