@@ -680,54 +680,46 @@ uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop,
     return status;
 }
 
-uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, 
-              uint8 min_satellites, uint8 max_tries, uint8 max_size){
-    
+uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix,
+              int *gps_trigger, uint8 min_satellites, uint8 max_tries,
+              uint8 max_size) {
     // Ensure we don't access nonexistent array index
     uint8 nvars = 10;
-    if(*array_ix + nvars >= max_size){
+    if (*array_ix + nvars >= max_size) {
         return *array_ix;
     }
-    
+
     float lat = -9999;
     float lon = -9999;
     float hdop = -9999;
     float altitude = -9999;
     uint8 gps_fix = 0u;
-    float cog = -9999; 
+    float cog = -9999;
     float spkm = -9999;
     float spkn = -9999;
     uint8 nsat = 0u;
-    
-    labels[*array_ix] = "gps_latitude";
-    labels[*array_ix + 1] = "gps_longitude";
-    labels[*array_ix + 2] = "gps_hdop";
-    labels[*array_ix + 3] = "gps_altitude";
-    labels[*array_ix + 4] = "gps_fix";
-    labels[*array_ix + 5] = "gps_cog";
-    labels[*array_ix + 6] = "gps_spkm";
-    labels[*array_ix + 7] = "gps_spkn";
-    labels[*array_ix + 8] = "gps_nsat";
-    labels[*array_ix + 9] = "gps_trigger";
-    run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, 
-                    &cog, &spkm, &spkn, &nsat, min_satellites, max_tries);
-    
-    readings[*array_ix] = lat;
-    readings[*array_ix + 1] = lon;
-    readings[*array_ix + 2] = hdop;
-    readings[*array_ix + 3] = altitude;
-    readings[*array_ix + 4] = gps_fix;
-    readings[*array_ix + 5] = cog;
-    readings[*array_ix + 6] = spkm;
-    readings[*array_ix + 7] = spkn;
-    readings[*array_ix + 8] = nsat;
-    readings[*array_ix + 9] = *gps_trigger;
-    
+
+    // with the begin/end paradigm, end must always be `one past the end`
+    char **begins = labels + *array_ix;
+    char **ends = begin + nvars;
+    zips(begins, ends, "gps_latitude", "gps_longitude", "gps_hdop",
+         "gps_altitude", "gps_fix", "gps_cog", "gps_spkm", "gps_spkn",
+         "gps_nsat", "gps_trigger");
+
+    run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, &cog,
+                    &spkm, &spkn, &nsat, min_satellites, max_tries);
+
+    // with the begin/end paradigm, end must always be `one past the end`
+    float **beginf = readings + *array_ix;
+    float **endf = beginf + nvars;
+    zipf(beginf, endf, lat, lon, hdop, altitude, gps_fix, cog, spkm, spkn, nsat,
+         *gps_trigger);
+
     (*array_ix) += nvars;
-    
+
     return *array_ix;
 }
-            
+
 uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype, 
                          char *cert, char *output_str){
     char at_command[100] = {'\0'};
