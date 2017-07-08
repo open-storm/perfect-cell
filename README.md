@@ -2,6 +2,7 @@
 
 General purpose firmware for cellular-enabled PSoC motes
 
+
 ## Installation
 
 First, set up a [remote server](https://github.com/open-storm/docs.open-storm.org/wiki/Setting-up-the-server-environment) to receive data from the sensor node.
