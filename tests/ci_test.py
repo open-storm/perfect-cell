@@ -1,4 +1,3 @@
-import os
 import sys
 import influxdb
 
@@ -13,7 +12,11 @@ var_ranges = {
     'cell_fer' : [0, 99],
     'cell_strength' : [0, 100],
     'conn_attempts' : [1, 1000],
-    'v_bat' : [-1, 10]
+    'v_bat' : [-1, 10],
+    'maxbotix_depth' : [0, 9998],
+    'decagon_soil_conduct' : [0, 9998],
+    'decagon_soil_dielec' : [0, 9998],
+    'decagon_soil_temp' : [-40, 60]
 }
 
 # Store test results here
