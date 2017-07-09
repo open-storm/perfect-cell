@@ -56,6 +56,8 @@ pipeline {
 
     post {
         always {
+            echo 'Dumping influxdb log...'
+            bat "bash -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
             echo 'Build complete'
         }
         /*
