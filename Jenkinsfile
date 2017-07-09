@@ -60,7 +60,6 @@ pipeline {
     post {
         always {
             node('master'){
-                agent { label 'ec2' }
                 steps {
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
                 }
