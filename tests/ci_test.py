@@ -63,7 +63,7 @@ if __name__ == '__main__':
                                     password=password, database=database, ssl=ssl_enabled)
 
     # Set a fast sleeptimer
-    sleeptimer_query = ("SELECT last(value) from sleeptimer where"
+    sleeptimer_query = ("SELECT last(value) FROM sleeptimer WHERE "
                         "node_id={0}").format(node_id)
     sleeptimer_result = client.query(sleeptimer_query)
     if sleeptimer_result:
