@@ -52,12 +52,11 @@ pipeline {
                 //bat "python build_tools\\psoc_program.py --power-off-device"
             }
         }
-        stage('Logging') {
-            steps {
-                echo 'Dumping influxdb log...'
-                bat "bash -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
-            }
-        }
+        //stage('Logging') {
+        //    steps {
+        //        bat "bash -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
+        //    }
+        //}
     }
 
     post {
