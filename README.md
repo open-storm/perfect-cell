@@ -17,7 +17,30 @@ Next, download the firmware using git:
 git clone https://github.com/open-storm/perfect-cell.git
 ```
 
-Open `perfect-cell.cyprj` using PSoC creator.
+Open `perfect-cell.cyprj` using PSoC Creator (4.1 or greater).
+
+Set the following parameters in `config.h` to match your server settings:
+
+```
+// Default user info
+#define DEFAULT_HOME_USER   "home_user"
+#define DEFAULT_HOME_PASS   "home_pass"
+#define DEFAULT_HOME_DB     "HOME_DB"
+#define DEFAULT_HOME_PORT   8086
+#define DEFAULT_HOME_HOST   "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
+
+// Meta user info
+#define DEFAULT_META_USER   "meta_user"
+#define DEFAULT_META_PASS   "meta_pass"
+#define DEFAULT_META_DB     "META_DB"
+#define DEFAULT_META_PORT   8086
+#define DEFAULT_META_HOST   "ec2-52-87-156-130.compute-1.amazonaws.com"
+
+...
+
+// SSL parameters
+#define SSL_ENABLED            1u
+```
 
 Use PSoC Creator to [flash the firmware](https://github.com/open-storm/docs.open-storm.org/wiki/Using-PSoC-Creator) to a compatible device.
 
