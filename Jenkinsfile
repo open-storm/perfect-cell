@@ -52,11 +52,18 @@ pipeline {
                 //bat "python build_tools\\psoc_program.py --power-off-device"
             }
         }
+        stage('Acquire Logs') {
+            agent { label 'ec2' }
+            steps {
+                sh "python3 build_tools/read_build_journal.py ${env.BUILD_TIMESTAMP}"
+            }
+        }
     }
 
     post {
         always {
-            bat "\"C:\\Windows\\Sysnative\\bash.exe\" -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
+            echo 'Build complete'
+//            bat "\"C:\\Windows\\Sysnative\\bash.exe\" -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
         }
         /*
         success {
