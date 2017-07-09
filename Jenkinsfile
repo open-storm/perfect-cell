@@ -60,9 +60,7 @@ pipeline {
     post {
         always {
             node('master'){
-                steps {
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
-                }
             }
         }
         /*
