@@ -56,7 +56,7 @@ pipeline {
 
     post {
         always {
-            bat "\"C:\\Windows\\System32\\bash.exe\" -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
+            bat "\"C:\\Windows\\Sysnative\\bash.exe\" -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
         }
         /*
         success {
