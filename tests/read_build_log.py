@@ -1,9 +1,13 @@
+import re
 import sys
 import datetime
 from systemd import journal
 sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
+filters = re.compile('source=ci_test|python-requests|WHERE commit_hash')
+filter_on = True
+filtered = False
 
 if __name__ == "__main__":
     build_time = sys.argv[1]
@@ -17,6 +21,9 @@ if __name__ == "__main__":
         j.seek_realtime(build_datetime)
         entry = j.get_next()
         while entry:
-            print(entry['MESSAGE'])
-            # sys.stdout.flush()
+            msg = entry['MESSAGE']
+            if filter_on:
+                filtered = filters.match(msg)
+            if not filtered:
+                print(msg)
             entry = j.get_next()
