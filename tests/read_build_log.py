@@ -16,5 +16,5 @@ if __name__ == "__main__":
         entry = j.get_next()
         while entry:
             print(entry['MESSAGE'])
-            sys.stdout.flush()
+            # sys.stdout.flush()
             entry = j.get_next()
