@@ -8,6 +8,9 @@ username = 'test_user'
 password = 'test_pass'
 database = 'TEST_DB'
 ssl_enabled = True
+node_id = 'ARB000'
+fast_sleeptimer = 20
+slow_sleeptimer = 4600
 
 # Target variables and acceptable ranges
 var_ranges = {
@@ -60,13 +63,15 @@ if __name__ == '__main__':
                                     password=password, database=database, ssl=ssl_enabled)
 
     # Set a fast sleeptimer
-    sleeptimer_query = ("SELECT last(value) from sleeptimer where node_id=ARB000")
+    sleeptimer_query = ("SELECT last(value) from sleeptimer where"
+                        "node_id={0}").format(node_id)
     sleeptimer_result = client.query(sleeptimer_query)
     if sleeptimer_result:
         value_index = sleeptimer_result['columns'].index('last')
         sleeptimer_value = sleeptimer_result['values'][0][value_index]
     if (not sleeptimer_result) or (sleeptimer_value != 100):
-        client.write_points(['sleeptimer,node_id=ARB000 value=100'], protocol='line')
+        client.write_points(['sleeptimer,node_id={0} value={1}'
+                             .format(node_id, fast_sleeptimer)], protocol='line')
 
     # Create query
     query_str = (("SELECT last(value) FROM {0} WHERE commit_hash=\'{1}\' AND "
@@ -93,7 +98,8 @@ if __name__ == '__main__':
             # for next try
             if var in trigger_vars:
                 trigger = trigger_vars[var]
-                client.write_points(['{0},node_id=ARB000 value=1'.format(trigger)],
+                client.write_points(['{0},node_id={1} value=1'
+                                     .format(trigger, node_id)],
                                      protocol='line')
             # Raise an error if value is not in acceptable range
             raise ValueError(("{0} does not lie within specified"
@@ -116,11 +122,13 @@ if __name__ == '__main__':
         if missing_trigger_vars:
             missing_triggers = set([trigger_vars[var] for var in
                                     missing_trigger_vars])
-            client.write_points(['{0},node_id=ARB000 value=1'.format(trigger) for
+            client.write_points(['{0},node_id={1} value=1'
+                                 .format(trigger, node_id) for
                                 trigger in missing_triggers], protocol='line')
         # Raise an error if not all requested variables were returned
         raise KeyError("Did not write variable(s) {0} to database"
                        .format(', '.join(missing_vars)))
 
     # Set slow sleeptimer
-    client.write_points(['sleeptimer,node_id=ARB000 value=4600'], protocol='line')
+    client.write_points(['sleeptimer,node_id={0} value={1}'
+                         .format(node_id, slow_sleeptimer)], protocol='line')
