@@ -5,7 +5,7 @@ from systemd import journal
 sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
-filters = re.compile('source=ci_test|python-requests|WHERE commit_hash')
+filters = re.compile('ci_test|python-requests|WHERE commit_hash')
 filter_on = True
 filtered = False
 
