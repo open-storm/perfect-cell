@@ -12,7 +12,7 @@ String build = "Debug" // Debug | Release, debug build enables testing.
 String arch = "ARM_GCC_541"
 
 pipeline {
-    agent { label 'klab' }
+    agent none
 
     options {
         timeout(time: 30, unit: 'MINUTES')
@@ -23,6 +23,7 @@ pipeline {
     }
 
     stages {
+        agent { label 'klab' }
         stage('Build') {
             steps {
                 //setBuildStatus("Building...", "PENDING");
@@ -54,12 +55,13 @@ pipeline {
         }
     }
 
-    agent { label 'ec2' }
     post {
         always {
-            sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
-            echo 'Build complete'
-//            bat "\"C:\\Windows\\Sysnative\\bash.exe\" -c \"ssh -i ${env.SERVERKEY} ${env.SERVERADDR} python3 -u - < tests\\read_build_log.py '${env.BUILD_TIMESTAMP}'\""
+            node('master'){
+                steps {
+                sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
+                }
+            }
         }
         /*
         success {
