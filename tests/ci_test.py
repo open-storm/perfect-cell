@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # Set a fast sleeptimer
     sleeptimer_query = ("SELECT last(value) FROM sleeptimer WHERE "
-                        "node_id={0}").format(node_id)
+                        "node_id={0} AND source={1}").format(node_id, source)
     sleeptimer_result = client.query(sleeptimer_query)
     if sleeptimer_result:
         value_index = sleeptimer_result['columns'].index('last')

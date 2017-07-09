@@ -23,7 +23,7 @@ if __name__ == "__main__":
         while entry:
             msg = entry['MESSAGE']
             if filter_on:
-                filtered = filters.match(msg)
+                filtered = filters.search(msg)
             if not filtered:
                 print(msg)
             entry = j.get_next()
