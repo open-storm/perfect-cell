@@ -23,8 +23,8 @@ pipeline {
     }
 
     stages {
-        agent { label 'klab' }
         stage('Build') {
+        agent { label 'klab' }
             steps {
                 //setBuildStatus("Building...", "PENDING");
                 // Build the $BUILD version of the project.
@@ -33,12 +33,14 @@ pipeline {
             }
         }
         stage('Program') {
+        agent { label 'klab' }
             steps {
                 //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
             }
         }
         stage('Test') {
+        agent { label 'klab' }
             steps {
                 //setBuildStatus("Testing...", "PENDING");
                 timeout(10) { // Only attempt for 10 minutes
@@ -58,6 +60,7 @@ pipeline {
     post {
         always {
             node('master'){
+                agent { label 'ec2' }
                 steps {
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
                 }
