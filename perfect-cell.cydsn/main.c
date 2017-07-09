@@ -16,6 +16,8 @@
  * @version TODO
  * @date 2017-05-31
  */
+#ifndef MISC_H
+#define MISC_H
 #include <device.h>
 #include <project.h>
 #include "autosampler.h"
@@ -232,4 +234,5 @@ void clear_all_arrays(uint8 clear_readings_and_labels) {
     memset(response_str, '\0', sizeof(response_str));
 }
 
+#endif
 /* [] END OF FILE */

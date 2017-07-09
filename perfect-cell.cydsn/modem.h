@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-01
  */
+#ifndef MODEM_H
+#define MODEM_H
 #include <project.h>
 
 #define MODEM_STATE_OFF         0
@@ -458,4 +460,6 @@ uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop,
  * @return (*array_ix) + 10
  */
 uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, uint8 min_satellites, uint8 max_tries, uint8 max_size);
+
+#endif
 //[] END OF FILE

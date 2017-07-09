@@ -6,7 +6,8 @@
  * @date 2017-06-19
  */
 
-#pragma once
+#ifndef UPDATER_H
+#define UPDATER_H
 #include <stddef.h>
 #include <stdint.h>
 
@@ -120,4 +121,5 @@ char *strextract(const char input_str[], char output_str[],
  */
 void for_each(void *begin, void *end, size_t sz, void (*fn)(void *a));
 
+#endif
 /* [] END OF FILE */

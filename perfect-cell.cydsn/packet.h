@@ -1,3 +1,5 @@
+#ifndef PACKET_H
+#define PACKET_H
 #include <device.h>
 #include <stdio.h>
 #include <stdlib.h> 
@@ -9,4 +11,5 @@ uint8   packet_get_uint8(char* packet, char* name, uint8* value);
 uint8   packet_get_uint32(char* packet, char* name, uint32* value);
 uint8   clear_packet(char* packet);
 
+#endif
 //[] END OF FILE

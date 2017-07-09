@@ -701,7 +701,7 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix,
 
     // with the begin/end paradigm, end must always be `one past the end`
     char **begins = labels + *array_ix;
-    char **ends = begin + nvars;
+    char **ends = begins + nvars;
     zips(begins, ends, "gps_latitude", "gps_longitude", "gps_hdop",
          "gps_altitude", "gps_fix", "gps_cog", "gps_spkm", "gps_spkn",
          "gps_nsat", "gps_trigger");
@@ -710,8 +710,8 @@ uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix,
                     &spkm, &spkn, &nsat, min_satellites, max_tries);
 
     // with the begin/end paradigm, end must always be `one past the end`
-    float **beginf = readings + *array_ix;
-    float **endf = beginf + nvars;
+    float *beginf = readings + *array_ix;
+    float *endf = beginf + nvars;
     zipf(beginf, endf, lat, lon, hdop, altitude, gps_fix, cog, spkm, spkn, nsat,
          *gps_trigger);
 

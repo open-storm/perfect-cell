@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef STARTUP_H
+#define STARTUP_H
 #include <project.h>
 
 /**
@@ -33,4 +35,5 @@ uint8 counter_sensor_initialize();
  */
 uint8 initialize_ssl(uint8 *ssl_enabled, uint8 *ssl_initialized);
 
+#endif
 /* [] END OF FILE */
