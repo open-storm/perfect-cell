@@ -1,6 +1,7 @@
 import sys
 import datetime
 from systemd import journal
+sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
 
@@ -8,6 +9,7 @@ if __name__ == "__main__":
     build_time = sys.argv[1]
     build_datetime = datetime.datetime.strptime(build_time,
                                             "%Y-%m-%d %H:%M:%S")
+    print('Dumping influxdb logs')
     with journal.Reader() as j:
         j.this_boot()
         j.log_level(journal.LOG_INFO)
