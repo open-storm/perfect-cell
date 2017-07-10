@@ -6,7 +6,7 @@ sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
 
-filters = 'ci_test|python-requests|WHERE commit_hash|^[\s]*service=httpd'
+filters = 'ci_test|python-requests|WHERE commit_hash|^ service=httpd'
 regex = re.compile(filters)
 filter_on = True
 filtered = False
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     build_time = sys.argv[1]
     build_datetime = datetime.datetime.strptime(build_time,
                                             "%Y-%m-%d %H:%M:%S")
-    print('Dumping influxdb logs')
+    print('Dumping influxdb logs...')
     print('Filters: {0}'.format(filters))
     with journal.Reader() as j:
         j.this_boot()
