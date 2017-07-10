@@ -1,7 +1,7 @@
 /**
  * @file updater.h
- * @brief Implements functions for parsing influxdb responses
- * @author Brandon Wong
+ * @brief Implements functions for parsing strings
+ * @author Brandon Wong, Ivan Mondragon
  * @version TODO
  * @date 2017-06-19
  */
