@@ -98,8 +98,8 @@ void zips(char *begin[], char *end[], ...);
 void zipf(float begin[], float end[], ...);
 
 /**
- * @brief Searches for the c string in between @p search_start and @p search_end
- * and stores it in output_str
+ * @brief Searches for the left-most c string in between @p search_start and @p
+ * search_end and stores it in @p output_str
  *
  * @param input_str[] C string to be searched
  * @param output_str[] Buffer to store the resulting c string

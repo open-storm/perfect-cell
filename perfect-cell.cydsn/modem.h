@@ -241,20 +241,6 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
 							   char *extra_headers, int extra_len, char* http_protocol);
 
 /**
- * @brief Finds the leftmost substring that begins with <search_start> and ends
- * with <search_end>, requires that <search_end> appears after <search_start>.
- *
- * @param input_str String to be parsed
- * @param output_str Buffer to store the result of parsing
- * @param search_start Substring start pattern to match, MUST appear before the end string
- * @param search_end Substring end pattern to match, MUST appear after the start string
- *
- * @return 1u on success, 0u otherwise.
- */
-uint8 parse_at_command_result(char *input_str, char *output_str,
-							  char *search_start, char *search_end);
-
-/**
  * @brief Context Activation. Execution command is used to activate or deactivate the specified PDP context.
  *
  * @param activate_pdp enable flag:

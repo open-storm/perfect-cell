@@ -318,26 +318,27 @@ uint8 modem_check_network() {
     return 0u;      
 }
 
-uint8 modem_get_meid(char* meid) {
-/*
-int modem_get_meid(char* meid)
+uint8 modem_get_meid(char *meid) {
+    /*
+    int modem_get_meid(char* meid)
 
-Return the MEID of the cell module
-- Tested for CC864-DUAL and DE910-DUAL
+    Return the MEID of the cell module
+    - Tested for CC864-DUAL and DE910-DUAL
 
-Example CC864-DUAL Conversation:
-[Board] AT#MEID?
-[Modem] #MEID: A10000,32B9F1C0
+    Example CC864-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A10000,32B9F1C0
 
-        OK
+            OK
 
-Example DE910-DUAL Conversation:
-[Board] AT#MEID?
-[Modem] #MEID: A1000049AB9082
+    Example DE910-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A1000049AB9082
 
-        OK
-*/
+            OK
+    */
     
+    /*
     // Check for valid response from cellular module
     if(at_write_command("AT#MEID?\r","OK",1000u) == 1u){ 
         // If successful, parse the string received over uart for the meid
@@ -374,29 +375,49 @@ Example DE910-DUAL Conversation:
         
         return 1u;
     }
+    */
+
+    // Check for valid response from cellular module
+    if (at_write_command("AT#MEID?\r","OK",1000u) == 1u) {
+        // Expect the UART to contain something like
+        // "\r\n#MEID: A10000,32B9F1C0\r\n\r\nOK"
+        char *terminator =
+            strextract(uart_received_string, meid, "#MEID: ", "\r\n");
+
+        // In the case for modules like CC864-DUAL where "," is in the middle of
+        // the MEID, remove the comma
+        // * Assume only 1 comma needs to be removed
+        char *comma = strstr(meid, ",");
+        if (comma != NULL) {
+            // +1 to include the null terminating character of a c string
+            memmove(comma, comma + 1, strlen(comma) + 1); 
+        }
+
+        return terminator != NULL;
+    }
     
-    return 0u;    
+    return 0u;
 }
 
-uint8 modem_check_signal_quality(int *rssi, int *fer){
-/* 
+uint8 modem_check_signal_quality(int *rssi, int *fer) {
+    /*
 
-uint8 modem_check_signal_quality(uint8 *rssi)
+    uint8 modem_check_signal_quality(uint8 *rssi)
 
-Returns the received signal strength indication (rssi) of the modem
-This value ranges from 0-31, or is 99 if unknown/undetectable
+    Returns the received signal strength indication (rssi) of the modem
+    This value ranges from 0-31, or is 99 if unknown/undetectable
 
-Also returns the frame rate error (fer) of the modem.  
-This value ranges from 0-7, or is 99 if unknown/undetectable.
-(From experience, fer is almost always 99)
+    Also returns the frame rate error (fer) of the modem.
+    This value ranges from 0-7, or is 99 if unknown/undetectable.
+    (From experience, fer is almost always 99)
 
-Example conversation:
-[Board] AT+CSQ
-[Modem] +CSQ: 17,99
+    Example conversation:
+    [Board] AT+CSQ
+    [Modem] +CSQ: 17,99
 
-        OK
-*/
-    
+            OK
+    */
+    /*
     // Check for valid response from cellular module
     if(at_write_command("AT+CSQ\r","OK",1000u) == 1u){  
         
@@ -442,12 +463,28 @@ Example conversation:
 
         return 1u;
     }
+    */
 
-    return 0u;  
+    // Check for valid response from cellular module
+    if (at_write_command("AT+CSQ\r", "OK", 1000u) == 1u) {
+        char rssi_str[4] = {'\0'};
+        char fer_str[4] = {'\0'};
+
+        // Expect the UART to contain something like "+CSQ: 17,99\r\n\r\nOK"
+        char *comma = strextract(uart_received_string, rssi_str, "+CSQ: ", ",");
+        char *terminator = strextract(comma, fer_str, ",", "\r\n");
+
+        *rssi = atoi(rssi_str);
+        *fer = atoi(fer_str);
+
+        return terminator != NULL;
+    }
+
+    return 0u;
 }
 
 int modem_get_socket_status() {
-   
+    /*
     // Check for valid response from cellular module
     if(at_write_command("AT#SS\r","OK",1000u) == 1u){ 
         // If successful, parse the string received over uart for the meid
@@ -478,7 +515,16 @@ int modem_get_socket_status() {
         ss = (int) strtol(status_str,(char **) NULL, 10);
         return ss;
     }
-    
+    */
+
+    if (at_write_command("AT#SS\r", "OK", 1000u) == 1u) {
+        char status_str[5] = {'\0'};
+        strextract(uart_received_string, status_str, "#SS: ", "\r\n");
+        // status_str should contain something like "1,0"
+        // So increment ptr by 2;
+        return atoi(status_str + 2);
+    }
+
     return -1;    
 }
 
@@ -493,7 +539,6 @@ uint8 modem_set_flow_control(uint8 param){
 }
 
 uint8 modem_set_error_reports(uint8 param){
-	
     char cmd[100];
     sprintf(cmd,"AT+CMEE=%u\r",param);
     if(at_write_command(cmd,"OK",1000u) == 1u){      
@@ -610,7 +655,7 @@ uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop,
     char londeg[4] = {'\0'};
     char lonmin[8] = {'\0'};
     
-    if (parse_at_command_result(gps_string, substring, "GPSACP: ", "\r\n")){
+    if (strextract(gps_string, substring, "GPSACP: ", "\r\n")){
         output_array[0] = strtok(substring, delim);
         
         if(output_array[0] == NULL){
@@ -738,7 +783,7 @@ uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype,
         sprintf(at_command, "%s\r", at_command);
         if (at_write_command(at_command,"OK",1000u)){
             // TODO: Check this parsing logic
-            parse_at_command_result(uart_received_string, output_str, "SSLSECDATA: ", "\r\n");
+            strextract(uart_received_string, output_str, "SSLSECDATA: ", "\r\n");
             return 1u;
         }
     }
@@ -944,6 +989,7 @@ Leverages Status-Line protocol for HTTP/1.0 and HTTP/1.1
 Stores the results in "version", "status_code", and "phrase"
 */
 uint8 parse_http_status(char* http_status, char* version, char* status_code, char* phrase) {
+    /*
     char *a, *b;
     
     // Find the version and copy to "version"
@@ -976,24 +1022,21 @@ uint8 parse_http_status(char* http_status, char* version, char* status_code, cha
     strncpy(phrase,a,b-a);
     
     return 1u;
-}
+    */
 
-uint8 parse_at_command_result(char *input_str, char *output_str, 
-                            char *search_start, char *search_end) {
-    char *a, *b;
+    char *space = strextract(http_status, version, "HTTP/", " ");
+    char *next_space = NULL;
+    char *terminator = NULL;
 
-    a = strstr(input_str, search_start);
-    if (a == NULL){
-        return 0u;
+    if (space != NULL) {
+        next_space = strextract(space, status_code, " ", " ");
     }
-    a += strlen(search_start);
-    b = strstr(a, search_end);
-    if (b == NULL){
-        return 0u;
+
+    if (next_space != NULL) {
+        terminator = strextract(next_space, phrase, " ", "\r\n");
     }
-    strncpy(output_str, a, b-a);
-    output_str[b-a] = '\0';
-    return 1u;
+
+    return terminator != NULL;
 }
 
 void uart_string_reset(){

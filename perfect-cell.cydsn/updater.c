@@ -197,6 +197,7 @@ void zipf(float begin[], float end[], ...) {
 
 char *strextract(const char input_str[], char output_str[],
                  const char search_start[], const char search_end[]) {
+    if (input_str == NULL) return NULL;
     char *begin, *end = NULL;
     output_str[0] = '\0';
 
