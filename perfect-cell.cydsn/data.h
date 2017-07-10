@@ -19,7 +19,7 @@
 #include "valve.h"
 #include "misc.h"
 #include "modem.h"
-#include "updater.h"
+#include "strlib.h"
 #include "commit.h"
 
 // Function prototypes

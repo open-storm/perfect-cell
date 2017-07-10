@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "modem.h"
-#include "updater.h"
+#include "strlib.h"
 #include "extern.h"
 
 char client_cert[] = "-----\032\0";

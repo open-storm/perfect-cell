@@ -1,35 +1,15 @@
 /**
- * @file updater.h
+ * @file strlib.h
  * @brief Declares functions for parsing influxdb responses
  * @author Brandon Wong
  * @version TODO
  * @date 2017-06-19
  */
 
-#ifndef UPDATER_H
-#define UPDATER_H
+#ifndef STRLIB_H
+#define STRLIB_H
 #include <stddef.h>
 #include <stdint.h>
-
-/**
- * @brief TODO: Not implemented
- */
-int parse(char *search_str, char *in_str, char *out_str);                     // parse in_str for search_str and write to out_str
-
-/**
- * @brief TODO: Not implemented
- */
-int intparse(int *param, char *search_str, char *in_str, char *out_str);      // parse in_str for search_str and write int to param
-
-/**
- * @brief TODO: Not implemented
- */
-int uintparse(uint8_t *param, char *search_str, char *in_str, char *out_str);    // parse in_str for search_str and write uint to param
-
-/**
- * @brief TODO: Not implemented
- */
-int floatparse(float *param, char *search_str, char *in_str, char *out_str);  // parse in_str for search_str and write float to param
 
 /**
  * @brief Searches InfluxDB json packet, "packet", for "name" and
@@ -86,7 +66,7 @@ uint8_t clear_str(char* str);
  * @param end Pointer to one past the end of the buffer.
  * @param ... Variadic number of c strings.
  */
-void zips(char *begin[], char *end[], ...);
+void zips(char* begin[], char* end[], ...);
 
 /**
  * @brief Variadic function that zips floats.
@@ -106,9 +86,10 @@ void zipf(float begin[], float end[], ...);
  * @param search_start[] Leading c string in the query
  * @param search_end[] Ending c string in the query
  *
- * @return Pointer to first occurance of @p search_end after @p search_start
+ * @return Pointer to first occurance of @p search_end after @p search_start or
+ * NULL if extraction fails.
  */
-char *strextract(const char input_str[], char output_str[],
+char* strextract(const char input_str[], char output_str[],
                  const char search_start[], const char search_end[]);
 
 /**

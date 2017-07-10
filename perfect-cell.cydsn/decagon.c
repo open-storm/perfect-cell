@@ -7,7 +7,7 @@
  */
 
 #include "decagon.h"
-#include "updater.h"
+#include "strlib.h"
 //Global Variable for the number of characters received from the UART reading
 #define RAW_SERIAL_DATA_LENGTH_d 100
 //How many reading to we want to average by after the reading's been parsed.
