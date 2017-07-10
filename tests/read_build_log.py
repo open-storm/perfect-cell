@@ -5,7 +5,9 @@ from systemd import journal
 sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
-filters = re.compile('ci_test|python-requests|WHERE commit_hash|^[^A-Za-z0-9]*service=httpd')
+
+filters = 'ci_test|python-requests|WHERE commit_hash|^[\s]*service=httpd'
+regex = re.compile(filters)
 filter_on = True
 filtered = False
 
@@ -24,7 +26,7 @@ if __name__ == "__main__":
         while entry:
             msg = entry['MESSAGE']
             if filter_on:
-                filtered = filters.search(msg)
+                filtered = regex.search(msg)
             if not filtered:
                 print(msg)
             entry = j.get_next()
