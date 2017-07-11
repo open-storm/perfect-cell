@@ -38,7 +38,7 @@ pipeline {
                 //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
                 script {
-                    def program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
+                    String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
                 }
             }
         }
