@@ -142,7 +142,7 @@ void for_each(void *begin, void *end, size_t sz, void (*fn)(void *a)) {
 uint8_t gps_parse(const char *gps_string, float *lat, float *lon, float *hdop,
                   float *altitude, uint8_t *gps_fix, float *cog, float *spkm,
                   float *spkn, uint8_t *nsat) {
-    char substring[80];
+    char substring[100];
     const char delim[2] = ",";
     const char *output_array[11];
     int i;
