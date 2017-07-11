@@ -37,6 +37,8 @@ pipeline {
             steps {
                 //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
+                TimeZone.setDefault(TimeZone.getTimeZone('UTC'))
+                def program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
             }
         }
         stage('Test') {
@@ -46,7 +48,7 @@ pipeline {
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
-                            def r = bat script: "python tests\\ci_test.py ${getCommitSHA()} \"${env.BUILD_TIMESTAMP}\"", returnStatus: true
+                            def r = bat script: "python tests\\ci_test.py ${getCommitSHA()} \"${program_time}\"", returnStatus: true
                             return (r == 0)
                         }
                     }
@@ -61,7 +63,7 @@ pipeline {
         always {
             node('master'){
                 checkout scm
-                sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
+                sh "python3 tests/read_build_log.py \"${program_time}\""
             }
         }
         /*
