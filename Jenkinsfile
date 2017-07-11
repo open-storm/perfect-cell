@@ -38,7 +38,6 @@ pipeline {
                 //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
                 script {
-                    TimeZone.setDefault(TimeZone.getTimeZone('UTC'))
                     def program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
                 }
             }
