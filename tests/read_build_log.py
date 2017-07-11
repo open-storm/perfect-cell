@@ -15,10 +15,10 @@ if __name__ == "__main__":
     build_time = sys.argv[1]
     build_datetime = datetime.datetime.strptime(build_time,
                                             "%Y-%m-%d %H:%M:%S")
-    print(40*'#')
+    print('\n' + 40*'#')
     print('Dumping influxdb logs...')
     print('Filters: {0}'.format(filters))
-    print(40*'#')
+    print(40*'#' + '\n')
     with journal.Reader() as j:
         j.this_boot()
         j.log_level(journal.LOG_INFO)
@@ -32,4 +32,4 @@ if __name__ == "__main__":
             if not filtered:
                 print(msg)
             entry = j.get_next()
-    print(40*'#')
+    print('\n' + 40*'#')

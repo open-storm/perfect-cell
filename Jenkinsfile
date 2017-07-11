@@ -47,6 +47,7 @@ pipeline {
                     waitUntil {
                         script {
                             def r = bat script: "python tests\\ci_test.py ${getCommitSHA()} \"${env.BUILD_TIMESTAMP}\"", returnStatus: true
+                            if (r != 0){ sleep 15 }
                             return (r == 0)
                         }
                     }

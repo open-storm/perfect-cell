@@ -14,7 +14,6 @@ fast_sleeptimer = 20
 slow_sleeptimer = 4600
 source = 'ci_test'
 offset_seconds = 60
-minimum_delay = 15
 date_format = "%Y-%m-%d %H:%M:%S"
 
 # Target variables and acceptable ranges
