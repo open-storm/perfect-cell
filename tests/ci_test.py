@@ -1,4 +1,5 @@
 import sys
+import datetime
 import influxdb
 
 # Database information
@@ -12,6 +13,9 @@ node_id = 'ARB000'
 fast_sleeptimer = 20
 slow_sleeptimer = 4600
 source = 'ci_test'
+offset_seconds = 60
+minimum_delay = 15
+date_format = "%Y-%m-%d %H:%M:%S"
 
 # Target variables and acceptable ranges
 var_ranges = {
@@ -57,6 +61,12 @@ result_check = {}
 git_commit = sys.argv[1]
 # Timestamp requires Jenkins Build Timestamp plugin
 build_timestamp = sys.argv[2]
+
+# Offset timestamp if desired
+if offset_seconds:
+    build_datetime = datetime.datetime.strptime(build_timestamp, date_format)
+    build_datetime = build_datetime + datetime.timedelta(seconds=offset_seconds)
+    build_timestamp = datetime.datetime.strftime(build_datetime, date_format)
 
 if __name__ == '__main__':
     # Instantiate client

@@ -42,14 +42,11 @@ pipeline {
         stage('Test') {
         agent { label 'klab' }
             steps {
-                script {
-                    String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
-                }
                 //setBuildStatus("Testing...", "PENDING");
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
-                            def r = bat script: "python tests\\ci_test.py ${getCommitSHA()} \"${program_time}\"", returnStatus: true
+                            def r = bat script: "python tests\\ci_test.py ${getCommitSHA()} \"${env.BUILD_TIMESTAMP}\"", returnStatus: true
                             return (r == 0)
                         }
                     }
@@ -64,7 +61,7 @@ pipeline {
         always {
             node('master'){
                 checkout scm
-                sh "python3 tests/read_build_log.py \"${program_time}\""
+                sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
             }
         }
         /*
