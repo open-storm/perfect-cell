@@ -37,15 +37,13 @@ pipeline {
             steps {
                 //setBuildStatus("Programming...", "PENDING");
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
-                script {
-                    String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
-                }
             }
         }
         stage('Test') {
         agent { label 'klab' }
             steps {
                 //setBuildStatus("Testing...", "PENDING");
+                String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
