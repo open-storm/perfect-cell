@@ -1,4 +1,5 @@
 import sys
+import datetime
 import influxdb
 
 # Database information
@@ -8,6 +9,12 @@ username = 'test_user'
 password = 'test_pass'
 database = 'TEST_DB'
 ssl_enabled = True
+node_id = 'ARB000'
+fast_sleeptimer = 20
+slow_sleeptimer = 4600
+source = 'ci_test'
+offset_seconds = 60
+date_format = "%Y-%m-%d %H:%M:%S"
 
 # Target variables and acceptable ranges
 var_ranges = {
@@ -16,9 +23,11 @@ var_ranges = {
     'conn_attempts' : [1, 1000],
     'v_bat' : [-1, 10],
     'maxbotix_depth' : [0, 9998],
+    'maxbotix_2_depth' : [0, 9998],
     'decagon_soil_conduct' : [0, 9998],
     'decagon_soil_dielec' : [0, 9998],
     'decagon_soil_temp' : [-40, 60],
+    'atlas_dissolved_oxygen' : [0, 20],
     'gps_latitude' : [42.2, 42.4],
     'gps_longitude' : [-83.8, -83.6],
     'gps_altitude' : [200, 300],
@@ -52,19 +61,28 @@ git_commit = sys.argv[1]
 # Timestamp requires Jenkins Build Timestamp plugin
 build_timestamp = sys.argv[2]
 
+# Offset timestamp if desired
+if offset_seconds:
+    build_datetime = datetime.datetime.strptime(build_timestamp, date_format)
+    build_datetime = build_datetime + datetime.timedelta(seconds=offset_seconds)
+    build_timestamp = datetime.datetime.strftime(build_datetime, date_format)
+
 if __name__ == '__main__':
     # Instantiate client
     client = influxdb.InfluxDBClient(host=host, port=port, username=username,
                                     password=password, database=database, ssl=ssl_enabled)
 
     # Set a fast sleeptimer
-    sleeptimer_query = ("SELECT last(value) from sleeptimer where node_id=ARB000")
+    sleeptimer_query = ("SELECT last(value) FROM sleeptimer WHERE "
+                        "node_id={0} AND source={1}").format(node_id, source)
     sleeptimer_result = client.query(sleeptimer_query)
     if sleeptimer_result:
         value_index = sleeptimer_result['columns'].index('last')
         sleeptimer_value = sleeptimer_result['values'][0][value_index]
-    if (not sleeptimer_result) or (sleeptimer_value != 100):
-        client.write_points(['sleeptimer,node_id=ARB000 value=100'], protocol='line')
+    if (not sleeptimer_result) or (sleeptimer_value != fast_sleeptimer):
+        client.write_points(['sleeptimer,node_id={0},source={1} value={2}'
+                             .format(node_id, source, fast_sleeptimer)],
+                            protocol='line')
 
     # Create query
     query_str = (("SELECT last(value) FROM {0} WHERE commit_hash=\'{1}\' AND "
@@ -91,7 +109,8 @@ if __name__ == '__main__':
             # for next try
             if var in trigger_vars:
                 trigger = trigger_vars[var]
-                client.write_points(['{0},node_id=ARB000 value=1'.format(trigger)],
+                client.write_points(['{0},node_id={1},source={2} value=1'
+                                     .format(trigger, node_id, source)],
                                      protocol='line')
             # Raise an error if value is not in acceptable range
             raise ValueError(("{0} does not lie within specified"
@@ -114,11 +133,13 @@ if __name__ == '__main__':
         if missing_trigger_vars:
             missing_triggers = set([trigger_vars[var] for var in
                                     missing_trigger_vars])
-            client.write_points(['{0},node_id=ARB000 value=1'.format(trigger) for
+            client.write_points(['{0},node_id={1},source={2} value=1'
+                                 .format(trigger, node_id, source) for
                                 trigger in missing_triggers], protocol='line')
         # Raise an error if not all requested variables were returned
         raise KeyError("Did not write variable(s) {0} to database"
                        .format(', '.join(missing_vars)))
 
     # Set slow sleeptimer
-    client.write_points(['sleeptimer,node_id=ARB000 value=4600'], protocol='line')
+    client.write_points(['sleeptimer,node_id={0},source={1} value={2}'
+                         .format(node_id, source, slow_sleeptimer)], protocol='line')

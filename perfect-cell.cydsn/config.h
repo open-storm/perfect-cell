@@ -27,7 +27,7 @@
 #define ENABLE_SSL_SEC_CONFIG  1u
 
 // GPS
-#define MIN_SATELLITES    5
+#define MIN_SATELLITES    3
 #define MAX_GPS_TRIES     6
 
 // Global parameters
