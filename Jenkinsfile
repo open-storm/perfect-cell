@@ -41,8 +41,10 @@ pipeline {
         }
         stage('Test') {
         agent { label 'klab' }
-            String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
             steps {
+                script {
+                    String program_time = new Date().format('yyyy-MM-dd HH:mm:ss')
+                }
                 //setBuildStatus("Testing...", "PENDING");
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
