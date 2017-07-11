@@ -210,19 +210,6 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled);
 
 /**
- * @brief Searches a string "http_status" and attempts to parse the status line.
- * Stores the results in "version", "status_code", and "phrase"
- *
- * @param http_status String to be parsed. Expects Status-Line protocol.
- * @param version Buffer to store the version.
- * @param status_code Buffer to store the status code.
- * @param phrase Buffer to store the phrase.
- *
- * @return 1u on success, 0u otherwise.
- */
-uint8 parse_http_status(char* http_status, char* version, char* status_code, char* phrase);
-
-/**
  * @brief Constructs a generic HTTP request.
  *
  * @param send_str Buffer to store generated HTTP request.
@@ -380,29 +367,6 @@ uint8 modem_gps_power_toggle(uint8 gps_power_on);
 uint8 modem_get_gps_position(float *lat, float *lon, float *hdop,
               float *altitude, uint8 *gps_fix, float *cog,
               float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries);
-
-/**
- * @brief Parses the given gps string into the given buffers.
- *
- * @param gps_string The string to be parsed
- * @param lat Buffer to store the Latitude.
- * @param lon Buffer to store the Longitude.
- * @param hdop Buffer to store the Horizontal Diluition of Precision.
- * @param altitude Buffer to store the Altitude: mean-sea-level (geoid).
- * @param gps_fix Buffer to store the flag:
- * - 0 = Invalid Fix
- * - 2 = 2D fix
- * - 3 = 3D fix
- * @param cog Buffer to store the Course over ground.
- * @param spkm Buffer to store the Speed over ground (km/hr).
- * @param spkn Buffer to store the Speed over ground (knots).
- * @param nsat Buffer to store the number of satellites in use [0..12]
- *
- * @return 1u on successful parsing, 0u otherwise.
- */
-uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop,
-              float *altitude, uint8 *gps_fix, float *cog,
-              float *spkm, float *spkn, uint8 *nsat);
 
 /**
  * @brief Runs GPS routine to retrieve GPS position.

@@ -1,7 +1,7 @@
 /**
  * @file strlib.h
- * @brief Declares functions for parsing influxdb responses
- * @author Brandon Wong
+ * @brief Functions for parsing c strings.
+ * @author Brandon Wong, Ivan Mondragon
  * @version TODO
  * @date 2017-06-19
  */
@@ -101,6 +101,43 @@ char* strextract(const char input_str[], char output_str[],
  * @param fn function which transforms each value.
  */
 void for_each(void *begin, void *end, size_t sz, void (*fn)(void *a));
+
+/**
+ * @brief Parses the given gps string into the given buffers.
+ *
+ * @param gps_string The string to be parsed
+ * @param lat Buffer to store the Latitude.
+ * @param lon Buffer to store the Longitude.
+ * @param hdop Buffer to store the Horizontal Diluition of Precision.
+ * @param altitude Buffer to store the Altitude: mean-sea-level (geoid).
+ * @param gps_fix Buffer to store the flag:
+ * - 0 = Invalid Fix
+ * - 2 = 2D fix
+ * - 3 = 3D fix
+ * @param cog Buffer to store the Course over ground.
+ * @param spkm Buffer to store the Speed over ground (km/hr).
+ * @param spkn Buffer to store the Speed over ground (knots).
+ * @param nsat Buffer to store the number of satellites in use [0..12]
+ *
+ * @return 1u on successful parsing, 0u otherwise.
+ */
+uint8_t gps_parse(const char* gps_string, float* lat, float* lon, float* hdop,
+                  float* altitude, uint8_t* gps_fix, float* cog, float* spkm,
+                  float* spkn, uint8_t* nsat);
+
+/**
+ * @brief Searches a string "http_status" and attempts to parse the status line.
+ * Stores the results in "version", "status_code", and "phrase"
+ *
+ * @param http_status String to be parsed. Expects Status-Line protocol.
+ * @param version Buffer to store the version.
+ * @param status_code Buffer to store the status code.
+ * @param phrase Buffer to store the phrase.
+ *
+ * @return 1u on success, 0u otherwise.
+ */
+uint8_t parse_http_status(char* http_status, char* version, char* status_code,
+                          char* phrase);
 
 #endif
 /* [] END OF FILE */
