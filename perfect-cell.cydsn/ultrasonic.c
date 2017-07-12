@@ -102,62 +102,57 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
     return (*reading).valid;
 }
 
-uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 which_ultrasonic, uint8 take_average, int ultrasonic_loops, uint8 max_size){
-
+uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
+                     uint8 which_ultrasonic, uint8 take_average,
+                     int ultrasonic_loops, uint8 max_size) {
     // Ensure we don't access nonexistent array index
     uint8 nvars = 1;
-    if(*array_ix + nvars >= max_size){
+    if (*array_ix + nvars >= max_size) {
         return *array_ix;
     }
-    
+
     float valid_iter = 0.0;
     int read_iter = 0;
     UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
     float measurement = 0.0f;
 
-    // TODO: This should probably be generalized
-    // May need to include string.h
-    if (which_ultrasonic == 0u){
-        labels[*array_ix] = "maxbotix_depth";
-    }
-    if (which_ultrasonic == 1u){
-        labels[*array_ix] = "maxbotix_2_depth";
-    }
-        
-    // Start the MUX 
+    const char *const ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};
+    labels[*array_ix] = ultrasonics[which_ultrasonic];
+
+    // Start the MUX
     mux_controller_Wakeup();
-        
+
     // Set MUX to read from 1st input
     mux_controller_Write(which_ultrasonic);
-        
-    for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
+
+    for (read_iter = 0; read_iter < ultrasonic_loops; read_iter++) {
         ultrasonic_get_reading(&ultrasonic_reading);
-        if ( ultrasonic_reading.valid == 1u){
+        if (ultrasonic_reading.valid == 1u) {
             valid_iter++;
             measurement += ultrasonic_reading.depth;
-            // If not taking the average, break the loop at the first valid reading
-            if ( take_average == 0u ) {
-				break;
+            // If not taking the average, break the loop at the first valid
+            // reading
+            if (take_average == 0u) {
+                break;
             }
-        }            
+        }
     }
+
     // If taking the average, divide by the number of valid readings
-    if ( take_average == 1u ) {
-		if ( valid_iter > 0 ) {
-            measurement = measurement / valid_iter;
-		}
+    if (take_average && valid_iter > 0) {
+        measurement = measurement / valid_iter;
     }
-        
-    // 2017 02 05: Send -1 instead of 9999 to avoid confusion
-    // TODO: Test and then check in this update on GitHub
-	// If there are no valid readings, send 9999
-	if (valid_iter == 0.0) {
-		measurement = -1;
-	}
-        
+    /* 2017 02 05: Send -1 instead of 9999 to avoid confusion
+     * TODO: Test and then check in this update on GitHub
+     * If there are no valid readings, send 9999 */
+    else if (valid_iter == 0.0) {
+        measurement = -1;
+    }
+
     // Save MUX configuration + put MUX to sleep
     mux_controller_Sleep();
-    measurement = (measurement > 10000) ? 9999 : measurement;
+
+    // Store measurement + increment array_ix
     readings[*array_ix] = measurement;
     *array_ix += 1;
     return *array_ix;
