@@ -113,9 +113,8 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
     float valid_iter = 0.0;
     int read_iter = 0;
     UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
-    // explicit reset for debugging purposes
-    readings[*array_ix] = 0.0f;
-        
+    float measurement = 0.0f;
+
     // TODO: This should probably be generalized
     // May need to include string.h
     if (which_ultrasonic == 0u){
@@ -135,10 +134,9 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
         ultrasonic_get_reading(&ultrasonic_reading);
         if ( ultrasonic_reading.valid == 1u){
             valid_iter++;
-            readings[*array_ix] += ultrasonic_reading.depth;
+            measurement += ultrasonic_reading.depth;
             // If not taking the average, break the loop at the first valid reading
             if ( take_average == 0u ) {
-                (*array_ix)++;
 				break;
             }
         }            
@@ -146,8 +144,7 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
     // If taking the average, divide by the number of valid readings
     if ( take_average == 1u ) {
 		if ( valid_iter > 0 ) {
-            readings[*array_ix] = readings[*array_ix] / valid_iter;
-            (*array_ix)++;
+            measurement = measurement / valid_iter;
 		}
     }
         
@@ -155,12 +152,14 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
     // TODO: Test and then check in this update on GitHub
 	// If there are no valid readings, send 9999
 	if (valid_iter == 0.0) {
-		readings[*array_ix] = -1;
-		(*array_ix)++;
+		measurement = -1;
 	}
         
     // Save MUX configuration + put MUX to sleep
     mux_controller_Sleep();
+    measurement = (measurement > 10000) ? 9999 : measurement;
+    readings[*array_ix] = measurement;
+    *array_ix += 1;
     return *array_ix;
 }
 
