@@ -13,6 +13,8 @@
 #define ORP 98
 #define PH 102
 
+#define ATLAS_MAX_ITER 100
+
 struct{
     float ec;
     float tds;
@@ -30,13 +32,13 @@ struct{
 int atlas_sensor_sleep(uint8 sensor_address);
 
 /**
- * @brief Wake Atlas I2C sensor from sleep mode
+ * @brief Calibrate Atlas sensor using single-point method
  *
  * @param sensor_address I2C slave address of sensor
  *
  * @return 1 on success
  */
-int atlas_sensor_wake(uint8 sensor_address);
+int atlas_sensor_calibrate(uint8 sensor_address);
 
 /**
  * @brief Take a single reading from Atlas sensor in I2C mode.
