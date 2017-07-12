@@ -60,9 +60,13 @@ pipeline {
 
     post {
         always {
+            node('klab') {
+                deleteDir()
+            }
             node('master'){
                 checkout scm
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
+                deleteDir()
             }
         }
         /*
