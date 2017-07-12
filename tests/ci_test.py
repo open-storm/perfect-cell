@@ -107,14 +107,14 @@ if __name__ == '__main__':
         except:
             # If rejected variable is associated with a trigger, set trigger high
             # for next try
-            if var in trigger_vars:
-                trigger = trigger_vars[var]
+            if var_name in trigger_vars:
+                trigger = trigger_vars[var_name]
                 client.write_points(['{0},node_id={1},source={2} value=1'
                                      .format(trigger, node_id, source)],
                                      protocol='line')
             # Raise an error if value is not in acceptable range
             raise ValueError(("{0} does not lie within specified"
-                             "range").format(var))
+                             "range").format(var_name))
         # Write passing variable to dictionary
         result_check.update({var_name : var_value})
 
