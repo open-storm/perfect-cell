@@ -110,10 +110,11 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
         return *array_ix;
     }
     
-    uint8 valid = 0u;
     float valid_iter = 0.0;
     int read_iter = 0;
     UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
+    // explicit reset for debugging purposes
+    readings[*array_ix] = 0.0f;
         
     // TODO: This should probably be generalized
     // May need to include string.h
@@ -131,7 +132,7 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
     mux_controller_Write(which_ultrasonic);
         
     for( read_iter = 0; read_iter < ultrasonic_loops; read_iter++){
-        valid = ultrasonic_get_reading(&ultrasonic_reading);
+        ultrasonic_get_reading(&ultrasonic_reading);
         if ( ultrasonic_reading.valid == 1u){
             valid_iter++;
             readings[*array_ix] += ultrasonic_reading.depth;
