@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "modem.h"
-#include "updater.h"
+#include "strlib.h"
 #include "extern.h"
 
 char client_cert[] = "-----\032\0";
@@ -318,168 +318,96 @@ uint8 modem_check_network() {
     return 0u;      
 }
 
-uint8 modem_get_meid(char* meid) {
-/*
-int modem_get_meid(char* meid)
+uint8 modem_get_meid(char *meid) {
+    /*
+    int modem_get_meid(char* meid)
 
-Return the MEID of the cell module
-- Tested for CC864-DUAL and DE910-DUAL
+    Return the MEID of the cell module
+    - Tested for CC864-DUAL and DE910-DUAL
 
-Example CC864-DUAL Conversation:
-[Board] AT#MEID?
-[Modem] #MEID: A10000,32B9F1C0
+    Example CC864-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A10000,32B9F1C0
 
-        OK
+            OK
 
-Example DE910-DUAL Conversation:
-[Board] AT#MEID?
-[Modem] #MEID: A1000049AB9082
+    Example DE910-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A1000049AB9082
 
-        OK
-*/
-    
+            OK
+    */
+
     // Check for valid response from cellular module
-    if(at_write_command("AT#MEID?\r","OK",1000u) == 1u){ 
-        // If successful, parse the string received over uart for the meid
-        char *a, *b;
+    if (at_write_command("AT#MEID?\r", "OK", 1000u) == 1u) {
+        // Expect the UART to contain something like
+        // "\r\n#MEID: A10000,32B9F1C0\r\n\r\nOK"
+        char *terminator =
+            strextract(uart_received_string, meid, "#MEID: ", "\r\n");
 
-        // Expect the UART to contain something like "\r\n#MEID: A10000,32B9F1C0\r\n\r\nOK"
-        // - Search for "#MEID:".  Place the starting pointer, a, at the resulting index
-        a = strstr(uart_received_string,"#MEID: ");
-        if (a == NULL) {
-            //puts("#MEID: not found in uart_received_string");
-            return 0u;
-        }
-        // - Shift the pointer to the beginning of the MEID, i.e. "A10000,32B9F1C0\r\n\r\nOK"
-        a += strlen("#MEID: ");
-        
-        // - Find the carriage return marking after "#MEID: " that follows the MEID
-        b = strstr(a,"\r");
-        if (b == NULL) {
-            //puts("Carriage return not found in uart_received_string");
-            return 0u;
-        }
-        
-        // Parse the strings and store the MEID in *meid
-        strncpy(meid,a,b-a);
-        meid[b-a] = '\0';
-        
-        // In the case for modules like CC864-DUAL where "," is in the middle of the MEID,
-        // remove the comma
+        // In the case for modules like CC864-DUAL where "," is in the middle of
+        // the MEID, remove the comma
         // * Assume only 1 comma needs to be removed
-        a = strstr(meid,",");
-        if (a != NULL) {
-            memmove(a,a+1,strlen(meid)-1);
-        } 
-        
-        return 1u;
+        char *comma = strstr(meid, ",");
+        if (comma != NULL) {
+            // +1 to include the null terminating character of a c string
+            memmove(comma, comma + 1, strlen(comma) + 1);
+        }
+
+        return terminator != NULL;
     }
-    
-    return 0u;    
+
+    return 0u;
 }
 
-uint8 modem_check_signal_quality(int *rssi, int *fer){
-/* 
+uint8 modem_check_signal_quality(int *rssi, int *fer) {
+    /*
+    Returns the received signal strength indication (rssi) of the modem
+    This value ranges from 0-31, or is 99 if unknown/undetectable
 
-uint8 modem_check_signal_quality(uint8 *rssi)
+    Also returns the frame rate error (fer) of the modem.
+    This value ranges from 0-7, or is 99 if unknown/undetectable.
+    (From experience, fer is almost always 99)
 
-Returns the received signal strength indication (rssi) of the modem
-This value ranges from 0-31, or is 99 if unknown/undetectable
+    Example conversation:
+    [Board] AT+CSQ
+    [Modem] +CSQ: 17,99
 
-Also returns the frame rate error (fer) of the modem.  
-This value ranges from 0-7, or is 99 if unknown/undetectable.
-(From experience, fer is almost always 99)
+            OK
+    */
 
-Example conversation:
-[Board] AT+CSQ
-[Modem] +CSQ: 17,99
-
-        OK
-*/
-    
     // Check for valid response from cellular module
-    if(at_write_command("AT+CSQ\r","OK",1000u) == 1u){  
-        
-        // If successful, parse the string received over uart for the rssi value
-        char *a, *b, *c;
-        char rssi_str[5] = {'\0'}, fer_str[5] = {'\0'};
+    if (at_write_command("AT+CSQ\r", "OK", 1000u) == 1u) {
+        char rssi_str[4] = {'\0'};
+        char fer_str[4] = {'\0'};
 
         // Expect the UART to contain something like "+CSQ: 17,99\r\n\r\nOK"
-        // - Search for "+CSQ: ".  Place the starting pointer, a, at the resulting index
-        a = strstr(uart_received_string,"+CSQ: ");
-        if (a == NULL) {
-            //puts("+CSQ: not found in uart_received_string");
-            return 0u;
-        }
-        // - Shift the pointer to the beginning of the rssi value, i.e. "17,99\r\n\r\n\OK"
-        a += strlen("+CSQ: ");
-        
-        // - Find the comma marking after "+CSQ: " that follows the rssi value
-        b = strstr(a,",");
-        if (b == NULL) {
-            //puts("Comma not found in uart_received_string");
-            return 0u;
-        }
-        
+        char *comma = strextract(uart_received_string, rssi_str, "+CSQ: ", ",");
+        char *terminator = strextract(comma, fer_str, ",", "\r\n");
 
-        // - Find the carriage return after the comma that follows the fer value
-        c = strstr(b + strlen(","),"\r");
-        if (c == NULL) {
-            //puts("\r not found in uart_received_string");
-            return 0u;
-        }
-        
-        // Parse the strings and store the respective rssi and fer values
-        strncpy(rssi_str,a,b-a);
-        rssi_str[b-a] = '\0';
-        // - Store the rssi value in *rssi
-        *rssi = (uint8) strtol(rssi_str,(char **) NULL, 10); // Base 10
+        *rssi = atoi(rssi_str);  // Containing "17"
+        *fer = atoi(fer_str);   // Containing "99"
 
-        strncpy(fer_str,b+strlen(","),c-b+strlen(","));
-        fer_str[c-b+strlen(",")] = '\0';
-        // - Store the fer value in *fer
-        *fer = (uint8) strtol(fer_str,(char **) NULL, 10); // Base 10
-
-        return 1u;
+        return terminator != NULL;
     }
 
-    return 0u;  
+    return 0u;
 }
 
 int modem_get_socket_status() {
-   
     // Check for valid response from cellular module
-    if(at_write_command("AT#SS\r","OK",1000u) == 1u){ 
-        // If successful, parse the string received over uart for the meid
-        char *a, *b;
-        char status_str[5];
-        int ss;
-        
+    if (at_write_command("AT#SS\r", "OK", 1000u) == 1u) {
+        char status_str[5] = {'\0'};
+
         // Expect the UART to contain something like "\r\n#SS: 1,0\r\n"
-        // - Search for "#SS:".  Place the starting pointer, a, at the resulting index
-        a = strstr(uart_received_string,"#SS: ");
-        if (a == NULL) {
-            //puts("#MEID: not found in uart_received_string");
-            return 0u;
-        }
-        // - Shift the pointer to the beginning of the MEID, i.e. "A10000,32B9F1C0\r\n\r\nOK"
-        a += strlen("#SS: 1,");
-        
-        // - Find the carriage return marking after "#MEID: " that follows the MEID
-        b = strstr(a,"\r");
-        if (b == NULL) {
-            //puts("Carriage return not found in uart_received_string");
-            return 0u;
-        }
-        
-        // Parse the strings and store the MEID in *meid
-        strncpy(status_str,a,b-a);
-        status_str[b-a] = '\0';
-        ss = (int) strtol(status_str,(char **) NULL, 10);
-        return ss;
+        strextract(uart_received_string, status_str, "#SS: ", "\r\n");
+
+        // status_str should contain something like "1,0"
+        // So increment ptr by 2;
+        return atoi(status_str + 2);
     }
-    
-    return -1;    
+
+    return -1;
 }
 
 uint8 modem_set_flow_control(uint8 param){
@@ -493,7 +421,6 @@ uint8 modem_set_flow_control(uint8 param){
 }
 
 uint8 modem_set_error_reports(uint8 param){
-	
     char cmd[100];
     sprintf(cmd,"AT+CMEE=%u\r",param);
     if(at_write_command(cmd,"OK",1000u) == 1u){      
@@ -503,78 +430,76 @@ uint8 modem_set_error_reports(uint8 param){
     return 0u;  
 }
 
-uint8 modem_pdp_context_toggle(uint8 activate_pdp){	
-    char cmd[100];
-    uint8 pdp_currently_activated;
-    uint8 pdp_currently_deactivated;
-    
-    // Send AT read command to determine if PDP is already enabled
-    // TODO: ASSUME SSID is 1
-    // TODO: This will actually fail if substring is not found
-    pdp_currently_activated = at_write_command("AT#SGACT?\r","SGACT: 1,1",1000u);
-    pdp_currently_deactivated = at_write_command("AT#SGACT?\r","SGACT: 1,0",1000u);
-    
-    // If current SSL state matches desired state, do nothing
-    if ((pdp_currently_activated && activate_pdp) ||
-        (pdp_currently_deactivated && !activate_pdp)){
-        return 1u;
+uint8 modem_pdp_context_toggle(uint8 activate_pdp) {
+    char cmd[20];
+    char pdp_state[5] = {'\0'};
+
+    // Send AT read command to determine if context is already enabled
+    if (at_write_command("AT#SGACT?\r", "OK", 1000u)) {
+        // Extract current pdp state into pdp_state
+        strextract(uart_received_string, pdp_state, "SGACT: 1,", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(pdp_state) != activate_pdp) {
+            // Construct AT command
+            sprintf(cmd, "AT#SGACT=1,%u\r", activate_pdp);
+
+            // Enable/disable context
+            return at_write_command(cmd, "OK", 5000u);
+        } else {
+            return 1u;
+        }
     }
-    // Construct AT command
-    sprintf(cmd,"AT#SGACT=1,%u\r", activate_pdp);
-    // Enable/disable SSL
-    if(at_write_command(cmd,"OK",5000u) == 1u){      
-        return 1u;
-    }
-    return 0u;  
+
+    return 0u;
 }
 
-uint8 modem_ssl_toggle(int enable_ssl){	
-    char cmd[100] = {'\0'};
-    uint8 ssl_currently_enabled;
-    uint8 ssl_currently_disabled;
-    
-    // TODO: This is actually not very safe
+uint8 modem_ssl_toggle(int enable_ssl) {
+    char cmd[20];
+    char ssl_state[5] = {'\0'};
+
     // Send AT read command to determine if SSL is already enabled
-    ssl_currently_enabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,1",1000u);
-    ssl_currently_disabled = at_write_command("AT#SSLEN?\r","SSLEN: 1,0",1000u);
-    
-    // If current SSL state matches desired state, do nothing
-    if ((ssl_currently_enabled && enable_ssl) ||
-        (ssl_currently_disabled && !enable_ssl)){
-        return 1u;
+    if (at_write_command("AT#SSLEN?\r", "OK", 1000u)) {
+        // Extract current ssl state into ssl_state
+        strextract(uart_received_string, ssl_state, "SSLEN: 1,", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(ssl_state) != enable_ssl) {
+            // Construct AT command
+            sprintf(cmd, "AT#SSLEN=1,%u\r", enable_ssl);
+
+            // Enable/disable SSL
+            return at_write_command(cmd, "OK", 1000u);
+        } else {
+            return 1u;
+        }
     }
-    // Construct AT command
-    sprintf(cmd,"AT#SSLEN=1,%u\r", enable_ssl);
-    // Enable/disable SSL
-    if(at_write_command(cmd,"OK",1000u) == 1u){      
-        return 1u;
-    }
-    return 0u;  
+
+    return 0u;
 }
 
-uint8 modem_gps_power_toggle(uint8 gps_power_on){	
-    char cmd[100];
-    uint8 gps_currently_powered;
-    uint8 gps_currently_unpowered;
-    
-    // Send AT read command to determine if GPS Power is already enabled
-    // TODO: ASSUME SSID is 1
-    // TODO: This will actually fail if substring is not found
-    gps_currently_powered = at_write_command("AT$GPSP?\r","GPSP: 1",1000u);
-    gps_currently_unpowered = at_write_command("AT$GPSP?\r","GPSP: 0",1000u);
-    
-    // If current GPS power state matches desired state, do nothing
-    if ((gps_currently_powered && gps_power_on) ||
-        (gps_currently_unpowered && !gps_power_on)){
-        return 1u;
+uint8 modem_gps_power_toggle(uint8 gps_power_on) {
+    char cmd[20];
+    char gps_power[2] = {'\0'};
+
+    // Send AT read command to determine if GPS is already powered
+    if (at_write_command("AT$GPSP?\r", "OK", 1000u)) {
+        // Extract current gps state into gps_power
+        strextract(uart_received_string, gps_power, "GPSP: ", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(gps_power) != gps_power_on) {
+            // Construct AT command
+            sprintf(cmd, "AT$GPSP=%u\r", gps_power_on);
+
+            // Enable/disable GPS power
+            return at_write_command(cmd, "OK", 5000u);
+        } else {
+            return 1u;
+        }
     }
-    // Construct AT command
-    sprintf(cmd,"AT$GPSP=%u\r", gps_power_on);
-    // Enable/disable GPS power
-    if(at_write_command(cmd,"OK",5000u) == 1u){      
-        return 1u;
-    }
-    return 0u;  
+
+    return 0u;
 }
 
 uint8 modem_get_gps_position(float *lat, float *lon, float *hdop, 
@@ -594,59 +519,6 @@ uint8 modem_get_gps_position(float *lat, float *lon, float *hdop,
                 CyDelay(5000u);
             }
         }
-    return 0u;
-}
-                            
-uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop, 
-              float *altitude, uint8 *gps_fix, float *cog, 
-              float *spkm, float *spkn, uint8 *nsat){
-    
-    char substring[100];
-    const char delim[2] = ",";
-    char *output_array[11];
-    int i;
-    char latdeg[3] = {'\0'};
-    char latmin[8] = {'\0'};
-    char londeg[4] = {'\0'};
-    char lonmin[8] = {'\0'};
-    
-    if (parse_at_command_result(gps_string, substring, "GPSACP: ", "\r\n")){
-        output_array[0] = strtok(substring, delim);
-        
-        if(output_array[0] == NULL){
-            return 0u;
-        }
-        
-        for(i=1; i<11; i++){
-            output_array[i] = strtok(NULL, delim);
-            if (output_array[i] == NULL){
-                return 0u;
-            }
-        }
-
-        strncpy(latdeg, output_array[1], 2);
-        strncpy(latmin, output_array[1] + 2, 7);
-        strncpy(londeg, output_array[2], 3);
-        strncpy(lonmin, output_array[2] + 3, 7);
-        // STILL NEED TO ACCOUNT FOR W/E and N/S
-        
-        *lat = strtof(latdeg, NULL) + (strtof(latmin, NULL) / 60.0);
-        *lon = strtof(londeg, NULL) + (strtof(lonmin, NULL) / 60.0);
-        *hdop = strtof(output_array[3], NULL);
-        *altitude = strtof(output_array[4], NULL);
-        *gps_fix = strtod(output_array[5], NULL);
-        *cog = strtof(output_array[6], NULL);
-        *spkm = strtof(output_array[7], NULL);
-        *spkn = strtof(output_array[8], NULL);
-        *nsat = strtod(output_array[10], NULL);
-        if (strstr(output_array[1], "S") != NULL){
-            (*lat) *= -1.0;
-        }
-        if (strstr(output_array[2], "W") != NULL){
-            (*lon) *= -1.0;
-        }        
-    return 1u;
-    }
     return 0u;
 }
 
@@ -680,54 +552,46 @@ uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop,
     return status;
 }
 
-uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, 
-              uint8 min_satellites, uint8 max_tries, uint8 max_size){
-    
+uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix,
+              int *gps_trigger, uint8 min_satellites, uint8 max_tries,
+              uint8 max_size) {
     // Ensure we don't access nonexistent array index
     uint8 nvars = 10;
-    if(*array_ix + nvars >= max_size){
+    if (*array_ix + nvars >= max_size) {
         return *array_ix;
     }
-    
+
     float lat = -9999;
     float lon = -9999;
     float hdop = -9999;
     float altitude = -9999;
     uint8 gps_fix = 0u;
-    float cog = -9999; 
+    float cog = -9999;
     float spkm = -9999;
     float spkn = -9999;
     uint8 nsat = 0u;
-    
-    labels[*array_ix] = "gps_latitude";
-    labels[*array_ix + 1] = "gps_longitude";
-    labels[*array_ix + 2] = "gps_hdop";
-    labels[*array_ix + 3] = "gps_altitude";
-    labels[*array_ix + 4] = "gps_fix";
-    labels[*array_ix + 5] = "gps_cog";
-    labels[*array_ix + 6] = "gps_spkm";
-    labels[*array_ix + 7] = "gps_spkn";
-    labels[*array_ix + 8] = "gps_nsat";
-    labels[*array_ix + 9] = "gps_trigger";
-    run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, 
-                    &cog, &spkm, &spkn, &nsat, min_satellites, max_tries);
-    
-    readings[*array_ix] = lat;
-    readings[*array_ix + 1] = lon;
-    readings[*array_ix + 2] = hdop;
-    readings[*array_ix + 3] = altitude;
-    readings[*array_ix + 4] = gps_fix;
-    readings[*array_ix + 5] = cog;
-    readings[*array_ix + 6] = spkm;
-    readings[*array_ix + 7] = spkn;
-    readings[*array_ix + 8] = nsat;
-    readings[*array_ix + 9] = *gps_trigger;
-    
+
+    // with the begin/end paradigm, end must always be `one past the end`
+    char **begins = labels + *array_ix;
+    char **ends = begins + nvars;
+    zips(begins, ends, "gps_latitude", "gps_longitude", "gps_hdop",
+         "gps_altitude", "gps_fix", "gps_cog", "gps_spkm", "gps_spkn",
+         "gps_nsat", "gps_trigger");
+
+    run_gps_routine(gps_trigger, &lat, &lon, &hdop, &altitude, &gps_fix, &cog,
+                    &spkm, &spkn, &nsat, min_satellites, max_tries);
+
+    // with the begin/end paradigm, end must always be `one past the end`
+    float *beginf = readings + *array_ix;
+    float *endf = beginf + nvars;
+    zipf(beginf, endf, lat, lon, hdop, altitude, (float) gps_fix, cog, spkm,
+         spkn, (float) nsat, *gps_trigger);
+
     (*array_ix) += nvars;
-    
+
     return *array_ix;
 }
-            
+
 uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype, 
                          char *cert, char *output_str){
     char at_command[100] = {'\0'};
@@ -745,8 +609,7 @@ uint8 modem_ssl_sec_data(uint8 ssid, uint8 action, uint8 datatype,
     else if (action == 2u){
         sprintf(at_command, "%s\r", at_command);
         if (at_write_command(at_command,"OK",1000u)){
-            // TODO: Check this parsing logic
-            parse_at_command_result(uart_received_string, output_str, "SSLSECDATA: ", "\r\n");
+            strextract(uart_received_string, output_str, "SSLSECDATA: ", "\r\n");
             return 1u;
         }
     }
@@ -938,70 +801,6 @@ uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ss
     }
        
     return 0u;  
-}
-
-/*
-Searches a string "http_status" for and attempts to parse the status line.
-Leverages Status-Line protocol for HTTP/1.0 and HTTP/1.1
-
-    Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-
-(See https://www.w3.org/Protocols/HTTP/1.0/spec.html#Status-Line.
- SP is a space, CRLF is carriage return line feed)
-
-Stores the results in "version", "status_code", and "phrase"
-*/
-uint8 parse_http_status(char* http_status, char* version, char* status_code, char* phrase) {
-    char *a, *b;
-    
-    // Find the version and copy to "version"
-    a = strstr(http_status,"HTTP/");
-    if (a == NULL) {
-        return 0u;
-    }
-    a += strlen("HTTP/");
-    b = strstr(a," ");
-    if (b == NULL) {
-        return 0u;
-    }
-    strncpy(version,a,b-a);
-    
-    // Find the status code and copy to "status_code"
-    a = b+1;
-    b = strstr(a," ");
-    if (b == NULL) {
-        return 0u;
-    }
-    strncpy(status_code,a,b-a);
-    //*status_code = (int) strtol(tmp_code,(char **) NULL, 10); 
-    
-    // Find the status phrase and copy to "phrase"
-    a = b+1;
-    b = strstr(a,"\r\n");
-    if (b == NULL) {
-        return 0u;
-    }
-    strncpy(phrase,a,b-a);
-    
-    return 1u;
-}
-
-uint8 parse_at_command_result(char *input_str, char *output_str, 
-                            char *search_start, char *search_end) {
-    char *a, *b;
-
-    a = strstr(input_str, search_start);
-    if (a == NULL){
-        return 0u;
-    }
-    a += strlen(search_start);
-    b = strstr(a, search_end);
-    if (b == NULL){
-        return 0u;
-    }
-    strncpy(output_str, a, b-a);
-    output_str[b-a] = '\0';
-    return 1u;
 }
 
 void uart_string_reset(){

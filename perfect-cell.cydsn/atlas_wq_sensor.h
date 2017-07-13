@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef ATLAS_WQ_SENSOR_H
+#define ATLAS_WQ_SENSOR_H
 #include "project.h"
 
 #define CONDUCTIVITY 101
@@ -73,4 +75,5 @@ uint8 atlas_take_con_reading(con_reading *reading);
  */
 uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 
+#endif
 // Additional functionality

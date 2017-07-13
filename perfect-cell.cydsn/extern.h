@@ -1,3 +1,5 @@
+#ifndef EXTERN_H
+#define EXTERN_H
 #include <project.h>
 
 extern char node_id[20];
@@ -82,4 +84,5 @@ extern int valve_vars;
 extern char *storm_endpoint;
 extern int storm_port;
 
+#endif
 /* [] END OF FILE */

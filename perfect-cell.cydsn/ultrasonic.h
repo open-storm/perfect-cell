@@ -5,7 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
-
+#ifndef ULTRASONIC_H
+#define ULTRASONIC_H
 #include <device.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,5 +90,5 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 wh
  */
 void                uart_ultrasonic_string_reset();
 
-
+#endif
 //[] END OF FILE

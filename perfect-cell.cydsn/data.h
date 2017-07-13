@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef DATA_H
+#define DATA_H
 #include <device.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +19,7 @@
 #include "valve.h"
 #include "misc.h"
 #include "modem.h"
-#include "updater.h"
+#include "strlib.h"
 #include "commit.h"
 
 // Function prototypes
@@ -208,5 +210,5 @@ uint8 append_tags(char *main_tags, char *appended_label, char *appended_value);
  */
 char *url_encode(char *str);
 
+#endif
 /* [] END OF FILE */
-

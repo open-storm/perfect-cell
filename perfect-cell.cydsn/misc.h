@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef MISC_H
+#define MISC_H
 #include <device.h>
 
 /**
@@ -40,4 +42,5 @@ uint8   blink_LED(uint8 n_blinks);
  */
 void    init_pins();
 
+#endif
 /* [] END OF FILE */
