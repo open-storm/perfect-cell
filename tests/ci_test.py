@@ -4,8 +4,11 @@ import datetime
 import yaml
 import influxdb
 
-parent_path = os.path.abspath(os.path.join
-                              (os.path.abspath(__file__),os.pardir))
+parent_path = os.path.abspath(os.path.join(
+    os.path.abspath(os.path.join(
+        os.path.realpath(__file__),os.pardir)),
+    os.pardir))
+
 config_path = os.path.join(parent_path, 'build_info.yaml')
 
 # Read config info
