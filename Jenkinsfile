@@ -68,21 +68,30 @@ pipeline {
                 deleteDir() // clean up our workspace
             }
         }
-        node('master') {
             success {
-                sh "python3 build_tools/post_build.py \"SUCCESS\""
+                node('master') {
+                    sh "python3 build_tools/post_build.py \"SUCCESS\""
+                }
             }
             unstable {
-                sh "python3 build_tools/post_build.py \"UNSTABLE\""
+                node('master') {
+                    sh "python3 build_tools/post_build.py \"UNSTABLE\""
+                }
             }
             failure {
-                sh "python3 build_tools/post_build.py \"FAILURE\""
+                node('master') {
+                    sh "python3 build_tools/post_build.py \"FAILURE\""
+                }
             }
             notBuilt {
-                sh "python3 build_tools/post_build.py \"NOT_BUILT\""
+                node('master') {
+                    sh "python3 build_tools/post_build.py \"NOT_BUILT\""
+                }
             }
             aborted {
-                sh "python3 build_tools/post_build.py \"ABORTED\""
+                node('master') {
+                    sh "python3 build_tools/post_build.py \"ABORTED\""
+                }
             }
         }
     }
