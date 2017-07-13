@@ -38,8 +38,10 @@ pipeline {
             }
         }
         stage('Test') {
+        // TODO: These steps could probably be run on the EC2 instance
         agent { label 'klab' }
             steps {
+                bat "python build_tools\\pre_build.py"
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
@@ -56,6 +58,36 @@ pipeline {
     }
 
     post {
+        success {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"SUCCESS\""
+            }
+        }
+        unstable {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"UNSTABLE\""
+            }
+        }
+        failure {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"FAILURE\""
+            }
+        }
+        notBuilt {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"NOT_BUILT\""
+            }
+        }
+        aborted {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"ABORTED\""
+            }
+        }
         always {
             node('klab') {
                 deleteDir()
