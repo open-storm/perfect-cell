@@ -75,7 +75,7 @@ pipeline {
         failure {
             sh "python3 build_tools/post_build.py \"FAILURE\""
         }
-        not_built {
+        notBuilt {
             sh "python3 build_tools/post_build.py \"NOT_BUILT\""
         }
         aborted {
