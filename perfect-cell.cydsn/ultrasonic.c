@@ -52,54 +52,37 @@ uint8 ultrasonic_power_off(uint8 which_ultrasonic){
 
 // Start ISR, Fill array, Return array, Stop ISR
 uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
-    
-    int i, j;
-    char depth[DEPTH_STRING_LENGTH] = {'\0'};
-    char s[MAX_STRING_LENGTH] = {'\0'};
-    
-    uint8 which_ultrasonic;
-    which_ultrasonic = mux_controller_Read();
-    
-    // Reset variables
-    (*reading).valid = 0u;
-    (*reading).temp = -9999;    
-    (*reading).depth = -9999;
-	
-	ultrasonic_start();
+    char depth_str[DEPTH_STRING_LENGTH + 1] = {'\0'};
+    uint8 which_ultrasonic = mux_controller_Read();
+
+    ultrasonic_start();
     uart_ultrasonic_string_reset();
 
-    isr_byte_ultrasonic_rx_StartEx(isr_byte_ultrasonic_rx); // Start the ISR to read the UART
-    ultrasonic_power_on(which_ultrasonic);                                  // Power on the sensor
-    CyDelay(1500u);                                         // Wait for UART to get readings from sensor
-    
-    isr_byte_ultrasonic_rx_Stop();                          // Stop the ISR to read the UART
-    ultrasonic_power_off(which_ultrasonic);                                 // Power off the sensor
-	ultrasonic_stop();
+    // Start the ISR to read the UART
+    isr_byte_ultrasonic_rx_StartEx(isr_byte_ultrasonic_rx);
+    ultrasonic_power_on(which_ultrasonic);  // Power on the sensor
+    CyDelay(1500u);  // Wait for UART to get readings from sensor
 
-    // Store relevant strings to ultrasonic_packet
-    strcpy(s,uart_ultrasonic_received_string);
-    uart_ultrasonic_string_reset();
+    isr_byte_ultrasonic_rx_Stop();           // Stop the ISR to read the UART
+    ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
+    ultrasonic_stop();
 
-    for(i = 0; i < MAX_STRING_LENGTH-1-DEPTH_STRING_LENGTH; i++){
-        if( s[i] == 'R' && s[i+1+DEPTH_STRING_LENGTH] == '\r' ) {
-            for(j = 0; j < DEPTH_STRING_LENGTH; j++) {
-                depth[j] = s[i+j+1];
-            }
-            (*reading).valid = 1u;
-            break;
-        }
+    // Expect the UART to contain something like "\rR1739\rRSonar...."
+    if (strextract(uart_ultrasonic_received_string, depth_str, "R", "\r")) {
+        float depth = strtof(depth_str, NULL);
+        // c string comparison because comparing floats is not ideal
+        int valid = strcmp(depth_str, "9999"); 
+        reading->depth = valid ? depth : -9999.0f;
+        reading->valid = valid ? 1u : 0u;
+    } else {
+        reading->valid = 0u;
+        reading->depth = -9999.0f;
     }
-    
-    if ((*reading).valid) {
-        (*reading).depth = strtof(depth,(char **) NULL);
-		
-		if ((*reading).depth == 9999) {			
-			(*reading).valid = 0u;
-			(*reading).depth = -9999;
-		}        
-    }
-	
-    return (*reading).valid;
+
+    // We don't use temp for now
+    reading->temp = -9999.0f;
+
+    return reading->valid;
 }
 
 uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
