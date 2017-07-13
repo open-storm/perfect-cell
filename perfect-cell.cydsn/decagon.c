@@ -23,7 +23,7 @@ uint8 raw_serial_data_count_d;
 CY_ISR(IntUartRx_D)
 {
    char getchar;
-   getchar  = UART_Decagon_GetChar();
+   getchar  = Sensors_UART_GetChar();
         
    if(getchar > 0u && raw_serial_data_count_d < RAW_SERIAL_DATA_LENGTH_d){
         raw_serial_data_d[raw_serial_data_count_d] = getchar;
@@ -41,15 +41,21 @@ DecagonGS3 Decagon_Take_Reading(){
     memset(&raw_serial_data_d[0],0,sizeof(raw_serial_data_d));
     raw_serial_data_count_d = 0u;
     
-	UART_Decagon_ClearRxBuffer();	
-	UART_Decagon_Start();
+    // Divide clock to get baud rate of 1200
+    Clock_sensors_SetDividerValue(8u);
+    
+    Sensors_UART_ClearRxBuffer();
+    Sensors_UART_Start();
 
 	Decagon_Power_Write(1u); 
-    isr_Decagon_StartEx(IntUartRx_D);
+    isr_sensors_uart_rx_StartEx(IntUartRx_D);
     CyDelay(1000u);
     Decagon_Power_Write(0u);
-    isr_Decagon_Stop();
-	UART_Decagon_Stop();	
+    isr_sensors_uart_rx_Stop();
+	Sensors_UART_Stop();
+    
+    // Restore baud rate
+    Clock_sensors_SetDividerValue(1u);
 	
 	// Convert the raw data
     if((value1 = strtok(raw_serial_data_d, " ")) == NULL) {
@@ -65,7 +71,6 @@ DecagonGS3 Decagon_Take_Reading(){
 	DecagonGS3 SoilMoisture = { atof(value1), atof(value2), atoi(value3), (err == 0u), err};
 	
 	return SoilMoisture;
-	
 }
 
 
@@ -102,6 +107,12 @@ uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
     char **ends = begins + nvars;
     zips(begins, ends, "decagon_soil_conduct", "decagon_soil_temp",
          "decagon_soil_dielec");
+    
+    // Start the mux
+    mux_controller_Wakeup();
+    
+    // Set the mux to read from the decagon pin
+    mux_controller_Write(2u);
 
     for (read_iter = 0; read_iter < decagon_loops; read_iter++) {
         decagon_reading = Decagon_Take_Reading();
@@ -124,6 +135,9 @@ uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
         readings[*array_ix + 1] = 9999;
         readings[*array_ix + 2] = 9999;
     }
+    
+    // Save mux configuration and put mux to sleep
+    mux_controller_Sleep();
 
     *array_ix += 3;
     return *array_ix;

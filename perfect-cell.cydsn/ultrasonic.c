@@ -22,11 +22,12 @@ uint8 uart_ultrasonic_string_index = 0;
 
 // Start the UART
 void ultrasonic_start(){
-    uart_ultrasonic_Start();
+    //uart_ultrasonic_Start();
+    Sensors_UART_Start();
 }
 // Stop the UART
 void ultrasonic_stop(){
-    uart_ultrasonic_Stop();
+    Sensors_UART_Stop();
 }
 
 // Provide power to the ultrasonic sensor
@@ -60,11 +61,11 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
     uart_ultrasonic_string_reset();
 
     // Start the ISR to read the UART
-    isr_byte_ultrasonic_rx_StartEx(isr_byte_ultrasonic_rx);
+    isr_sensors_uart_rx_StartEx(isr_byte_ultrasonic_rx);
     ultrasonic_power_on(which_ultrasonic);  // Power on the sensor
     CyDelay(1500u);  // Wait for UART to get readings from sensor
 
-    isr_byte_ultrasonic_rx_Stop();           // Stop the ISR to read the UART
+    isr_sensors_uart_rx_Stop();           // Stop the ISR to read the UART
     ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
     ultrasonic_stop();
 
@@ -159,13 +160,13 @@ void uart_ultrasonic_string_reset(){
        
     memset(&uart_ultrasonic_received_string[0],0,sizeof(uart_ultrasonic_received_string));
     uart_ultrasonic_string_index = 0;
-    uart_ultrasonic_ClearRxBuffer();
+    Sensors_UART_ClearRxBuffer();
 }
 
 
 CY_ISR(isr_byte_ultrasonic_rx){
     // hold the next char in the rx register as a temporary variable
-    uint8 rx_char_hold = uart_ultrasonic_GetChar();
+    uint8 rx_char_hold = Sensors_UART_GetChar();
     
     // store the char in uart_received_string
     if(rx_char_hold) {
