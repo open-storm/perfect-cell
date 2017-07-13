@@ -25,13 +25,13 @@ var_ranges :
     'decagon_soil_temp' : [-40, 60]
     'atlas_dissolved_oxygen' : [0, 20]
     'gps_latitude' : [42.2, 42.4],
-    'gps_longitude' : [-83.8, -83.6],
-    'gps_altitude' : [200, 300],
-    'gps_hdop' : [-9999, 9999],
-    'gps_fix' : [-9999, 9999],
-    'gps_cog' : [-9999, 9999],
-    'gps_spkm' : [0, 9999],
-    'gps_spkn' : [0, 9999],
+    'gps_longitude' : [-83.8, -83.6]
+    'gps_altitude' : [200, 300]
+    'gps_hdop' : [-9999, 9999]
+    'gps_fix' : [-9999, 9999]
+    'gps_cog' : [-9999, 9999]
+    'gps_spkm' : [0, 9999]
+    'gps_spkn' : [0, 9999]
     'gps_nsat' : [0, 12]
 
 
