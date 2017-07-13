@@ -8,6 +8,7 @@
 
 #include "ultrasonic.h"
 #include <stdio.h>
+#include <strlib.h>
 
 #define MAX_STRING_LENGTH       128
 #define DEPTH_STRING_LENGTH     4
@@ -67,12 +68,25 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
     ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
     ultrasonic_stop();
 
+    // Expected name in UART "MB7384\r", or corresponding sensor
+    // long range : 7383
+    // short range: 7384
+
     // Expect the UART to contain something like "\rR1739\rRSonar...."
     if (strextract(uart_ultrasonic_received_string, depth_str, "R", "\r")) {
         float depth = strtof(depth_str, NULL);
-        // c string comparison because comparing floats is not ideal
-        int valid = strcmp(depth_str, "9999"); 
-        reading->depth = valid ? depth : -9999.0f;
+        int valid = 0;
+
+        char name[5] = {'\0'};
+        strextract(uart_ultrasonic_received_string, name, "MB", "\r");
+
+        if (strcmp(name, "7383") == 0) {  // Short range sensor
+            valid = strcmp(depth_str, "5000");
+        } else if (strcmp(name, "7384") == 0) {  // Long range sensor
+            valid = strcmp(depth_str, "9999");
+        }
+
+        reading->depth = valid ? depth : -depth;
         reading->valid = valid ? 1u : 0u;
     } else {
         reading->valid = 0u;
@@ -81,7 +95,6 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
 
     // We don't use temp for now
     reading->temp = -9999.0f;
-
     return reading->valid;
 }
 
