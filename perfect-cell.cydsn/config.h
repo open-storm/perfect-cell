@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 // Default node info
 #define DEFAULT_NODE_ID "example_node"
 
@@ -60,4 +63,5 @@
 #define OPTICAL_RAIN_LOOPS   1
 #define DECAGON_LOOPS        1
 
+#endif
 /* [] END OF FILE */

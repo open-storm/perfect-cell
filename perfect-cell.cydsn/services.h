@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef SERVICES_H
+#define SERVICES_H
 
 // Xively parameters
 extern int XIVELY_FEED_ID;
@@ -65,4 +67,5 @@ int construct_data_body(char *data_packet, char *labels[], float readings[],
 void construct_data_post_request(char* body, char* socket_dial_str,
 	                             char* send_str, int service_flag);
 
+#endif
 /* [] END OF FILE */
