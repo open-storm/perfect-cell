@@ -66,6 +66,21 @@ pipeline {
                 deleteDir() // clean up our workspace
             }
         }
+        success {
+            sh "python3 build_tools/post_build.py \"SUCCESS\""
+        }
+        unstable {
+            sh "python3 build_tools/post_build.py \"UNSTABLE\""
+        }
+        failure {
+            sh "python3 build_tools/post_build.py \"FAILURE\""
+        }
+        not_built {
+            sh "python3 build_tools/post_build.py \"NOT_BUILT\""
+        }
+        aborted {
+            sh "python3 build_tools/post_build.py \"ABORTED\""
+        }
     }
 }
 
