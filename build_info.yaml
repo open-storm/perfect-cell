@@ -13,7 +13,7 @@ offset_seconds : 60
 date_format : "%Y-%m-%d %H:%M:%S"
 
 # Target variables and acceptable ranges
-var_ranges : 
+var_ranges :
     'cell_fer' : [0, 99]
     'cell_strength' : [0, 100]
     'conn_attempts' : [1, 1000]
@@ -24,15 +24,15 @@ var_ranges :
     'decagon_soil_dielec' : [0, 9998]
     'decagon_soil_temp' : [-40, 60]
     'atlas_dissolved_oxygen' : [0, 20]
-#    'gps_latitude' : [42.2, 42.4],
-#    'gps_longitude' : [-83.8, -83.6],
-#    'gps_altitude' : [200, 300],
-#    'gps_hdop' : [-9999, 9999],
-#    'gps_fix' : [-9999, 9999],
-#    'gps_cog' : [-9999, 9999],
-#    'gps_spkm' : [0, 9999],
-#    'gps_spkn' : [0, 9999],
-#    'gps_nsat' : [0, 12]
+    'gps_latitude' : [42.2, 42.4],
+    'gps_longitude' : [-83.8, -83.6],
+    'gps_altitude' : [200, 300],
+    'gps_hdop' : [-9999, 9999],
+    'gps_fix' : [-9999, 9999],
+    'gps_cog' : [-9999, 9999],
+    'gps_spkm' : [0, 9999],
+    'gps_spkn' : [0, 9999],
+    'gps_nsat' : [0, 12]
 
 
 # Variables associated with a trigger
@@ -48,7 +48,7 @@ trigger_vars :
     'gps_nsat' : 'gps_trigger'
     'isco_bottle' : 'autosampler_trigger'
 
-build_status_codes : 
+build_status_codes :
     'success' : 0
     'unstable' : 1
     'failure' : 2
