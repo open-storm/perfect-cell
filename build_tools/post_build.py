@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # Set sleeptimer mode to auto
     client.write_points(['sleeptimer_mode,node_id={0},source={1} value={2}'
                          .format(config['node_id'], config['source'],
-                                 "auto")], protocol='line')
+                                 "\"auto\"")], protocol='line')
 
     # Set all triggers low
     trigger_vars = list(set(config['trigger_vars'].values()))

@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # Set sleeptimer mode to manual
     client.write_points(['sleeptimer_mode,node_id={0},source={1} value={2}'
                          .format(config['node_id'], config['source'],
-                                 "manual")], protocol='line')
+                                 "\"manual\"")], protocol='line')
 
     # Set all triggers high
     trigger_vars = list(set(config['trigger_vars'].values()))
