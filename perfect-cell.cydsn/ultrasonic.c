@@ -113,7 +113,7 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
     UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
     float measurement = 0.0f;
 
-    const char *const ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};
+    char *ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};
     labels[*array_ix] = ultrasonics[which_ultrasonic];
 
     // Start the MUX

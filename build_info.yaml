@@ -47,7 +47,7 @@ trigger_vars :
     'gps_spkm' : 'gps_trigger'
     'gps_spkn' : 'gps_trigger'
     'gps_nsat' : 'gps_trigger'
-    'isco_bottle' : 'autosampler_trigger'
+    #'isco_bottle' : 'autosampler_trigger'
 
 build_status_codes :
     'success' : 0
