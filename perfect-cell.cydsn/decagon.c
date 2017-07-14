@@ -42,20 +42,21 @@ DecagonGS3 Decagon_Take_Reading(){
     raw_serial_data_count_d = 0u;
     
     // Divide clock to get baud rate of 1200
-    Clock_sensors_SetDividerValue(8u);
+    Clock_sensors_SetDividerValue(2500u);
     
     Sensors_UART_ClearRxBuffer();
     Sensors_UART_Start();
+    isr_sensors_uart_rx_StartEx(IntUartRx_D);
 
 	Decagon_Power_Write(1u); 
-    isr_sensors_uart_rx_StartEx(IntUartRx_D);
     CyDelay(1000u);
     Decagon_Power_Write(0u);
+
     isr_sensors_uart_rx_Stop();
 	Sensors_UART_Stop();
     
-    // Restore baud rate
-    Clock_sensors_SetDividerValue(1u);
+    // Restore baud rate of 9600
+    Clock_sensors_SetDividerValue(313u);
 	
 	// Convert the raw data
     if((value1 = strtok(raw_serial_data_d, " ")) == NULL) {
@@ -112,7 +113,7 @@ uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
     mux_controller_Wakeup();
     
     // Set the mux to read from the decagon pin
-    mux_controller_Write(2u);
+    mux_controller_Write(3u);
 
     for (read_iter = 0; read_iter < decagon_loops; read_iter++) {
         decagon_reading = Decagon_Take_Reading();
