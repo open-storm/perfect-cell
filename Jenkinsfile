@@ -58,14 +58,44 @@ pipeline {
     }
 
     post {
+        success {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"SUCCESS\""
+            }
+        }
+        unstable {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"UNSTABLE\""
+            }
+        }
+        failure {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"FAILURE\""
+            }
+        }
+        notBuilt {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"NOT_BUILT\""
+            }
+        }
+        aborted {
+            node('master') {
+                checkout scm
+                sh "python3 ./build_tools/post_build.py \"ABORTED\""
+            }
+        }
         always {
             node('klab') {
                 deleteDir() // clean up our workspace on the slave
             }
             node('master') {
                 checkout scm
-                sh "python3 build_tools/post_build.py \"${getBuildResult()}\""
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
+                //sh "echo ${getBuildResult()}"
                 deleteDir() // clean up our workspace on master
             }
         }
@@ -73,7 +103,7 @@ pipeline {
 }
 
 String getBuildResult() {
-    return "${env.currentBuild.result}"
+    return "${buildStatus}"
 }
 
 String getCommitSHA() {
