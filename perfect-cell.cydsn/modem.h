@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-01
  */
+#ifndef MODEM_H
+#define MODEM_H
 #include <project.h>
 
 #define MODEM_STATE_OFF         0
@@ -208,19 +210,6 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled);
 
 /**
- * @brief Searches a string "http_status" and attempts to parse the status line.
- * Stores the results in "version", "status_code", and "phrase"
- *
- * @param http_status String to be parsed. Expects Status-Line protocol.
- * @param version Buffer to store the version.
- * @param status_code Buffer to store the status code.
- * @param phrase Buffer to store the phrase.
- *
- * @return 1u on success, 0u otherwise.
- */
-uint8 parse_http_status(char* http_status, char* version, char* status_code, char* phrase);
-
-/**
  * @brief Constructs a generic HTTP request.
  *
  * @param send_str Buffer to store generated HTTP request.
@@ -237,20 +226,6 @@ uint8 parse_http_status(char* http_status, char* version, char* status_code, cha
 void construct_generic_request(char* send_str, char* body, char* host, char* route,
                                int port, char* method, char* connection_type,
 							   char *extra_headers, int extra_len, char* http_protocol);
-
-/**
- * @brief Finds the leftmost substring that begins with <search_start> and ends
- * with <search_end>, requires that <search_end> appears after <search_start>.
- *
- * @param input_str String to be parsed
- * @param output_str Buffer to store the result of parsing
- * @param search_start Substring start pattern to match, MUST appear before the end string
- * @param search_end Substring end pattern to match, MUST appear after the start string
- *
- * @return 1u on success, 0u otherwise.
- */
-uint8 parse_at_command_result(char *input_str, char *output_str,
-							  char *search_start, char *search_end);
 
 /**
  * @brief Context Activation. Execution command is used to activate or deactivate the specified PDP context.
@@ -394,29 +369,6 @@ uint8 modem_get_gps_position(float *lat, float *lon, float *hdop,
               float *spkm, float *spkn, uint8 *nsat, uint8 min_satellites, uint8 max_tries);
 
 /**
- * @brief Parses the given gps string into the given buffers.
- *
- * @param gps_string The string to be parsed
- * @param lat Buffer to store the Latitude.
- * @param lon Buffer to store the Longitude.
- * @param hdop Buffer to store the Horizontal Diluition of Precision.
- * @param altitude Buffer to store the Altitude: mean-sea-level (geoid).
- * @param gps_fix Buffer to store the flag:
- * - 0 = Invalid Fix
- * - 2 = 2D fix
- * - 3 = 3D fix
- * @param cog Buffer to store the Course over ground.
- * @param spkm Buffer to store the Speed over ground (km/hr).
- * @param spkn Buffer to store the Speed over ground (knots).
- * @param nsat Buffer to store the number of satellites in use [0..12]
- *
- * @return 1u on successful parsing, 0u otherwise.
- */
-uint8 gps_parse(char *gps_string, float *lat, float *lon, float *hdop,
-              float *altitude, uint8 *gps_fix, float *cog,
-              float *spkm, float *spkn, uint8 *nsat);
-
-/**
  * @brief Runs GPS routine to retrieve GPS position.
  *
  * @param gps_trigger gps_trigger flag.
@@ -458,4 +410,6 @@ uint8 run_gps_routine(int *gps_trigger, float *lat, float *lon, float *hdop,
  * @return (*array_ix) + 10
  */
 uint8 zip_gps(char *labels[], float readings[], uint8 *array_ix, int *gps_trigger, uint8 min_satellites, uint8 max_tries, uint8 max_size);
+
+#endif
 //[] END OF FILE

@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef DECAGON_H
+#define DECAGON_H
 #include <project.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,5 +53,5 @@ DecagonGS3 Decagon_Convert_Raw_Reading(char* raw_D);
  */
 uint8 zip_decagon(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, int decagon_loops, uint8 max_size);
 
-
+#endif
 /* [] END OF FILE */

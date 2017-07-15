@@ -5,7 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
-
+#ifndef OPTICAL_RAIN_H
+#define OPTICAL_RAIN_H
 #include <project.h>
 
 /**
@@ -48,4 +49,5 @@ uint8 optical_rain_get_count();
  */
 uint8 zip_optical_rain(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
 
+#endif
 /* [] END OF FILE */
