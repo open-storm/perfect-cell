@@ -1,16 +1,17 @@
 /**
  * @file decagon.h
  * @brief Declares functions for Decagon GS3 soil moisture sensor
- * @author Brandon Wong and Matt Bartos
+ * @author Brandon Wong, Matt Bartos, Ivan Mondragon
  * @version TODO
  * @date 2017-06-19
  */
 #ifndef DECAGON_H
 #define DECAGON_H
 #include <project.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include "cytypes.h"
 
 /**
@@ -30,7 +31,7 @@ struct {
  *
  * @return DecagonGS3 struct containing sensor readings
  */
-DecagonGS3 Decagon_Take_Reading();
+uint8_t Decagon_Take_Reading(DecagonGS3 *decagon_reading);
 
 /**
  * @brief TODO: Not implemented
