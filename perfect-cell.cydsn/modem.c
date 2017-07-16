@@ -525,7 +525,7 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
     char *message_end = NULL;
     char *ending_buffer = NULL;
     char *response_start = NULL;
-    char length_string[10] = {'\0'};
+    char length_string[CHUNK_STRING_LENGTH] = {'\0'};
     char status_code[5] = {"\0"};
     int iter;
     
@@ -561,7 +561,10 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
         a = fixed_length + strlen(fixed_length_header);
         b = strstr(a, "\r\n");
         if (!b) {return 0u;}
-        // TODO: buffer overflow check here
+        // Buffer overflow check
+        if ( (b - a) >= CHUNK_STRING_LENGTH){
+            return 0u;
+        }
         strncpy(length_string, a, b-a);
         chunk_size = (int)strtol(length_string, NULL, 10);
         memset(length_string, '\0', sizeof(length_string));
@@ -627,7 +630,10 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
         // If we're positioned at the start of a new chunk, get the chunk size
         if (chunked){
             if (chunk_start){
-                // Get new chunk size
+                // Buffer overflow check
+                if ( (b - a) >= CHUNK_STRING_LENGTH){
+                    return 0u;
+                }
                 strncpy(length_string, a, b-a);
                 chunk_size = (int)strtol(length_string, NULL, 16);
                 memset(length_string, '\0', sizeof(length_string));

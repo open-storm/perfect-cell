@@ -17,6 +17,7 @@
 #define MAX_SEND_LENGTH         5000
 #define MAX_RECV_LENGTH         5000
 #define CHUNK_SIZE              800
+#define CHUNK_STRING_LENGTH     10
 
 extern uint8	modem_state;
 extern uint8	lock_acquired;
