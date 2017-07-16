@@ -14,9 +14,10 @@
 #define MODEM_STATE_READY       3
 #define MAX_GET_ATTEMPTS        2
 #define MAX_SEND_ATTEMPTS       1//2
-#define MAX_PACKET_LENGTH       1500
+//#define MAX_PACKET_LENGTH       1500
+#define TELIT_BUFFER_LENGTH     1600
 #define MAX_SEND_LENGTH         5000
-#define MAX_RECV_LENGTH         1500
+#define MAX_RECV_LENGTH         5000
 #define CHUNK_SIZE              800
 
 extern uint8	modem_state;
@@ -196,6 +197,20 @@ uint8 modem_socket_close(int ssl_enabled);
  * @return 1u on success, 0u otherwise.
  */
 int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char);
+
+/**
+ * @brief Reads a HTTP response with a chunked transfer encoding over multiple modem buffers
+ *
+ * @param message The message buffer to write to
+ * @param response_start A pointer to the start of the response in the modem buffer
+ * @param recv_cmd The Telit receive command to use: AT#SRECV=1,<BYTES>\r or AT#SSLRECV=1,<BYTES>\r
+ * @param max_loops The maximum number of times to loop; used as a safeguard
+ * @param max_message_size The maximum size of the @p message
+ *
+ * @return 1u on success, 0u otherwise.
+ */
+int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_response, 
+                  int max_loops, int max_message_size);
 
 /**
  * @brief TODO

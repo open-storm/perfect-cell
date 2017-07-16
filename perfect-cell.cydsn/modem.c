@@ -61,7 +61,7 @@ int	   iter = 0;
 uint8  modem_state, lock_acquired = 0u, ready = 0u;
 uint16 uart_string_index = 0u;
 uint32 feed_id;
-char   uart_received_string[1500] = {'\0'};
+char   uart_received_string[TELIT_BUFFER_LENGTH] = {'\0'};
 char   request_chunk[CHUNK_SIZE] = {'\0'};
 char*  modem_apn = "epc.tmobile.com";
 
@@ -731,12 +731,14 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
         a = send_str + i*chunk_len;
         b = send_str + (i+1)*chunk_len;
         if (b >= str_end){
+            // TODO: Reimplement as strncat to avoid unnecessary copying
             strncpy(chunk, a, str_end - a);
             sprintf(chunk, "%s%s", chunk, term_char);
             status = at_write_command(chunk, ring_cmd, 10000u);
             uart_string_reset();
             return status;
         }
+        // TODO: Reimplement as strncat to avoid unnecessary copying
         strncpy(chunk, a, b - a);
         sprintf(chunk, "%s%s", chunk, term_char);
         status = at_write_command(chunk, "OK", 10000u);
@@ -746,7 +748,211 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
         }        
     }
     return status;
-}                            
+}
+
+int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_response, 
+                  int max_loops, int max_message_size){
+
+    char *chunked_header = "Transfer-Encoding: chunked";
+    char *fixed_length_header = "Content-Length: ";
+    int message_free_space = max_message_size - strlen(message);
+    int chunk_remainder = 0;
+    int buffer_start = 1;
+    int chunk_start = 1;
+    int chunk_size = 0;
+    int status = 0;
+    char *chunked = NULL;
+    char *fixed_length = NULL;
+    char *error = NULL;
+    char *message_end = NULL;
+    char *ending_buffer = NULL;
+    char *response_start = NULL;
+    char length_string[10] = {'\0'};
+    char status_code[5] = {"\0"};
+    int iter;
+    
+    char *a = NULL;
+    char *b = NULL;
+
+    // Download the first buffer of data
+    uart_string_reset();
+    int data_pending = at_write_command(recv_cmd, ring_cmd, 10000u);
+    
+    // Check the HTTP response for valid status (200 or 204)
+    parse_http_status(uart_received_string, (char*) NULL, status_code, (char*) NULL);
+
+    // If response is not desired, report whether request was successful
+    if ( !get_response){
+        if( status_code[0] == '2' ){
+            return 1u;
+        }
+        return 0u;
+    }
+    // Determine the transfer encoding
+    fixed_length = strstr(uart_received_string, fixed_length_header);
+    chunked = strstr(uart_received_string, chunked_header);
+
+    // If neither (or both) transfer encodings are included, abort
+    if ((!fixed_length && !chunked) || (fixed_length && chunked)){
+        return 0u;
+    }
+
+    // If fixed length, get the content length
+    if (fixed_length){
+        a = fixed_length + strlen(fixed_length_header);
+        b = strstr(a, "\r\n");
+        if (!b) {return 0u;}
+        // TODO: buffer overflow check here
+        strncpy(length_string, a, b-a);
+        chunk_size = (int)strtol(length_string, NULL, 10);
+        memset(length_string, '\0', sizeof(length_string));
+        chunk_remainder = chunk_size;
+    }
+
+    // InfluxDB sends chunked data, so check again to see if there is an
+    // unsolicited message indicated a suspended connection
+    //
+    // If so, then the query results are stored in the buffer, so issue
+    // AT#SRECV to read the buffer
+    if (data_pending){
+        // Throw out headers for now
+        uart_string_reset();
+        // Get the next modem buffer
+        status = at_write_command(recv_cmd, "OK", 10000u);
+        // Set the starting pointer to the modem buffer start
+        response_start = uart_received_string;
+    }
+    // If no data pending, set the starting pointer
+    else{
+        // If chunked, set the starting pointer right before the first chunk size
+        if (chunked){
+            response_start = chunked;
+        }
+        // If fixed length, seek the first double CRLF
+        if (fixed_length){
+            response_start = strstr(fixed_length, "\r\n\r\n") + strlen("\r\n\r\n");
+        }
+    }
+
+    // Make sure response start is not a null pointer
+    if (!response_start){
+        return 0u;
+    }
+    // Set the start and end pointers to the beginning of the message
+    a = response_start;
+    b = response_start;
+
+    // Iterate until all content is downloaded
+    for (iter=0; iter < max_loops; iter++){
+        // Check for CMEE error
+        error = strstr(response_start, "CMEE ERROR");
+        // Get pointer to end of Telit buffer
+        message_end = strstr(response_start, "\r\n\r\nOK\r\n");
+        // Check if this buffer contains the terminating chunk and get pointer
+        ending_buffer = strstr(response_start, "\r\n0\r\n");
+
+        // Break if CMEE error or message truncated
+        if (error || !message_end){
+            return 0u;
+        }
+
+        // Move the beginning pointer to the start of the next line
+        a = strstr(b, "\r\n") + strlen("\r\n");
+        if (!a) {return 0u;}
+        // If we are at the beginning of the Telit buffer, skip another line
+        if (buffer_start){
+            a = strstr(a, "\r\n") + strlen("\r\n");
+            if (!a) {return 0u;}
+            // Reset buffer start flag
+            buffer_start = 0;
+        }
+        // Move the end pointer to the end of the line
+        b = strstr(a, "\r\n");
+        if (!b) {return 0u;}
+
+        // If we're positioned at the start of a new chunk, get the chunk size
+        if (chunked){
+            if (chunk_start){
+                // Get new chunk size
+                strncpy(length_string, a, b-a);
+                chunk_size = (int)strtol(length_string, NULL, 16);
+                memset(length_string, '\0', sizeof(length_string));
+                chunk_remainder = chunk_size;
+                // Move the beginning pointer to the start of the next line
+                a = b + strlen("\r\n");
+                if (!a) {return 0u;}
+                // Move the end pointer to the end of the line
+                b = strstr(a, "\r\n");
+                if (!b) {return 0u;}
+                // Reset chunk start flag
+                chunk_start = 0;
+            }
+        }
+
+        // Add the current selection to the message buffer
+        // First, check for buffer overflow
+        message_free_space = max_message_size - strlen(message);
+        if ((b - a) >= message_free_space){
+            strncat(message, a, message_free_space);
+            return 0u;
+        }
+        // Concatenate the latest selection to the message
+        strncat(message, a, b - a);
+        // Compute the remaining bytes in the chunk
+        chunk_remainder -= (b - a);
+
+        // If we've reached the terminal chunk, exit the function
+        if (!chunk_size){
+            // return 1 if status code indicates Success, 2xx
+            if( status_code[0] == '2' ){
+                return 1u;
+            }
+            return 0u;
+        }
+
+        // Check if current Telit buffer is exhausted
+        if (b >= message_end){
+            // Make sure that we haven't gone over the end of the buffer
+            if (b > message_end){
+                return 0u;
+            }
+        // If exhausted, get the next Telit buffer
+        status = at_write_command(recv_cmd, "OK", 10000u);
+        // Set the flag to indicate we're at the start of a Telit buffer
+        buffer_start = 1;
+        // Reset pointers
+        response_start = uart_received_string;
+        a = response_start;
+        b = response_start;
+        }
+
+        // Check chunk status
+        if (chunk_remainder <= 0){
+            // Check to see if we've overflowed the end of the chunk
+            if (chunk_remainder < 0){
+                return 0u;
+            }
+            // For chunked responses:
+            // If chunk is exhausted, set flag to indicate we're at the 
+            // start of a new chunk
+            if (chunked){
+                if (chunk_size != 0){
+                    chunk_start = 1;
+                }
+            }
+            // For fixed-length responses:
+            // If chunk is exhausted, exit the function
+            else if (fixed_length){
+                // return 1 if status code indicates Success, 2xx
+                if( status_code[0] == '2' ){
+                    return 1u;
+                }
+                return 0u;
+            }
+        }
+    }
+    return 0u;
+}
                             
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
@@ -769,37 +975,12 @@ uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ss
     
     // TODO: Should request_chunk be passed in, or global?
     status = send_chunked_request(send_str, request_chunk, CHUNK_SIZE, send_cmd, ring_cmd, "\032");
+    
     if( status ){
-        // Read HTTP response from the buffer
-        uart_string_reset();
-        uint8 data_pending = at_write_command(recv_cmd,ring_cmd,10000u);
-            
-        // Check the HTTP response for valid status (200 or 204)
-        // Create array, "status_code" to temporarily hold the result
-        char status_code[5] = {"\0"};
-        parse_http_status(uart_received_string, (char*) NULL, status_code, (char*) NULL);
-
-        // TODO: Generalize this for N chunks
-        // TODO: Parse for content length
-        // InfluxDB sends chunked data, so check again to see if there is an
-        // unsolicited message indicated a suspended connection
-        //
-        // If so, then the query results are stored in the buffer, so issue
-        // AT#SRECV to read the buffer
-        if (data_pending == 1) {
-            uart_string_reset();
-            status = at_write_command(recv_cmd,"NO CARRIER",10000u);
-        }
-		if (get_response){
-            strcpy(response, uart_received_string);
-		}
-            
-        // return 1 if status code indicates Success, 2xx
-        if( status_code[0] == '2' ){
-            return 1u;
-        }
+        status = read_response(response, recv_cmd, ring_cmd, get_response, 100, MAX_RECV_LENGTH);
+        return status;
     }
-       
+    
     return 0u;  
 }
 
