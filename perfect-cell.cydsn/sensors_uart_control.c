@@ -2,6 +2,8 @@
 
 static const uint32_t MASTER_CLOCK_FREQ = 24000000u;  //  24 MHz
 
+// The buffer and index are dependent on eachother. This buffer is implemented
+// as a circular buffer to avoid overflow.
 static char sensors_uart_buf[257] = {'\0'};
 static uint8_t buf_idx = 0u;
 
@@ -44,9 +46,9 @@ CY_ISR(isr_sensors_uart_rx) {
 
     // store the char in sensors_uart_buf
     if (rx_char) {
-        // unsigned ints don't overflow, they reset at 0 if they are incremented
-        // one more than it's max value. It will be obvious if an `overflow`
-        // occurs
+        // unsigned ints don't `overflow`, they reset at 0 if they are
+        // incremented one more than it's max value. It will be obvious if an
+        // `overflow` occurs
         sensors_uart_buf[buf_idx++] = rx_char;
     }
 }

@@ -7,20 +7,13 @@
  */
 
 #include "decagon.h"
-#include "sensors_uart_control.h"
-#include "strlib.h"
 
 uint8_t Decagon_Take_Reading(DecagonGS3* decagon_reading) {
     char *dielectric, *temp, *conductivity;
     uint8_t err = 0u;
 
     sensors_uart_clear_string();
-
-    // Divide clock to get baud rate of 1200
-    // Ideally we want every function that needs to use the UART
-    // to state the baud rate that they want to use beforehand
     sensors_uart_set_baud(1200u);
-
     sensors_uart_start();
 
     // Power cycle sensor to gather readings
@@ -29,10 +22,6 @@ uint8_t Decagon_Take_Reading(DecagonGS3* decagon_reading) {
     Decagon_Power_Write(0u);
 
     sensors_uart_stop();
-
-    // Restore old baud rate, read above for ideal world
-    sensors_uart_set_baud(9600u);
-
     char *raw_serial_data_d = sensors_uart_get_string();
 
     // Convert the raw data

@@ -9,10 +9,11 @@
 #define DECAGON_H
 #include <project.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "cytypes.h"
+#include "sensors_uart_control.h"
+#include "strlib.h"
 
 /**
  * @brief Type definition for decagon GS3 sensor struct
