@@ -793,6 +793,7 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
     chunked = strstr(uart_received_string, chunked_header);
 
     // If neither (or both) transfer encodings are included, abort
+    // TODO: This may not always be the case
     if ((!fixed_length && !chunked) || (fixed_length && chunked)){
         return 0u;
     }
@@ -825,13 +826,8 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
     // If no data pending, set the starting pointer
     else{
         // If chunked, set the starting pointer right before the first chunk size
-        if (chunked){
-            response_start = chunked;
-        }
-        // If fixed length, seek the first double CRLF
-        if (fixed_length){
-            response_start = strstr(fixed_length, "\r\n\r\n") + strlen("\r\n\r\n");
-        }
+        // If fixed, set the starting pointer at the start of the message body
+            response_start = strstr(uart_received_string, "\r\n\r\n");
     }
 
     // Make sure response start is not a null pointer

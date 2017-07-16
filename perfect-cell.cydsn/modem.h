@@ -199,11 +199,12 @@ uint8 modem_socket_close(int ssl_enabled);
 int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char);
 
 /**
- * @brief Reads a HTTP response with a chunked transfer encoding over multiple modem buffers
+ * @brief Reads a HTTP response with a chunked of fixed-length transfer encoding over multiple modem buffers
  *
  * @param message The message buffer to write to
- * @param response_start A pointer to the start of the response in the modem buffer
  * @param recv_cmd The Telit receive command to use: AT#SRECV=1,<BYTES>\r or AT#SSLRECV=1,<BYTES>\r
+ * @param ring_cmd The Telit ring URC to seek: SRING: 1 or SSLRING: 1
+ * @param get_response 1u if the response is to be downloaded to the response buffer; 0u otherwise 
  * @param max_loops The maximum number of times to loop; used as a safeguard
  * @param max_message_size The maximum size of the @p message
  *
