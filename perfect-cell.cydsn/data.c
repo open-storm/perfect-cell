@@ -6,6 +6,7 @@
  * @date 2017-06-01
  */
 #include "data.h"
+#include "gps.h"
 #include "extern.h"
 #include "config.h"
 
