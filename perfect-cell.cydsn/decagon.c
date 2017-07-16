@@ -81,7 +81,7 @@ uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
     }
 
     int valid_count = 0u, read_iter = 0u;
-    float conductivity = 0.0f, temp = 0.0f dielectric = 0.0f;
+    float conductivity = 0.0f, temp = 0.0f, dielectric = 0.0f;
 
     DecagonGS3 decagon_reading = {0u, 0u, 0u, 0u, 0u};
 
