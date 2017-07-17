@@ -2,6 +2,8 @@
 #define EXTERN_H
 #include <project.h>
 
+#define MODEM_BUFFER_LENGTH     1600
+    
 extern char node_id[20];
 extern char site_name[10];
 
@@ -24,9 +26,8 @@ extern char write_route[60];
 
 extern uint8 array_ix;
 
-//extern const char* server_cert;
-//extern const char* client_cert;
-//extern const char* private_key;
+// Buffer for cell module
+extern char modem_received_buffer[MODEM_BUFFER_LENGTH];
 
 // SSL/TLS enabled?
 extern uint8 ssl_enabled;

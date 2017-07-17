@@ -2,6 +2,7 @@
 #include "modem.h"
 #include "extern.h"
 #include "startup.h"
+#include "ssl.h"
 
 uint8 counter_sensor_initialize(){
     // Turn on optical rain sensor if needed
