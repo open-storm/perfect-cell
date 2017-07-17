@@ -6,7 +6,7 @@ sys.stdout.flush()
 
 current_time = datetime.datetime.utcnow()
 
-filters = 'ci_test|python-requests|WHERE commit_hash|^\s*service=httpd|GROUP BY'
+filters = 'ci_test|python-requests|WHERE commit_hash|^\s*service=httpd|GROUP[\s+]BY|grafana_daemon'
 regex = re.compile(filters)
 filter_on = True
 filtered = False
