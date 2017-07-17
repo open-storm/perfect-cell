@@ -74,8 +74,6 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
         reading->depth = -9999.0f;
     }
 
-    // We don't use temp for now
-    reading->temp = -9999.0f;
     return reading->valid;
 }
 
@@ -90,7 +88,7 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
 
     float valid_iter = 0.0;
     int read_iter = 0;
-    UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
+    UltrasonicReading ultrasonic_reading = {0u, 0u};
     float measurement = 0.0f;
 
     char *ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};

@@ -17,8 +17,7 @@
  * @brief Type definition for maxbotix depth sensor struct
  *
  */
-typedef struct{
-    float temp;
+typedef struct {
     float depth;
     uint8 valid;
 } UltrasonicReading;
