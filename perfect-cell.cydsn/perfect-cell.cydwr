@@ -502,8 +502,8 @@
   </Group>
   <Group key="Component">
     <Group key="v1">
-      <Data key="cy_boot" value="cy_boot_v4_20" />
-      <Data key="LIN_Dynamic" value="LIN_Dynamic_v3_30" />
+      <Data key="cy_boot" value="cy_boot_v5_60" />
+      <Data key="LIN_Dynamic" value="LIN_Dynamic_v4_0" />
     </Group>
   </Group>
   <Data key="DataVersionKey" value="1" />
