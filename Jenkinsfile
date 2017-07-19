@@ -110,4 +110,3 @@ String getCommitSHA() {
     bat "${env.GIT} rev-parse HEAD > .git/current-commit"
     return readFile(".git/current-commit").trim()
 }
-

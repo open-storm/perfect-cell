@@ -6,7 +6,6 @@ General purpose firmware for cellular-enabled PSoC motes
 
 **Development:**    [![Build Status](http://ec2-13-58-145-29.us-east-2.compute.amazonaws.com:8080/buildStatus/icon?job=open-storm/perfect-cell/development&.png)](http://ec2-13-58-145-29.us-east-2.compute.amazonaws.com:8080/job/open-storm/job/perfect-cell/job/development/)
 
-
 ## Installation
 
 First, set up a [remote server](https://github.com/open-storm/docs.open-storm.org/wiki/Setting-up-the-server-environment) to receive data from the sensor node.
