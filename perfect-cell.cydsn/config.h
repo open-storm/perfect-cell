@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 // Default node info
 #define DEFAULT_NODE_ID "example_node"
 
@@ -27,7 +30,7 @@
 #define ENABLE_SSL_SEC_CONFIG  1u
 
 // GPS
-#define MIN_SATELLITES    5
+#define MIN_SATELLITES    3
 #define MAX_GPS_TRIES     6
 
 // Global parameters
@@ -60,4 +63,5 @@
 #define OPTICAL_RAIN_LOOPS   1
 #define DECAGON_LOOPS        1
 
+#endif
 /* [] END OF FILE */

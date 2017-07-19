@@ -5,13 +5,10 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef STARTUP_H
+#define STARTUP_H
 #include <project.h>
 
-/**
- * @brief TODO: Not implemented
- */
-int initial_metadata_update(char* send_str, char* response_str, uint8 *ssl_initialized,
-                            uint8 *update_successful, uint8 *socket_status);
 /**
  * @brief Initialize counter-type sensors that must remain on during the sleep cycle.
  * Currently only the optical rain sensor requires this behavior
@@ -33,4 +30,5 @@ uint8 counter_sensor_initialize();
  */
 uint8 initialize_ssl(uint8 *ssl_enabled, uint8 *ssl_initialized);
 
+#endif
 /* [] END OF FILE */

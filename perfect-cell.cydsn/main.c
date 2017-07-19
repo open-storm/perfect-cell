@@ -95,7 +95,7 @@ void main() {
 #ifdef DEBUG
 
     // TODO: Implement generic sensor unit tests here?
-    result_t results;
+    // result_t results;
 
     // test_run_all(&results);
     // test_post_results(&results);

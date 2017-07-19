@@ -1,0 +1,58 @@
+# Influxdb info
+host : "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
+port : 8086
+username : 'test_user'
+password : 'test_pass'
+database : 'TEST_DB'
+ssl_enabled : True
+node_id : 'ARB000'
+fast_sleeptimer : 20
+slow_sleeptimer : 4600
+source : 'ci_test'
+offset_seconds : 60
+date_format : "%Y-%m-%d %H:%M:%S"
+
+# Target variables and acceptable ranges
+var_ranges :
+    'cell_fer' : [0, 99]
+    'cell_strength' : [0, 100]
+    'conn_attempts' : [1, 1000]
+    'v_bat' : [-1, 10]
+    'maxbotix_depth' : [0, 9998]
+    'maxbotix_2_depth' : [0, 9998]
+    'decagon_soil_conduct' : [0, 9998]
+    'decagon_soil_dielec' : [0, 9998]
+    'decagon_soil_temp' : [-40, 60]
+    'atlas_dissolved_oxygen' : [0, 20]
+    #'isco_bottle' : [0, 20]
+    #'gps_latitude' : [42.2, 42.4]
+    #'gps_longitude' : [-83.8, -83.6]
+    #'gps_altitude' : [200, 300]
+    #'gps_hdop' : [-9999, 9999]
+    #'gps_fix' : [-9999, 9999]
+    #'gps_cog' : [-9999, 9999]
+    #'gps_spkm' : [0, 9999]
+    #'gps_spkn' : [0, 9999]
+    #'gps_nsat' : [0, 12]
+
+
+# Variables associated with a trigger
+trigger_vars :
+    'gps_latitude' : 'gps_trigger'
+    'gps_longitude' : 'gps_trigger'
+    'gps_hdop' : 'gps_trigger'
+    'gps_altitude' : 'gps_trigger'
+    'gps_fix' : 'gps_trigger'
+    'gps_cog' : 'gps_trigger'
+    'gps_spkm' : 'gps_trigger'
+    'gps_spkn' : 'gps_trigger'
+    'gps_nsat' : 'gps_trigger'
+    'isco_bottle' : 'autosampler_trigger'
+
+build_status_codes :
+    'success' : 0
+    'unstable' : 1
+    'failure' : 2
+    'not_built' : 3
+    'aborted' : 4
+
