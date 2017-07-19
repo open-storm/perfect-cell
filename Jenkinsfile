@@ -90,15 +90,20 @@ pipeline {
         }
         always {
             node('klab') {
-                deleteDir()
+                deleteDir() // clean up our workspace on the slave
             }
             node('master') {
                 checkout scm
                 sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
-                deleteDir() // clean up our workspace
+                //sh "echo ${getBuildResult()}"
+                deleteDir() // clean up our workspace on master
             }
         }
     }
+}
+
+String getBuildResult() {
+    return "${buildStatus}"
 }
 
 String getCommitSHA() {

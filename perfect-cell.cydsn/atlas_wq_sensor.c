@@ -71,7 +71,7 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
         }
     }
 
-    reading_start = strchr(raw_reading, 1);
+    reading_start = strchr((const char*)raw_reading, 1u);
     if (reading_start == NULL){
         return 0u;
     }
@@ -118,7 +118,7 @@ uint8 atlas_take_con_reading(con_reading *reading){
         }
     }
     
-    reading_start = strchr(raw_reading, 1);
+    reading_start = strchr((const char*)raw_reading, 1u);
     // This should probably be redone to write to an input rather than return struct
     if (reading_start == NULL){
         return 0u;

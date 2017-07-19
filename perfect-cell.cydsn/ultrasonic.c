@@ -7,27 +7,8 @@
  */
 
 #include "ultrasonic.h"
-#include <stdio.h>
-#include <strlib.h>
 
-#define MAX_STRING_LENGTH       128
 #define DEPTH_STRING_LENGTH     4
-
-// prototype modem interrupt
-CY_ISR_PROTO(isr_byte_ultrasonic_rx);
-
-// Declare variables
-char uart_ultrasonic_received_string[MAX_STRING_LENGTH];
-uint8 uart_ultrasonic_string_index = 0;
-
-// Start the UART
-void ultrasonic_start(){
-    uart_ultrasonic_Start();
-}
-// Stop the UART
-void ultrasonic_stop(){
-    uart_ultrasonic_Stop();
-}
 
 // Provide power to the ultrasonic sensor
 uint8 ultrasonic_power_on(uint8 which_ultrasonic){
@@ -56,29 +37,29 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
     char depth_str[DEPTH_STRING_LENGTH + 1] = {'\0'};
     uint8 which_ultrasonic = mux_controller_Read();
 
-    ultrasonic_start();
-    uart_ultrasonic_string_reset();
+    sensors_uart_clear_string();
+    sensors_uart_set_baud(9600u);
+    sensors_uart_start();
 
-    // Start the ISR to read the UART
-    isr_byte_ultrasonic_rx_StartEx(isr_byte_ultrasonic_rx);
     ultrasonic_power_on(which_ultrasonic);  // Power on the sensor
-    CyDelay(1500u);  // Wait for UART to get readings from sensor
-
-    isr_byte_ultrasonic_rx_Stop();           // Stop the ISR to read the UART
+    CyDelay(750u);  // Wait for UART to get readings from sensor
     ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
-    ultrasonic_stop();
 
-    // Expected name in UART "MB7384\r", or corresponding sensor
+    sensors_uart_stop();
+    char *uart_string = sensors_uart_get_string();
+
+    // Expected name in UART "PN:MB7384\r", or corresponding sensor
     // long range : 7383
     // short range: 7384
 
-    // Expect the UART to contain something like "\rR1739\rRSonar...."
-    if (strextract(uart_ultrasonic_received_string, depth_str, "R", "\r")) {
+    // Expect the UART to contain something like "Sonar..copyright..
+    // \rTempI\rR1478\rR1477\r..."
+    if (strextract(uart_string, depth_str, "TempI\rR", "\r")) {
         float depth = strtof(depth_str, NULL);
         int valid = 0;
 
         char name[5] = {'\0'};
-        strextract(uart_ultrasonic_received_string, name, "MB", "\r");
+        strextract(uart_string, name, "PN:MB", "\r");
 
         if (strcmp(name, "7383") == 0) {  // Short range sensor
             valid = strcmp(depth_str, "5000");
@@ -87,14 +68,12 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading) {
         }
 
         reading->depth = valid ? depth : -depth;
-        reading->valid = valid ? 1u : 0u;
+        reading->valid = !!valid;  // valid could be any non-zero number
     } else {
         reading->valid = 0u;
         reading->depth = -9999.0f;
     }
 
-    // We don't use temp for now
-    reading->temp = -9999.0f;
     return reading->valid;
 }
 
@@ -109,10 +88,10 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
 
     float valid_iter = 0.0;
     int read_iter = 0;
-    UltrasonicReading ultrasonic_reading = {0u, 0u, 0u};
+    UltrasonicReading ultrasonic_reading = {0u, 0u};
     float measurement = 0.0f;
 
-    const char *const ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};
+    char *ultrasonics[] = {"maxbotix_depth", "maxbotix_2_depth"};
     labels[*array_ix] = ultrasonics[which_ultrasonic];
 
     // Start the MUX
@@ -152,30 +131,6 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
     readings[*array_ix] = measurement;
     *array_ix += 1;
     return *array_ix;
-}
-
-void uart_ultrasonic_string_reset(){
-    // reset uart_received_string to zero
-       
-    memset(&uart_ultrasonic_received_string[0],0,sizeof(uart_ultrasonic_received_string));
-    uart_ultrasonic_string_index = 0;
-    uart_ultrasonic_ClearRxBuffer();
-}
-
-
-CY_ISR(isr_byte_ultrasonic_rx){
-    // hold the next char in the rx register as a temporary variable
-    uint8 rx_char_hold = uart_ultrasonic_GetChar();
-    
-    // store the char in uart_received_string
-    if(rx_char_hold) {
-        uart_ultrasonic_received_string[uart_ultrasonic_string_index] = rx_char_hold;
-        uart_ultrasonic_string_index++;
-        
-        if (uart_ultrasonic_string_index >= MAX_STRING_LENGTH) {
-            uart_ultrasonic_string_index = 0; // reset the index to prevent an overflow
-        }
-    }   
 }
 
 /* [] END OF FILE */

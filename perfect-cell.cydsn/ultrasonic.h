@@ -10,31 +10,17 @@
 #include <device.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sensors_uart_control.h"
+#include "strlib.h"
 
 /**
  * @brief Type definition for maxbotix depth sensor struct
  *
  */
-typedef struct{
-    float temp;
+typedef struct {
     float depth;
     uint8 valid;
 } UltrasonicReading;
-
-
-/**
- * @brief Starts the ultrasonic sensor UART
- *
- * @return null
- */
-void                ultrasonic_start();
-
-/**
- * @brief Stops the ultrasonic sensor UART
- *
- * @return null
- */
-void                ultrasonic_stop();
 
 /**
  * @brief Powers on the ultrasonic sensor
@@ -81,14 +67,6 @@ uint8               ultrasonic_get_reading();
  * @return (*array_ix) + number of entries filled
  */
 uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 which_ultrasonic, uint8 take_average, int ultrasonic_loops, uint8 max_size);
-
-/**
- * @brief Resets @p uart_ultrasonic_received_string, clears rx buffer, and 
- * resets @p uart_ultrasonic_string_index
- *
- * @return null
- */
-void                uart_ultrasonic_string_reset();
 
 #endif
 //[] END OF FILE

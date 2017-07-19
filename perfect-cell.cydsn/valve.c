@@ -79,7 +79,7 @@ float32 read_Valve_POS() {
 
 int move_valve(int valve){
 	int iter;
-	int valve_out;
+	int valve_out = 0;
 	float32 valve_pos, d_valve;
 	
 	if (valve == 0){
