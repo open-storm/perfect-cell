@@ -40,7 +40,7 @@ uint8 ultrasonic_power_off(uint8 which_ultrasonic) {
 
 static void parse_senix_string(UltrasonicReading *reading, const char *str) {
     const char *cr = strchr(str, '\r');       // find the carriage return
-    const unsigned int depth = strtoul(cr - 5, &cr);  // convert to float
+    const unsigned int depth = strtoul(cr - 5, &cr, 0);  // convert to float
     const float counts_to_mm = 0.003384f * 4u * 25.4f;
     reading->depth = depth * counts_to_mm;  // convert to millimeters
     reading->valid = !!depth;
