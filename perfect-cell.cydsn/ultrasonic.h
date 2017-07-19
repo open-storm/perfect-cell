@@ -30,7 +30,7 @@ typedef struct {
  * - 1: Second ultrasonic sensor
  * @return 1 on success
  */
-uint8               ultrasonic_power_on(uint8 which_ultrasonic);
+uint8 ultrasonic_power_on(uint8 which_ultrasonic);
 
 /**
  * @brief Powers off the ultrasonic sensor
@@ -40,17 +40,18 @@ uint8               ultrasonic_power_on(uint8 which_ultrasonic);
  * - 1: Second ultrasonic sensor
  * @return 1 on success
  */
-uint8               ultrasonic_power_off(uint8 which_ultrasonic);
+uint8 ultrasonic_power_off(uint8 which_ultrasonic);
 
 /**
  * @brief Takes a reading with the ultrasonic sensor
  *
  * @return 1 on success, 0 otherwise.
  */
-uint8               ultrasonic_get_reading();
-
+uint8 ultrasonic_get_reading(UltrasonicReading *reading,
+                             uint8_t which_ultrasonic);
 /**
- * @brief Inserts current values of @p ultrasonic_reading into labels and readings arrays.
+ * @brief Inserts current values of @p ultrasonic_reading into labels and
+ * readings arrays.
  *
  * @param labels Array to store labels corresponding to each sensor reading
  * @param readings Array to store sensor readings as floating point values
@@ -59,14 +60,17 @@ uint8               ultrasonic_get_reading();
  * - 0: First ultrasonic sensor
  * - 1: Second ultrasonic sensor
  * @param take_average Whether to take average or not
- * - 0: Take first valid reading 
+ * - 0: Take first valid reading
  * - 1: Take average of valid readings
  * @param ultrasonic_loops Number of readings taken on each call.
- * @param max_size Maximum size of label and reading arrays (number of entries)
+ * @param max_size Maximum size of label and reading arrays (number of
+ * entries)
  *
  * @return (*array_ix) + number of entries filled
  */
-uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix, uint8 which_ultrasonic, uint8 take_average, int ultrasonic_loops, uint8 max_size);
+uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
+                     uint8 which_ultrasonic, uint8 take_average,
+                     int ultrasonic_loops, uint8 max_size);
 
 #endif
 //[] END OF FILE
