@@ -39,7 +39,7 @@ uint8 ultrasonic_power_off(uint8 which_ultrasonic) {
 }
 
 static void parse_senix_string(UltrasonicReading *reading, const char *str) {
-    const char *cr = strchr(str, '\r');       // find the carriage return
+    char *cr = strchr(str, '\r');                        // find the carriage return
     const unsigned int depth = strtoul(cr - 5, &cr, 0);  // convert to float
     const float counts_to_mm = 0.003384f * 4u * 25.4f;
     reading->depth = depth * counts_to_mm;  // convert to millimeters
@@ -83,7 +83,7 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading,
     sensors_uart_start();
 
     ultrasonic_power_on(which_ultrasonic);  // Power on the sensor
-    CyDelay(750u);  // Wait for UART to get readings from sensor
+    CyDelay(800u);  // Wait for UART to get readings from sensor
     ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
 
     sensors_uart_stop();

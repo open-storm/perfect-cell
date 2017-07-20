@@ -79,6 +79,7 @@ void main() {
 
     // Initialize Pins
     init_pins();
+    Senix_Comp_Start();
 
     // Update influxdb tags
     status = append_tags(main_tags, "commit_hash", CURRENT_COMMIT);
