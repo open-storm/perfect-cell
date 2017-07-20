@@ -20,6 +20,7 @@ var_ranges :
     'v_bat' : [-1, 10]
     'maxbotix_depth' : [0, 9998]
     'maxbotix_2_depth' : [0, 9998]
+    'senix_depth' : [0, 15240]
     'decagon_soil_conduct' : [0, 9998]
     'decagon_soil_dielec' : [0, 9998]
     'decagon_soil_temp' : [-40, 60]
