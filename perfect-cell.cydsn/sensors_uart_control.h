@@ -30,10 +30,8 @@ void sensors_uart_stop();
  *
  * @param baud One of the standard baud rates. [1200, 2400, 4800, 9600, 14400,
  * 19200, 38400, 57600, 115200, 128000, or 256000]
- *
- * @return 1u on success, 0u otherwise.
  */
-uint8_t sensors_uart_set_baud(const uint32_t baud);
+void sensors_uart_set_baud(const uint32_t baud);
 
 /**
  * @brief Get the uart received string.

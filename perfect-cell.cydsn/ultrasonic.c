@@ -1,7 +1,8 @@
 /**
  * @file ultrasonic.c
- * @brief Implements functions for maxbotix ultrasonic sensor subroutine
- * @author Brandon Wong and Matt Bartos
+ * @brief Implements functions for maxbotix ultrasonic sensors and senix
+ * toughsonic sensors subroutines
+ * @author Brandon Wong, Matt Bartos, Ivan Mondragon, Alec Beljanski
  * @version TODO
  * @date 2017-06-19
  */
@@ -38,16 +39,30 @@ uint8 ultrasonic_power_off(uint8 which_ultrasonic) {
     return 0u;
 }
 
+/**
+ * @brief Parse raw UART received string from any senix sensor into @p
+ * reading.
+ *
+ * @param reading Structure to store results into. Depth in millimeters.
+ * @param str Raw UART received string.
+ */
 static void parse_senix_string(UltrasonicReading *reading, const char *str) {
-    char *cr = strchr(str, '\r');                        // find the carriage return
-    const unsigned int depth = strtoul(cr - 5, &cr, 0);  // convert to float
+    char *cr = strchr(str, '\r');  // find the first carriage return
+    const unsigned int depth = strtoul(cr - 5, &cr, 0);  // get counts
     const float counts_to_mm = 0.003384f * 4u * 25.4f;
     reading->depth = depth * counts_to_mm;  // convert to millimeters
     reading->valid = !!depth;
 }
 
+/**
+ * @brief Parse raw UART received string from any maxbotix sensor into @p
+ * reading.
+ *
+ * @param reading Structure to store results into. Depth in millimeters.
+ * @param str Raw UART received string.
+ */
 static void parse_maxbotix_string(UltrasonicReading *reading, const char *str) {
-    // Expected name in UART "PN:MB7384\r", or corresponding sensor
+    // Expected model name in UART "PN:MB7384\r", or corresponding sensor
     // long range : 7383
     // short range: 7384
 
@@ -58,17 +73,17 @@ static void parse_maxbotix_string(UltrasonicReading *reading, const char *str) {
         float depth = strtof(depth_str, NULL);
         int valid = 0;
 
-        char name[5] = {'\0'};
-        strextract(str, name, "PN:MB", "\r");
+        char model[5] = {'\0'};
+        strextract(str, model, "PN:MB", "\r");
 
-        if (strcmp(name, "7383") == 0) {  // Short range sensor
+        if (strcmp(model, "7383") == 0) {  // Short range sensor
             valid = strcmp(depth_str, "5000");
-        } else if (strcmp(name, "7384") == 0) {  // Long range sensor
+        } else if (strcmp(model, "7384") == 0) {  // Long range sensor
             valid = strcmp(depth_str, "9999");
         }
 
-        reading->depth = valid ? depth : -depth;
         reading->valid = !!valid;  // valid could be any non-zero number
+        reading->depth = valid ? depth : -depth;
     } else {
         reading->valid = 0u;
         reading->depth = -9999.0f;
@@ -140,7 +155,7 @@ uint8 zip_ultrasonic(char *labels[], float readings[], uint8 *array_ix,
     /* 2017 02 05: Send -1 instead of 9999 to avoid confusion
      * TODO: Test and then check in this update on GitHub
      * If there are no valid readings, send 9999 */
-    else if (valid_count == 0.0) {
+    else if (valid_count == 0u) {
         measurement = -1;
     }
 

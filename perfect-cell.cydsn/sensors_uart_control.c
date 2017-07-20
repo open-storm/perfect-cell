@@ -17,15 +17,19 @@ void sensors_uart_stop() {
     Sensors_UART_Stop();
 }
 
+// Rounds any positive float to the nearest whole number.
 inline static unsigned int pos_round(const float val) { return val + 0.5f; }
 
-uint8_t sensors_uart_set_baud(const uint32_t baud) {
+// The equation to set the baud rate is as follows:
+// divider = source_clock_frequency / (8 * desired_baud_rate)
+//
+// Then set the divider for the digital clock using the calculated value.
+void sensors_uart_set_baud(const uint32_t baud) {
     const uint32_t desired_clock = 8 * baud;
     const uint16_t divider =
         pos_round((float) MASTER_CLOCK_FREQ / desired_clock);
 
     Clock_sensors_SetDividerValue(divider);
-    return Clock_sensors_GetDividerRegister() + 1u == divider;
 }
 
 char* sensors_uart_get_string() { return sensors_uart_buf; }
