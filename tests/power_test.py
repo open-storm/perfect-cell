@@ -98,7 +98,7 @@ if __name__ == "__main__":
                     # Get data:
                     data = scp.get_data()
                     series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1),
-                                       freq='1ms', periods=len(data[0])))
+                                       freq='1ms', periods=len(data[0])).astype('datetime64[ns]'))
                     dataframe = pd.DataFrame(series, columns=['value'])
                     master_dataframe = master_dataframe.append(dataframe)
             except Exception as e:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
             # Stop stream:
             scp.stop()
             master_dataframe = master_dataframe.resample('2ms').mean().dropna()
-            print(master_dataframe.head())
+            master_dataframe.index = master_dataframe.index.astype('datetime64[ns]')
             print('Writing power consumption measurements to influxdb...')
             client.write_points(master_dataframe, measurement='power_consumption',
                     time_precision='n', protocol='line', tags={'commit_hash' : commit_hash,
