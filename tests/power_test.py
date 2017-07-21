@@ -112,7 +112,7 @@ if __name__ == "__main__":
             str_prefix = ('power_consumption,source=ci_test,node_id=ARB000,commit_hash={0}'
              .format(commit_hash))
             write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
-                          dt_ix).tolist()
+                          dt_ix + 'Z').tolist()
             print(write_list[0:10])
             print('Writing power consumption measurements to influxdb...')
             client.write_points(write_list, protocol='line')
