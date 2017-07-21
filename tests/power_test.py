@@ -22,7 +22,7 @@ config = {}
 with open(config_path, 'r') as stream:
     config.update(yaml.load(stream))
 
-client = influxdb.InfluxdbClient(host=config['host'], port=config['port'],
+client = influxdb.InfluxDBClient(host=config['host'], port=config['port'],
                                      username=config['username'],
                                      password=config['password'],
                                      database=config['database'],
