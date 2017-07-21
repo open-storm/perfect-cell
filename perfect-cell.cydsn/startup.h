@@ -10,11 +10,6 @@
 #include <project.h>
 
 /**
- * @brief TODO: Not implemented
- */
-int initial_metadata_update(char* send_str, char* response_str, uint8 *ssl_initialized,
-                            uint8 *update_successful, uint8 *socket_status);
-/**
  * @brief Initialize counter-type sensors that must remain on during the sleep cycle.
  * Currently only the optical rain sensor requires this behavior
  *

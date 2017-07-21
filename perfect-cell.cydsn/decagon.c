@@ -1,88 +1,64 @@
 /**
  * @file decagon.c
  * @brief Implements functions for Decagon GS3 soil moisture sensor
- * @author Brandon Wong and Matt Bartos
+ * @author Brandon Wong, Matt Bartos, Ivan Mondragon
  * @version TODO
  * @date 2017-06-19
  */
 
 #include "decagon.h"
-#include "strlib.h"
-//Global Variable for the number of characters received from the UART reading
-#define RAW_SERIAL_DATA_LENGTH_d 100
-//How many reading to we want to average by after the reading's been parsed.
-#define VALUES_ARRAY_LENGTH 6
-//This is where we stored the initial UART reading result
-char raw_serial_data_d[RAW_SERIAL_DATA_LENGTH_d];
-//counter for interrupt readings
-uint8 raw_serial_data_count_d;
 
+uint8_t Decagon_Take_Reading(DecagonGS3* decagon_reading) {
+    char *dielectric, *temp, *conductivity;
+    uint8_t err = 0u;
 
+    sensors_uart_clear_string();
+    sensors_uart_set_baud(1200u);
+    sensors_uart_start();
 
-//===============================Interrupt Function==============================
-CY_ISR(IntUartRx_D)
-{
-   char getchar;
-   getchar  = UART_Decagon_GetChar();
-        
-   if(getchar > 0u && raw_serial_data_count_d < RAW_SERIAL_DATA_LENGTH_d){
-        raw_serial_data_d[raw_serial_data_count_d] = getchar;
-        raw_serial_data_count_d++;
-   }   
-    
-}
-
-
-DecagonGS3 Decagon_Take_Reading(){
-	
-    char* value1, *value2, *value3;
-	uint8 err = 0u;
-
-    memset(&raw_serial_data_d[0],0,sizeof(raw_serial_data_d));
-    raw_serial_data_count_d = 0u;
-    
-	UART_Decagon_ClearRxBuffer();	
-	UART_Decagon_Start();
-
-	Decagon_Power_Write(1u); 
-    isr_Decagon_StartEx(IntUartRx_D);
-    CyDelay(1000u);
+    // Power cycle sensor to gather readings
+    Decagon_Power_Write(1u);
+    CyDelay(300u);
     Decagon_Power_Write(0u);
-    isr_Decagon_Stop();
-	UART_Decagon_Stop();	
-	
-	// Convert the raw data
-    if((value1 = strtok(raw_serial_data_d, " ")) == NULL) {
-		err += 1u;
-	}
-	if((value2 = strtok(NULL, " ")) == NULL) {
-		err += 2u;
-	}
-	if((value3 = strtok(NULL, " ")) == NULL) {
-		err += 4u;
-	}
-	
-	DecagonGS3 SoilMoisture = { atof(value1), atof(value2), atoi(value3), (err == 0u), err};
-	
-	return SoilMoisture;
-	
+
+    sensors_uart_stop();
+    char *raw_serial_data_d = sensors_uart_get_string();
+
+    // Convert the raw data
+    if ((dielectric = strtok(raw_serial_data_d, " ")) == NULL) {
+        err += 1u;
+    }
+    if ((temp = strtok(NULL, " ")) == NULL) {
+        err += 2u;
+    }
+    if ((conductivity = strtok(NULL, " ")) == NULL) {
+        err += 4u;
+    }
+
+    decagon_reading->dielectric = atof(dielectric);
+    decagon_reading->temp = atof(temp);
+    decagon_reading->conductivity = atoi(conductivity);
+    decagon_reading->valid = (err == 0u);
+    decagon_reading->err = err;
+
+    return err;
 }
 
-
-DecagonGS3 Decagon_Convert_Raw_Reading(char* raw_D){
+DecagonGS3 Decagon_Convert_Raw_Reading(char* raw_D) {
     DecagonGS3 final_reading;
     final_reading.valid = 0u;
-    
-    final_reading.valid  = sscanf(raw_D,"\x09%f %f %d\r%*s",&final_reading.dielectric,
-                                &final_reading.temp,&final_reading.conductivity);
 
-	//if you know the the calibration equation, you can caalcualte the soil moisutre here, too
-    if(final_reading.valid != 4){
+    final_reading.valid =
+        sscanf(raw_D, "\x09%f %f %d\r%*s", &final_reading.dielectric,
+               &final_reading.temp, &final_reading.conductivity);
+
+    // if you know the the calibration equation, you can caalcualte the soil
+    // moisutre here, too
+    if (final_reading.valid != 4) {
         final_reading.valid = 0;
     }
-    
+
     return final_reading;
-    
 }
 
 uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
@@ -93,37 +69,50 @@ uint8 zip_decagon(char* labels[], float readings[], uint8* array_ix,
         return *array_ix;
     }
 
-    float valid_iter = 0.0;
-    int read_iter = 0;
+    int valid_count = 0u, read_iter = 0u;
+    float conductivity = 0.0f, temp = 0.0f, dielectric = 0.0f;
+
     DecagonGS3 decagon_reading = {0u, 0u, 0u, 0u, 0u};
 
     // with the begin/end paradigm, end must always be `one past the end`
-    char **begins = labels + *array_ix;
-    char **ends = begins + nvars;
+    char** begins = labels + *array_ix;
+    char** ends = begins + nvars;
     zips(begins, ends, "decagon_soil_conduct", "decagon_soil_temp",
          "decagon_soil_dielec");
 
+    // Set the mux to read from the decagon pin
+    mux_controller_Wakeup();
+    mux_controller_Write(3u);
+
     for (read_iter = 0; read_iter < decagon_loops; read_iter++) {
-        decagon_reading = Decagon_Take_Reading();
+        Decagon_Take_Reading(&decagon_reading);
         if (decagon_reading.valid == 1u) {
-            valid_iter++;
-            readings[*array_ix] += decagon_reading.conductivity;
-            readings[*array_ix + 1] += decagon_reading.temp;
-            readings[*array_ix + 2] += decagon_reading.dielectric;
+            valid_count++;
+            conductivity += decagon_reading.conductivity;
+            temp += decagon_reading.temp;
+            dielectric += decagon_reading.dielectric;
             if (take_average == 0u) {
                 break;
             }
         }
     }
-    if (take_average == 1u && valid_iter > 0) {
-        readings[*array_ix] /= valid_iter;
-        readings[*array_ix + 1] /= valid_iter;
-        readings[*array_ix + 2] /= valid_iter;
-    } else if (valid_iter == 0.0) {
-        readings[*array_ix] = 9999;
-        readings[*array_ix + 1] = 9999;
-        readings[*array_ix + 2] = 9999;
+    if (take_average == 1u && valid_count > 0) {
+        conductivity /= valid_count;
+        temp /= valid_count;
+        dielectric /= valid_count;
+    } else if (valid_count == 0u) {
+        conductivity = 9999;
+        temp = 9999;
+        dielectric = 9999;
     }
+
+    // Save mux configuration and put mux to sleep
+    mux_controller_Sleep();
+
+    // with the begin/end paradigm, end must always be `one past the end`
+    float* beginf = readings + *array_ix;
+    float* endf = beginf + nvars;
+    zipf(beginf, endf, conductivity, temp, dielectric);
 
     *array_ix += 3;
     return *array_ix;
