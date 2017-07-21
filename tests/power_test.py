@@ -111,7 +111,7 @@ if __name__ == "__main__":
             dt_ix = ((pd.Series(master_series.index)
                      .apply(lambda x:
                             datetime.datetime.timestamp(x)).astype(int)) *
-                     1e9).astype(str).values
+                     1000000000).astype(int).astype(str).values
             values = master_series.astype(str).values
             str_prefix = ('power_consumption,source=ci_test,node_id=ARB000,commit_hash={0}'
              .format(commit_hash))
