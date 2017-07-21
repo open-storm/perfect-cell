@@ -84,6 +84,8 @@ if __name__ == "__main__":
                 for block in range(120):
                     if (block % 10 == 0):
                         print('Block: ', block)
+                        print(datetime.datetime.isoformat(datetime.datetime.utcnow()
+                                                          - datetime.timedelta(seconds=1)))
 
                     # Wait for measurement to complete:
                     while not (scp.is_data_ready or scp.is_data_overflow):
@@ -95,7 +97,7 @@ if __name__ == "__main__":
 
                     # Get data:
                     data = scp.get_data()
-                    series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1), 
+                    series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1),
                                        freq='1ms', periods=len(data[0])))
                     dataframe = pd.DataFrame(series, columns=['value'])
                     master_dataframe = master_dataframe.append(dataframe)
@@ -105,6 +107,7 @@ if __name__ == "__main__":
             # Stop stream:
             scp.stop()
             master_dataframe = master_dataframe.resample('2ms').mean().dropna()
+            print(master_dataframe.head())
             print('Writing power consumption measurements to influxdb...')
             client.write_points(master_dataframe, measurement='power_consumption',
                     time_precision='n', protocol='line', tags={'commit_hash' : commit_hash,
