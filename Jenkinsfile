@@ -35,7 +35,6 @@ pipeline {
         agent { label 'klab' }
             steps {
                 bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
-		bat "\"C:\\Program Files\\TiePie\\MultiChannel\\MultiChannel.exe\" -l tests\\ci_power_consumption.tps"
             }
         }
         stage('Test') {
@@ -43,6 +42,7 @@ pipeline {
         agent { label 'klab' }
             steps {
                 bat "python build_tools\\pre_build.py"
+	        bat "python tests\\power_test.py ${getCommitSHA()}"
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {
@@ -91,8 +91,6 @@ pipeline {
         }
         always {
             node('klab') {
-	        bat "python tests\\power_test.py ${getCommitSHA()}"
-	        bat "Taskkill /IM MultiChannel.exe"
                 deleteDir() // clean up our workspace on the slave
             }
             node('master') {
