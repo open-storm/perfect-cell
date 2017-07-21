@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
             # Stop stream:
             scp.stop()
-            master_dataframe = master_dataframe.resample('2ms').mean()
+            master_dataframe = master_dataframe.resample('2ms').mean().dropna()
             print('Writing power consumption measurements to influxdb...')
             client.write_points(master_dataframe, measurement='power_consumption',
                     protocol='line', tags={'commit_hash' : commit_hash,
