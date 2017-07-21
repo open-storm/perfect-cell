@@ -22,7 +22,7 @@ config = {}
 with open(config_path, 'r') as stream:
     config.update(yaml.load(stream))
 
-client = influxdb.DataFrameClient(host=config['host'], port=config['port'],
+client = influxdb.InfluxdbClient(host=config['host'], port=config['port'],
                                      username=config['username'],
                                      password=config['password'],
                                      database=config['database'],
@@ -75,7 +75,7 @@ if __name__ == "__main__":
             # Start measurement:
             scp.start()
 
-            master_dataframe = pd.DataFrame(columns=['value'])
+            master_series = pd.Series()
             try:
 
                 # Measure 200 blocks:
@@ -99,19 +99,21 @@ if __name__ == "__main__":
                     data = scp.get_data()
                     series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1),
                                        freq='1ms', periods=len(data[0])).astype('datetime64[ns]'))
-                    dataframe = pd.DataFrame(series, columns=['value'])
-                    master_dataframe = master_dataframe.append(dataframe)
+                    master_series = master_series.append(series)
             except Exception as e:
                 print('Exception: ' + e.message)
 
             # Stop stream:
             scp.stop()
-            master_dataframe = master_dataframe.resample('2ms').mean().dropna()
-            master_dataframe.index = master_dataframe.index.astype('datetime64[ns]')
+            master_series = master_series.resample('2ms').mean().dropna()
+            dt_ix = pd.Series(master_series.index).dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
+            values = master_series.astype(str)
+            str_prefix = ('power_consumption,source=ci_test,node_id=ARB001,commit_hash={0}'
+             .format(commit_hash))
+            write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
+                          dt_ix).tolist()
             print('Writing power consumption measurements to influxdb...')
-            client.write_points(master_dataframe, measurement='power_consumption',
-                    time_precision='n', protocol='line', tags={'commit_hash' : commit_hash,
-                                                               'source' : 'ci_test'})
+            client.write_points(write_list, protocol='line')
 
         except Exception as e:
             print('Exception: ' + e.message)
