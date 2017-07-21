@@ -106,8 +106,9 @@ if __name__ == "__main__":
             # Stop stream:
             scp.stop()
             # master_series = master_series.resample('2ms').mean().dropna()
-            dt_ix = pd.Series(master_series.index).dt.strftime("%Y-%m-%dT%H:%M:%S.%f")
-            values = master_series.astype(str)
+            dt_ix = (pd.Series(master_series.index)
+                     .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
+            values = master_series.astype(str).values
             str_prefix = ('power_consumption,source=ci_test,node_id=ARB000,commit_hash={0}'
              .format(commit_hash))
             write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
