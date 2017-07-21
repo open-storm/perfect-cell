@@ -108,10 +108,10 @@ if __name__ == "__main__":
             master_series = master_series.resample('100ms').mean().dropna()
             # dt_ix = (pd.Series(master_series.index)
             #          .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
-            dt_ix = ((pd.Series(master_series.index)
+            dt_ix = (pd.Series(master_series.index)
                      .apply(lambda x:
-                            datetime.datetime.timestamp(x)).astype(int)) *
-                     1000000000).astype(int).astype(str).values
+                            int(datetime.datetime.timestamp(x)))).tolist()
+            dt_ix = [str(i*1000000000) for i in dt_ix]
             values = master_series.astype(str).values
             str_prefix = ('power_consumption,source=ci_test,node_id=ARB000,commit_hash={0}'
              .format(commit_hash))
