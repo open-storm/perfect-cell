@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
             # Stop stream:
             scp.stop()
-            # master_series = master_series.resample('2ms').mean().dropna()
+            master_series = master_series.resample('100ms').mean().dropna()
             dt_ix = (pd.Series(master_series.index)
                      .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
             values = master_series.astype(str).values
