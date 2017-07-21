@@ -2,10 +2,13 @@
 
 from __future__ import print_function
 import time
+import datetime
 import os
 import sys
+import yaml
+import pandas as pd
+import influxdb
 import libtiepie
-from printinfo import *
 
 parent_path = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(
@@ -29,7 +32,7 @@ if __name__ == "__main__":
     commit_hash = sys.argv[1]
 
     # Print library info:
-    print_library_info()
+    # print_library_info()
 
     # Search for devices:
     libtiepie.device_list.update()
@@ -67,7 +70,7 @@ if __name__ == "__main__":
                 ch.coupling = libtiepie.CK_DCV  # DC Volt
 
             # Print oscilloscope info:
-            print_device_info(scp)
+            # print_device_info(scp)
 
             # Start measurement:
             scp.start()
@@ -96,7 +99,7 @@ if __name__ == "__main__":
                                        freq='1ms', periods=len(data[0])))
                     dataframe = pd.DataFrame(series, columns=['value'])
                     master_dataframe = master_dataframe.append(dataframe)
-            except:
+            except Exception as e:
                 print('Exception: ' + e.message)
 
             # Stop stream:
@@ -104,7 +107,8 @@ if __name__ == "__main__":
             master_dataframe = master_dataframe.resample('2ms').mean()
             print('Writing power consumption measurements to influxdb...')
             client.write_points(series, measurement='power_consumption',
-                    protocol='line', tags={'commit_hash' : commit_hash, 'source' : ci_test})
+                    protocol='line', tags={'commit_hash' : commit_hash,
+                                           'source' : 'ci_test'})
 
         except Exception as e:
             print('Exception: ' + e.message)
