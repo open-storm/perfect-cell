@@ -112,6 +112,7 @@ if __name__ == "__main__":
              .format(commit_hash))
             write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
                           dt_ix).tolist()
+            print(write_list[0:10])
             print('Writing power consumption measurements to influxdb...')
             client.write_points(write_list, protocol='line')
 
