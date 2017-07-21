@@ -106,13 +106,17 @@ if __name__ == "__main__":
             # Stop stream:
             scp.stop()
             master_series = master_series.resample('100ms').mean().dropna()
-            dt_ix = (pd.Series(master_series.index)
-                     .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
+            # dt_ix = (pd.Series(master_series.index)
+            #          .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
+            dt_ix = ((pd.Series(master_series.index)
+                     .apply(lambda x:
+                            datetime.datetime.timestamp(x)).astype(int)) *
+                     1e9).astype(str).values
             values = master_series.astype(str).values
             str_prefix = ('power_consumption,source=ci_test,node_id=ARB000,commit_hash={0}'
              .format(commit_hash))
             write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
-                          dt_ix + 'Z').tolist()
+                          dt_ix).tolist()
             print(write_list[0:10])
             print('Writing power consumption measurements to influxdb...')
             client.write_points(write_list, protocol='line')
