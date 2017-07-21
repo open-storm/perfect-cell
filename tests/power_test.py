@@ -96,6 +96,8 @@ if __name__ == "__main__":
                                        freq='1ms', periods=len(data[0])))
                     dataframe = pd.DataFrame(series, columns=['value'])
                     master_dataframe = master_dataframe.append(dataframe)
+            except:
+                print('Exception: ' + e.message)
 
             # Stop stream:
             scp.stop()
@@ -103,7 +105,6 @@ if __name__ == "__main__":
             print('Writing power consumption measurements to influxdb...')
             client.write_points(series, measurement='power_consumption',
                     protocol='line', tags={'commit_hash' : commit_hash, 'source' : ci_test})
-        
 
         except Exception as e:
             print('Exception: ' + e.message)
