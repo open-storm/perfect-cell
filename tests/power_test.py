@@ -107,8 +107,8 @@ if __name__ == "__main__":
             master_dataframe = master_dataframe.resample('2ms').mean().dropna()
             print('Writing power consumption measurements to influxdb...')
             client.write_points(master_dataframe, measurement='power_consumption',
-                    protocol='line', tags={'commit_hash' : commit_hash,
-                                           'source' : 'ci_test'})
+                    time_precision='n', protocol='line', tags={'commit_hash' : commit_hash,
+                                                               'source' : 'ci_test'})
 
         except Exception as e:
             print('Exception: ' + e.message)
