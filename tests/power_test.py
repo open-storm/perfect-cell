@@ -60,7 +60,7 @@ if __name__ == "__main__":
             scp.record_length = 1000  # 1 kS
 
             # Set resolution
-            scp.resolution = 14
+            scp.resolution = 16
 
             # For all channels:
             for ch in scp.channels:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 ch.enabled = True
 
                 # Set range:
-                ch.range = 2  # 8 V
+                ch.range = 1  # 8 V
 
                 # Set coupling:
                 ch.coupling = libtiepie.CK_DCV  # DC Volt
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                 # Measure 200 blocks:
                 print()
                 sample = 0
-                for block in range(240):
+                for block in range(280):
                     if (block % 10 == 0):
                         print('Block: ', block)
                         print(datetime.datetime.timestamp(datetime.datetime.utcnow()
