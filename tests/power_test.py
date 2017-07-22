@@ -85,7 +85,7 @@ if __name__ == "__main__":
                 # Measure 200 blocks:
                 print()
                 sample = 0
-                for block in range(120):
+                for block in range(240):
                     if (block % 10 == 0):
                         print('Block: ', block)
                         print(datetime.datetime.timestamp(datetime.datetime.utcnow()
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
             # Stop stream:
             scp.stop()
-            master_series = master_series.resample('10ms').mean().dropna()
+            master_series = master_series.resample('50ms').mean().dropna()
             dt_ix = pd.Series(master_series.index).tolist()
             # Hack to get around 32-bit precision
             dt_ix = [str(int(datetime.datetime.timestamp(i)*1000000000)) for i in dt_ix]
