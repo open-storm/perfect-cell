@@ -79,7 +79,7 @@ if __name__ == "__main__":
             # Start measurement:
             scp.start()
 
-            master_series = pd.Series()
+            master_series = pd.Series(dtype=np.float32)
             try:
 
                 # Measure 200 blocks:
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                     # Get data:
                     data = scp.get_data()
                     series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1),
-                                       freq='1ms', periods=len(data[0])))
+                                       freq='1ms', periods=len(data[0])), dtype=np.float32)
                     master_series = master_series.append(series)
             except Exception as e:
                 print('Exception: ' + e.message)
