@@ -6,7 +6,7 @@ password : 'test_pass'
 database : 'TEST_DB'
 ssl_enabled : True
 node_id : 'ARB000'
-fast_sleeptimer : 20
+fast_sleeptimer : 80
 slow_sleeptimer : 4600
 source : 'ci_test'
 offset_seconds : 60
