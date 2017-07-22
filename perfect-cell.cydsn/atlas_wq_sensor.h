@@ -17,6 +17,8 @@
 
 #define ATLAS_MAX_ITER 100
 
+#define ATLAS_MAX_ITER 100
+
 struct{
     float ec;
     float tds;
