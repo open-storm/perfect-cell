@@ -9,11 +9,13 @@
 #define ATLAS_WQ_SENSOR_H
 #include "project.h"
 
-#define CONDUCTIVITY 101
-#define TEMPERATURE 96
+#define CONDUCTIVITY 100
+#define TEMPERATURE 102
 #define DO 97
 #define ORP 98
-#define PH 102
+#define PH 99
+
+#define ATLAS_MAX_ITER 100
 
 #define ATLAS_MAX_ITER 100
 

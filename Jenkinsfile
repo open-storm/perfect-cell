@@ -42,6 +42,7 @@ pipeline {
         agent { label 'klab' }
             steps {
                 bat "python build_tools\\pre_build.py"
+	        bat "python tests\\power_test.py ${getCommitSHA()}"
                 timeout(10) { // Only attempt for 10 minutes
                     waitUntil {
                         script {

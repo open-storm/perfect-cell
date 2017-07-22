@@ -43,6 +43,7 @@
 #define GPS_FLAG          1u
 #define ULTRASONIC_FLAG   0u
 #define ULTRASONIC_2_FLAG 0u
+#define SENIX_FLAG        0u
 #define OPTICAL_RAIN_FLAG 0u
 #define DECAGON_FLAG      0u
 #define AUTOSAMPLER_FLAG  0u
