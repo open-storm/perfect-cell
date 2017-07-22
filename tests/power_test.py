@@ -59,13 +59,16 @@ if __name__ == "__main__":
             # Set record length:
             scp.record_length = 1000  # 1 kS
 
+            # Set resolution
+            scp.resolution = 14
+
             # For all channels:
             for ch in scp.channels:
                 # Enable channel to measure it:
                 ch.enabled = True
 
                 # Set range:
-                ch.range = 8  # 8 V
+                ch.range = 2  # 8 V
 
                 # Set coupling:
                 ch.coupling = libtiepie.CK_DCV  # DC Volt
@@ -85,7 +88,7 @@ if __name__ == "__main__":
                 for block in range(120):
                     if (block % 10 == 0):
                         print('Block: ', block)
-                        print(datetime.datetime.isoformat(datetime.datetime.utcnow()
+                        print(datetime.datetime.timestamp(datetime.datetime.utcnow()
                                                           - datetime.timedelta(seconds=1)))
 
                     # Wait for measurement to complete:
@@ -99,20 +102,16 @@ if __name__ == "__main__":
                     # Get data:
                     data = scp.get_data()
                     series = pd.Series(data[0], index=pd.date_range(start=datetime.datetime.utcnow() - datetime.timedelta(seconds=1),
-                                       freq='1ms', periods=len(data[0])).astype('datetime64[ns]'))
+                                       freq='1ms', periods=len(data[0])))
                     master_series = master_series.append(series)
             except Exception as e:
                 print('Exception: ' + e.message)
 
             # Stop stream:
             scp.stop()
-            master_series = master_series.resample('100ms').mean().dropna()
-            # dt_ix = (pd.Series(master_series.index)
-            #          .dt.strftime("%Y-%m-%dT%H:%M:%S.%f").values)
-            # dt_ix = (pd.Series(master_series.index)
-            #          .apply(lambda x:
-            #                 int(datetime.datetime.timestamp(x)))).tolist()
+            master_series = master_series.resample('10ms').mean().dropna()
             dt_ix = pd.Series(master_series.index).tolist()
+            # Hack to get around 32-bit precision
             dt_ix = [str(int(datetime.datetime.timestamp(i)*1000000000)) for i in dt_ix]
             dt_ix = np.asarray(dt_ix)
             values = master_series.astype(str).values
@@ -120,19 +119,19 @@ if __name__ == "__main__":
              .format(commit_hash))
             write_list = (str_prefix + ' ' + 'value=' + values + ' ' +
                           dt_ix).tolist()
-            print(write_list[0:10])
+            print('\n'.join(write_list[0:5]))
             print('Writing power consumption measurements to influxdb...')
             client.write_points(write_list, protocol='line')
 
         except Exception as e:
             print('Exception: ' + e.message)
-            sys.exit(1)
+            sys.exit(0)
 
         # Close oscilloscope:
         del scp
 
     else:
         print('No oscilloscope available with stream measurement support!')
-        sys.exit(1)
+        sys.exit(0)
 
     sys.exit(0)
