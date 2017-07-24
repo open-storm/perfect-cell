@@ -8,7 +8,7 @@
 
 #include "optical_rain.h"
 
-uint8 count = 0;
+static volatile uint8 count = 0;
 // prototype modem interrupt
 CY_ISR_PROTO(isr_optical_rain);
 

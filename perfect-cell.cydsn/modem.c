@@ -14,13 +14,13 @@
 #include "extern.h"
 
 // declare variables
-int	   iter = 0;
-uint8  modem_state, lock_acquired = 0u, ready = 0u;
-uint16 uart_string_index = 0u;
+int iter = 0;
+uint8 modem_state, lock_acquired = 0u, ready = 0u;
+static volatile uint16 uart_string_index = 0u;
 uint32 feed_id;
-char   modem_received_buffer[MODEM_BUFFER_LENGTH] = {'\0'};
-char   request_chunk[CHUNK_SIZE] = {'\0'};
-char*  modem_apn = "epc.tmobile.com";
+volatile char modem_received_buffer[MODEM_BUFFER_LENGTH] = {'\0'};
+char request_chunk[CHUNK_SIZE] = {'\0'};
+char *modem_apn = "epc.tmobile.com";
 
 // prototype modem interrupt
 CY_ISR_PROTO(Telit_isr_rx);

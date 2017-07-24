@@ -27,7 +27,7 @@ extern char write_route[60];
 extern uint8 array_ix;
 
 // Buffer for cell module
-extern char modem_received_buffer[MODEM_BUFFER_LENGTH];
+extern volatile char modem_received_buffer[MODEM_BUFFER_LENGTH];
 
 // SSL/TLS enabled?
 extern uint8 ssl_enabled;

@@ -19,8 +19,8 @@
 #define MAX_BOTTLE_COUNT            24
 #define PULSE_COUNT                 20
 
-extern uint8    autosampler_state;
-extern uint8    SampleCount;
+extern volatile uint8 autosampler_state;
+extern volatile uint8 SampleCount;
 
 /**
  * @brief Starts the autosampler UART

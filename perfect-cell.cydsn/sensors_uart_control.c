@@ -4,8 +4,8 @@ static const uint32_t MASTER_CLOCK_FREQ = 24000000u;  //  24 MHz
 
 // The buffer and index are dependent on eachother. This buffer is implemented
 // as a circular buffer to avoid overflow.
-static char sensors_uart_buf[257] = {'\0'};
-static uint8_t buf_idx = 0u;
+static volatile char sensors_uart_buf[257] = {'\0'};
+static volatile uint8_t buf_idx = 0u;
 
 void sensors_uart_start() {
     Sensors_UART_Start();
