@@ -7,22 +7,22 @@
  */
 #ifndef ATLAS_WQ_SENSOR_H
 #define ATLAS_WQ_SENSOR_H
+#include <stdio.h>
+#include <stdlib.h>
 #include "project.h"
+#include "strlib.h"
 
-#define CONDUCTIVITY 100
-#define TEMPERATURE 102
-#define DO 97
-#define ORP 98
-#define PH 99
-
-#define ATLAS_MAX_ITER 100
-
-struct{
+typedef struct {
     float ec;
     float tds;
     float sal;
     float sg;
-}typedef con_reading;
+} con_reading_t;
+
+typedef union {
+    float *generic_reading;
+    con_reading_t *co_reading;
+} reading_u;
 
 /**
  * @brief Put Atlas I2C sensor into sleep mode
@@ -31,7 +31,7 @@ struct{
  *
  * @return 1 on success
  */
-int atlas_sensor_sleep(uint8 sensor_address);
+int atlas_sensor_sleep(uint8_t sensor_address);
 
 /**
  * @brief Calibrate Atlas sensor using single-point method
@@ -40,7 +40,7 @@ int atlas_sensor_sleep(uint8 sensor_address);
  *
  * @return 1 on success
  */
-int atlas_sensor_calibrate(uint8 sensor_address);
+int atlas_sensor_calibrate(uint8_t sensor_address);
 
 /**
  * @brief Take a single reading from Atlas sensor in I2C mode.
@@ -51,20 +51,11 @@ int atlas_sensor_calibrate(uint8 sensor_address);
  *
  * @return 1u on success, and 0u otherwise.
  */
-uint8 atlas_take_single_reading(uint8 sensor_address, float *reading);
+uint8_t atlas_take_single_reading(uint8_t sensor_address, reading_u reading);
 
 /**
- * @brief Take a single reading from Atlas sensor in I2C mode.
- * Used for conductivity sensor.
- *
- * @param reading Struct for conductivity reading (to be written to)
- *
- * @return 1u on success, and 0u otherwise.
- */
-uint8 atlas_take_con_reading(con_reading *reading);
-
-/**
- * @brief Inserts current values of water quality measurements into labels and readings arrays.
+ * @brief Inserts current values of water quality measurements into labels and
+ * readings arrays.
  *
  * @param labels Array to store labels corresponding to each sensor reading
  * @param readings Array to store sensor readings as floating point values
@@ -73,7 +64,7 @@ uint8 atlas_take_con_reading(con_reading *reading);
  *
  * @return (*array_ix) + number of entries filled
  */
-uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
+uint8_t zip_atlas_wq(char *labels[], float readings[], uint8_t *array_ix,
+                     uint8_t max_size);
 
 #endif
-// Additional functionality
