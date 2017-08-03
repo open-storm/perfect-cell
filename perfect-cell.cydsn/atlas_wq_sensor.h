@@ -20,8 +20,7 @@ typedef struct {
 } con_reading_t;
 
 typedef union {
-    float *generic_reading;
-    con_reading_t *co_reading;
+    float *generic_reading; con_reading_t *co_reading;
 } reading_ptr_u;
 
 /**

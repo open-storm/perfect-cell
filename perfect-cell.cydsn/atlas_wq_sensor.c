@@ -47,7 +47,7 @@ uint8_t atlas_sensor_sleep(uint8_t sensor_address) {
     return i2c_write(sensor_address, command, sizeof(command));
 }
 
-uint8_t tlas_sensor_calibrate(uint8_t sensor_address) {
+uint8_t atlas_sensor_calibrate(uint8_t sensor_address) {
     uint8_t command[] = "Cal,1";
     return i2c_write(sensor_address, command, sizeof(command));
 }

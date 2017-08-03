@@ -552,6 +552,7 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
 
     // If neither (or both) transfer encodings are included, abort
     // TODO: This may not always be the case
+    //if (!fixed_length == !chunked ){ // consider this logical equivalent
     if ((!fixed_length && !chunked) || (fixed_length && chunked)){
         return 0u;
     }
