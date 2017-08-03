@@ -41,14 +41,12 @@ static uint8_t i2c_read(const uint8_t addr, const uint8_t buf[],
     return !(I2C_MasterStatus() & I2C_MSTAT_ERR_XFER); // return 0u on error
 }
 
-int atlas_sensor_sleep(uint8_t sensor_address) {
-    i2c_write(sensor_address, "Sleep", 7u);
-    return 1u;
+uint8_t atlas_sensor_sleep(uint8_t sensor_address) {
+    return i2c_write(sensor_address, "Sleep", 7u);
 }
 
-int atlas_sensor_calibrate(uint8_t sensor_address) {
-    i2c_write(sensor_address, "Cal,1", 7u);
-    return 1u;
+uint8_t tlas_sensor_calibrate(uint8_t sensor_address) {
+    return i2c_write(sensor_address, "Cal,1", 7u);
 }
 
 inline static void parse_conductivity_string(const con_reading_t *reading,
@@ -64,7 +62,8 @@ inline static void parse_conductivity_string(const con_reading_t *reading,
     reading->sg = atof(sg);
 }
 
-uint8_t atlas_take_single_reading(uint8_t sensor_address, reading_ptr_u reading) {
+uint8_t atlas_take_single_reading(uint8_t sensor_address,
+                                  reading_ptr_u reading) {
     uint8 command_buffer_size = sensor_address == CONDUCTIVITY ? 19u : 7u;
     uint8 raw_reading[20] = {0};
     char *reading_start;

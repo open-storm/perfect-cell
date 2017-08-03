@@ -31,7 +31,7 @@ typedef union {
  *
  * @return 1 on success
  */
-int atlas_sensor_sleep(uint8_t sensor_address);
+uint8_t atlas_sensor_sleep(uint8_t sensor_address);
 
 /**
  * @brief Calibrate Atlas sensor using single-point method
@@ -40,7 +40,7 @@ int atlas_sensor_sleep(uint8_t sensor_address);
  *
  * @return 1 on success
  */
-int atlas_sensor_calibrate(uint8_t sensor_address);
+uint8_t atlas_sensor_calibrate(uint8_t sensor_address);
 
 /**
  * @brief Take a single reading from Atlas sensor in I2C mode.
