@@ -6,7 +6,8 @@
  * @date 2017-06-19
  */
 #include "atlas_wq_sensor.h"
-const uint8_t ATLAS_MAX_ITER = 100u;
+
+// I2C Sensors' default addresses
 const uint8_t CONDUCTIVITY = 100u;
 const uint8_t TEMPERATURE = 102u;
 const uint8_t DO = 97u;
@@ -14,13 +15,13 @@ const uint8_t ORP = 98u;
 const uint8_t PH = 99u;
 
 static uint8_t i2c_write(const uint8_t addr, const char msg[],
-                         const uint8_t buf_sz) {
+                         const uint8_t msg_sz) {
     // Clear any existing buffers
     I2C_MasterClearStatus();
     I2C_MasterClearReadBuf();
 
     // Send I2C command
-    I2C_MasterWriteBuf(addr, msg, buf_sz, I2C_MODE_COMPLETE_XFER);
+    I2C_MasterWriteBuf(addr, msg, msg_sz, I2C_MODE_COMPLETE_XFER);
 
     // Wait for complete transfer
     while (!(I2C_MasterStatus() & I2C_MSTAT_WR_CMPLT));
@@ -42,15 +43,16 @@ static uint8_t i2c_read(const uint8_t addr, const uint8_t buf[],
 }
 
 uint8_t atlas_sensor_sleep(uint8_t sensor_address) {
-    return i2c_write(sensor_address, "Sleep", 7u);
+    return i2c_write(sensor_address, "Sleep", 6u);
 }
 
 uint8_t tlas_sensor_calibrate(uint8_t sensor_address) {
-    return i2c_write(sensor_address, "Cal,1", 7u);
+    return i2c_write(sensor_address, "Cal,1", 6u);
 }
 
-inline static void parse_conductivity_string(const con_reading_t *reading,
-                                             char *str) {
+// Parses string received by a CONDUCTIVITY sensor
+// MODIFIES: str
+static void parse_conductivity_string(const con_reading_t *reading, char *str) {
     const char *ec = strtok(str, ",");
     const char *tds = strtok(NULL, ",");
     const char *sal = strtok(NULL, ",");
@@ -64,18 +66,18 @@ inline static void parse_conductivity_string(const con_reading_t *reading,
 
 uint8_t atlas_take_single_reading(uint8_t sensor_address,
                                   reading_ptr_u reading) {
-    uint8 command_buffer_size = sensor_address == CONDUCTIVITY ? 19u : 7u;
-    uint8 raw_reading[20] = {0};
+    uint8_t raw_reading[20] = {0u};
+    uint8_t buf_sz = sensor_address == CONDUCTIVITY ? 19u : 7u;
     char *reading_start;
 
     // Send command to read
-    i2c_write(sensor_address, "R", command_buffer_size);
+    i2c_write(sensor_address, "R", 2u);
 
     // Wait for sensor to take readings
     CyDelay(1000u);
 
     // Read result
-    i2c_write(sensor_address, raw_reading, command_buffer_size);
+    i2c_read(sensor_address, raw_reading, buf_sz);
 
     // Parse the buffer if it is valid
     reading_start = strchr((const char *) raw_reading, 1u);
@@ -83,17 +85,20 @@ uint8_t atlas_take_single_reading(uint8_t sensor_address,
         return 0u;
     }
 
+    // Move ptr to first digit of actual reading
+    ++reading_start;
+
     // Parse based on sensor address and type of reading that we get
     if (sensor_address == CONDUCTIVITY) {
-        parse_conductivity_string(reading.co_reading,
-                                  (char *) reading_start + 1u);
+        parse_conductivity_string(reading.co_reading, reading_start);
     } else {
-        *reading.generic_reading = strtof(reading_start + 1u, NULL);
+        // Parse generic reading
+        *reading.generic_reading = strtof(reading_start, NULL);
     }
     return 1u;
 }
 
-inline static void wq_power_on_off(uint8_t val) {
+static void wq_power_on_off(uint8_t val) {
     WQ_Power_Write(val);
     WQ_Power_1_Write(val);
     WQ_Power_2_Write(val);
