@@ -22,7 +22,7 @@ typedef struct {
 typedef union {
     float *generic_reading;
     con_reading_t *co_reading;
-} reading_u;
+} reading_ptr_u;
 
 /**
  * @brief Put Atlas I2C sensor into sleep mode
