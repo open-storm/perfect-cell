@@ -51,7 +51,7 @@ uint8_t atlas_sensor_calibrate(uint8_t sensor_address);
  *
  * @return 1u on success, and 0u otherwise.
  */
-uint8_t atlas_take_single_reading(uint8_t sensor_address, reading_u reading);
+uint8_t atlas_take_single_reading(uint8_t sensor_address, reading_ptr_u reading);
 
 /**
  * @brief Inserts current values of water quality measurements into labels and

@@ -14,7 +14,7 @@ const uint8_t DO = 97u;
 const uint8_t ORP = 98u;
 const uint8_t PH = 99u;
 
-static uint8_t i2c_write(const uint8_t addr, const char msg[],
+static uint8_t i2c_write(const uint8_t addr, uint8_t msg[],
                          const uint8_t msg_sz) {
     // Clear any existing buffers
     I2C_MasterClearStatus();
@@ -28,7 +28,7 @@ static uint8_t i2c_write(const uint8_t addr, const char msg[],
     return !(I2C_MasterStatus() & I2C_MSTAT_ERR_XFER); // return 0u on error
 }
 
-static uint8_t i2c_read(const uint8_t addr, const uint8_t buf[],
+static uint8_t i2c_read(const uint8_t addr, uint8_t buf[],
                         const uint8_t buf_sz) {
     // Clear any existing buffers
     I2C_MasterClearStatus();
@@ -43,16 +43,18 @@ static uint8_t i2c_read(const uint8_t addr, const uint8_t buf[],
 }
 
 uint8_t atlas_sensor_sleep(uint8_t sensor_address) {
-    return i2c_write(sensor_address, "Sleep", 6u);
+    uint8_t command[] = "Sleep";
+    return i2c_write(sensor_address, command, sizeof(command));
 }
 
 uint8_t tlas_sensor_calibrate(uint8_t sensor_address) {
-    return i2c_write(sensor_address, "Cal,1", 6u);
+    uint8_t command[] = "Cal,1";
+    return i2c_write(sensor_address, command, sizeof(command));
 }
 
 // Parses string received by a CONDUCTIVITY sensor
 // MODIFIES: str
-static void parse_conductivity_string(const con_reading_t *reading, char *str) {
+static void parse_conductivity_string(con_reading_t *reading, char *str) {
     const char *ec = strtok(str, ",");
     const char *tds = strtok(NULL, ",");
     const char *sal = strtok(NULL, ",");
@@ -71,7 +73,8 @@ uint8_t atlas_take_single_reading(uint8_t sensor_address,
     char *reading_start;
 
     // Send command to read
-    i2c_write(sensor_address, "R", 2u);
+    uint8_t command[] = "R";
+    i2c_write(sensor_address, command, 2u);
 
     // Wait for sensor to take readings
     CyDelay(1000u);
@@ -126,19 +129,21 @@ uint8_t zip_atlas_wq(char *labels[], float readings[], uint8_t *array_ix,
     CyDelay(500);
 
     // Execute readings
-    reading_ptr_u rd = &atlas_water_temp;
+    reading_ptr_u rd;
+
+    rd.generic_reading = &atlas_water_temp;
     atlas_take_single_reading(TEMPERATURE, rd);
 
-    rd = &atlas_do;
+    rd.generic_reading = &atlas_do;
     atlas_take_single_reading(DO, rd);
 
-    rd = &atlas_orp;
+    rd.generic_reading = &atlas_orp;
     atlas_take_single_reading(ORP, rd);
 
-    rd = &atlas_ph;
+    rd.generic_reading = &atlas_ph;
     atlas_take_single_reading(PH, rd);
 
-    rd = &atlas_conductivity;
+    rd.co_reading = &atlas_conductivity;
     atlas_take_single_reading(CONDUCTIVITY, rd);
 
     // Fill labels
