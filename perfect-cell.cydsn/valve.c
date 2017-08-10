@@ -16,19 +16,19 @@ int test_valve(){
 	for (p_count = 0; p_count < 2; p_count++){
 		blink_LED(5u);
 		Valve_OUT_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_OUT_Write(0u);
 		
 		Valve_IN_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_IN_Write(0u);
         
 		Valve_2_OUT_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_2_OUT_Write(0u);
 		
 		Valve_2_IN_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_2_IN_Write(0u);
                 
 	}
@@ -176,7 +176,7 @@ uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_tr
 		valve_pos = 100. * read_Valve_POS();
 		labels[*array_ix] = "valve_trigger";
 		labels[*array_ix + 1] = "valve_pos";
-		readings[*array_ix] = *valve_trigger;
+		readings[*array_ix] = -1;
 		readings[*array_ix + 1] = valve_pos;
 		(*array_ix) += nvars;
         
