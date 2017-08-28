@@ -8,25 +8,27 @@
 
 #include "valve.h"
 
+uint8 potentiometer_enabled = 1u;
+
 int test_valve(){
 	int p_count = 0;
 	
 	for (p_count = 0; p_count < 2; p_count++){
 		blink_LED(5u);
 		Valve_OUT_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_OUT_Write(0u);
 		
 		Valve_IN_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_IN_Write(0u);
         
 		Valve_2_OUT_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_2_OUT_Write(0u);
 		
 		Valve_2_IN_Write(1u);
-		CyDelay(200u);
+		CyDelay(1000u);
 		Valve_2_IN_Write(0u);
                 
 	}
@@ -122,7 +124,7 @@ int move_valve(int valve){
 		valve_out = -1*iter;
 		return valve_out;
 	}
-	else if(valve > 0 && valve < 100){	
+	else if((valve > 0 && valve < 100) && potentiometer_enabled){	
 														
 	    // Derivative controller
 	    // move the actuator within 5 percent of the desired pos
@@ -161,24 +163,24 @@ int move_valve(int valve){
 
 uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_trigger, uint8 max_size){
     // Ensure we don't access nonexistent array index
-    uint8 nvars = 1;
+    uint8 nvars = 2;
     if(*array_ix + nvars >= max_size){
         return *array_ix;
     }
         // Ellsworth does not have a potentiometer installed
         // Simply flip the pins for now and come back to implement
         // a pulse counter
-        /*        
+                
         float32 valve_pos;
-		valve = move_valve(valve);
+		*valve_trigger = move_valve(*valve_trigger);
 		valve_pos = 100. * read_Valve_POS();
-		labels[array_ix] = "valve_cmd";
-		labels[array_ix + 1] = "valve_pos";
-		readings[array_ix] = valve;
-		readings[array_ix + 1] = valve_pos;
-		array_ix += 2;
-        */
+		labels[*array_ix] = "valve_trigger";
+		labels[*array_ix + 1] = "valve_pos";
+		readings[*array_ix] = -1;
+		readings[*array_ix + 1] = valve_pos;
+		(*array_ix) += nvars;
         
+        /*
         // If zero, open the valve completely
         // IMPORTANT: If there is a "null" entry,
         //            intparse_influxdb returns 0
@@ -200,7 +202,8 @@ uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_tr
         // -1, and negative values are reserved for actuator response
         labels[*array_ix] = "valve_trigger";
         readings[*array_ix] = -1;
-        (*array_ix) += 1;
+        (*array_ix) += 1;*/
+        
         return *array_ix;
 }
 
