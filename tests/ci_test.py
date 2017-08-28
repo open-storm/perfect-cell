@@ -82,7 +82,7 @@ if __name__ == '__main__':
             if var_name in config['trigger_vars']:
                 trigger = config['trigger_vars'][var_name]
                 client.write_points(['{0},node_id={1},source={2} value=1'
-                                     .format(config['trigger'],
+                                     .format(trigger,
                                              config['node_id'],
                                              config['source'])],
                                      protocol='line')

@@ -6,6 +6,7 @@
  * @date 2017-06-01
  */
 #include "data.h"
+#include "gps.h"
 #include "extern.h"
 #include "config.h"
 
@@ -53,6 +54,7 @@ int vbat_flag  = VBAT_FLAG;
 int gps_flag = GPS_FLAG;
 int ultrasonic_flag   = ULTRASONIC_FLAG;
 int ultrasonic_2_flag = ULTRASONIC_2_FLAG;
+int senix_flag = SENIX_FLAG;
 int optical_rain_flag = OPTICAL_RAIN_FLAG;
 int decagon_flag      = DECAGON_FLAG;
 int autosampler_flag  = AUTOSAMPLER_FLAG;
@@ -85,8 +87,8 @@ uint8 array_ix = 0u;
 
 // Functions
 
-int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, uint8 max_size){
-
+int take_readings(char* labels[], float readings[], uint8* array_ix,
+                  uint8 take_average, uint8 max_size) {
     /*
     // Check if the signal strength and number of attempts modem took
     //  to connect during the last transmission is to be reported
@@ -96,32 +98,41 @@ int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_
     */
 
     // Take battery voltage measurement
-    if ( vbat_flag == 1u ){
+    if (vbat_flag == 1u) {
         zip_vbat(labels, readings, array_ix, max_size);
     }
-    
-    // Take ultrasonic measurement
-    if ( ultrasonic_flag == 1u ) {
-        zip_ultrasonic(labels, readings, array_ix, 0u, take_average, ultrasonic_loops, max_size);
-    }    
 
-    // Take ultrasonic 2 measurement     
-    if ( ultrasonic_2_flag == 1u ) {
-        zip_ultrasonic(labels, readings, array_ix, 1u, take_average, ultrasonic_loops, max_size);
-    }    
-    
+    // Take ultrasonic measurement
+    if (ultrasonic_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 0u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
+    // Take ultrasonic 2 measurement
+    if (ultrasonic_2_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 1u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
+    // Take toughsonic measurement
+    if (senix_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 2u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
     // Take optical rain measurement
-    if ( optical_rain_flag == 1u ) {
+    if (optical_rain_flag == 1u) {
         zip_optical_rain(labels, readings, array_ix, max_size);
     }
 
     // Take soil moisture measurement
-    if ( decagon_flag == 1u ) {
-        zip_decagon(labels, readings, array_ix, take_average, decagon_loops, max_size);
+    if (decagon_flag == 1u) {
+        zip_decagon(labels, readings, array_ix, take_average, decagon_loops,
+                    max_size);
     }
-    
+
     // Take water quality measurement
-    if (atlas_wq_flag == 1u){
+    if (atlas_wq_flag == 1u) {
         zip_atlas_wq(labels, readings, array_ix, max_size);
     }
     return (*array_ix);
@@ -387,7 +398,8 @@ void update_params(char* body, char* send_str, char* response_str){
             sprintf(body, "%s%s,", body, "valve_flag");
             sprintf(body, "%s%s,", body, "valve_2_flag");
             sprintf(body, "%s%s,",  body, "autosampler_flag");
-            sprintf(body, "%s%s",  body, "atlas_wq_flag");
+            sprintf(body, "%s%s,",  body, "atlas_wq_flag");
+            sprintf(body, "%s%s",  body, "senix_flag");
 
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
@@ -424,6 +436,7 @@ void update_params(char* body, char* send_str, char* response_str){
                 intparse_influxdb(&valve_2_flag, response_str, "valve_2_flag");
                 intparse_influxdb(&autosampler_flag, response_str, "autosampler_flag");
                 intparse_influxdb(&atlas_wq_flag, response_str, "atlas_wq_flag");
+                intparse_influxdb(&senix_flag, response_str, "senix_flag");
             }
 		}
         modem_socket_close(ssl_enabled);

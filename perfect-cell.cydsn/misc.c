@@ -51,9 +51,9 @@ uint8 zip_vbat(char *labels[], float readings[], uint8 *array_ix, uint8 max_size
 
 void init_pins(){
     VBAT_READ_EN_Write(0u);  // VBAT pin
-	Pin2_Write(0u);
-    Pin37_Write(0u);
-    Pin38_Write(0u);
+	//Pin2_Write(0u);
+    //Pin37_Write(0u);
+    //Pin38_Write(0u);
     mux_controller_Write(0u);
 }
 /* [] END OF FILE */

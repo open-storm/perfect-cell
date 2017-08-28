@@ -116,11 +116,11 @@ void zipf(float begin[], float end[], ...) {
 char *strextract(const char input_str[], char output_str[],
                  const char search_start[], const char search_end[]) {
     if (input_str == NULL) return NULL;
-    const char *begin, *end = NULL;
+    char *begin, *end = NULL;
 
-    if (begin = strstr(input_str, search_start)) {
+    if ((begin = strstr(input_str, search_start))) {
         begin += strlen(search_start);
-        if (end = strstr(begin, search_end)) {
+        if ((end = strstr(begin, search_end))) {
             strncpy(output_str, begin, end - begin);
             output_str[end - begin] = '\0';
         }

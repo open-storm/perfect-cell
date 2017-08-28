@@ -26,9 +26,9 @@
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
 
-#ifdef DEBUG
-#include "tests.h"
-#endif
+//#ifdef DEBUG
+//#include "tests.h"
+//#endif
 
 // define global variables
 #define NVARS 25
@@ -75,10 +75,11 @@ void main() {
     CyDelay(5u);
 
     sleep_isr_StartEx(Wakeup_ISR);  // Start Sleep ISR
-    SleepTimer_Start();             // Start SleepTimer Compnent
+    SleepTimer_Start();             // Start SleepTimer Component
 
     // Initialize Pins
     init_pins();
+    Senix_Comp_Start();
 
     // Update influxdb tags
     status = append_tags(main_tags, "commit_hash", CURRENT_COMMIT);
@@ -95,7 +96,7 @@ void main() {
 #ifdef DEBUG
 
     // TODO: Implement generic sensor unit tests here?
-    result_t results;
+    // result_t results;
 
     // test_run_all(&results);
     // test_post_results(&results);

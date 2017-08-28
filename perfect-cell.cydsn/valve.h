@@ -9,7 +9,7 @@
 #define VALVE_H
 #include <project.h>
 #include "misc.h"
-
+    
 /**
  * @brief Move valve to the position indicated by @p valve
  *
