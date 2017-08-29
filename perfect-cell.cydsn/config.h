@@ -23,6 +23,7 @@
 
 // Modem parameters
 #define MAX_CONNECTION_ATTEMPTS 5
+#define ALLOW_DM_UPDATES        0
 
 // SSL parameters
 #define SSL_ENABLED            1u
