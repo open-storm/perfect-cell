@@ -76,9 +76,9 @@ static void parse_maxbotix_string(UltrasonicReading *reading, const char *str) {
         char model[5] = {'\0'};
         strextract(str, model, "PN:MB", "\r");
 
-        if (strcmp(model, "7383") == 0) {  // Short range sensor
+        if (strcmp(model, "7384") == 0) {  // Short range sensor
             valid = strcmp(depth_str, "5000");
-        } else if (strcmp(model, "7384") == 0) {  // Long range sensor
+        } else if (strcmp(model, "7383") == 0) {  // Long range sensor
             valid = strcmp(depth_str, "9999");
         }
 
