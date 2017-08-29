@@ -25,6 +25,17 @@ extern uint32	feed_id;
 extern char*	api_key;
 
 /**
+ * @brief Enable/disable Sprint updates. Execution command is used to enable or disable updates.
+ *
+ * @param updates_enabled enable flag:
+ * - 0 = disable updates
+ * - 1 = enable updates
+ *
+ * @return 1u on successful toggle, 0u otherwise
+ */
+uint8 modem_updates_toggle(uint8 updates_enabled);
+    
+/**
  * @brief Startup sequence to power on the modem, start modem components and
  * prepare for sending/receiving messages over the network.
  *

@@ -101,6 +101,30 @@ void modem_stop(){
     modem_state = MODEM_STATE_OFF;
 }
 
+uint8 modem_updates_toggle(uint8 updates_enabled){
+    char cmd[20];
+    char updates_state[5] = {'\0'};
+
+    // Send AT read command to determine if updates are already enabled
+    if (at_write_command("AT#OMADMCEN?\r", "OK", 1000u)) {
+        // Extract current updates state into updates_state
+        strextract(modem_received_buffer, updates_state, "OMADMCEN: 1,", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(updates_state) != updates_enabled) {
+            // Construct AT command
+            sprintf(cmd, "AT#OMADMCEN=%u\r", updates_enabled);
+
+            // Enable/disable updates
+            return at_write_command(cmd, "OK", 5000u);
+        } else {
+            return 1u;
+        }
+    }
+
+    return 0u;
+}
+
 // send at-command to modem
 uint8 at_write_command(char* uart_string, char* expected_response, uint32 uart_timeout){
     uint8 response = 0u;
