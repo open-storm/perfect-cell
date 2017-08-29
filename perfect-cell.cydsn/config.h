@@ -1,8 +1,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// Service to use
+#define USE_INFLUXDB        1
+#define USE_CHORDS          0
+    
 // Default node info
-#define DEFAULT_NODE_ID "example_node"
+#define DEFAULT_NODE_ID     "example_node"
 
 // Default user info
 #define DEFAULT_HOME_USER   "home_user"
@@ -21,6 +25,12 @@
 // Other InfluxDB parameters
 #define DEFAULT_GLOBAL_TAGS "source=node"
 
+// CHORDS info
+#define CHORDS_INSTRUMENT_ID       1
+#define CHORDS_WRITE_KEY_ENABLED   1
+#define CHORDS_WRITE_KEY           "key"
+#define CHORDS_IS_TEST             0
+    
 // Modem parameters
 #define MAX_CONNECTION_ATTEMPTS 5
 #define ALLOW_DM_UPDATES        0

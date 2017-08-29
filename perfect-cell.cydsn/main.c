@@ -25,8 +25,14 @@
 #include "sleep.h"
 #include "startup.h"
 #include "config.h"
-// Uncomment to use the SERVICES script to create requests
-// #include "services.h"
+
+#if USE_INFLUXDB
+    #include "influxdb.h"
+#endif
+
+#if USE_CHORDS
+    #include "chords.h"
+#endif
 
 //#ifdef DEBUG
 //#include "tests.h"

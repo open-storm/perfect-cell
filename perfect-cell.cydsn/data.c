@@ -10,18 +10,33 @@
 #include "extern.h"
 #include "config.h"
 
-// Node ID
-char node_id[20] = DEFAULT_NODE_ID;
+#if (USE_INFLUXDB && USE_CHORDS)
+    #error Must select only one of USE_INFLUXDB, USE_CHORDS
+#endif
 
-// Default user info
-char user[20] = DEFAULT_HOME_USER;
-char pass[50] = DEFAULT_HOME_PASS;
-char database[20] = DEFAULT_HOME_DB;
+#if USE_INFLUXDB
+    #include "influxdb.h"
+    // Node ID
+    char node_id[20] = DEFAULT_NODE_ID;
 
-// Meta user info
-char meta_user[20] = DEFAULT_META_USER;
-char meta_pass[50] = DEFAULT_META_PASS;
-char meta_database[20] = DEFAULT_META_DB;
+    // Default user info
+    char user[20] = DEFAULT_HOME_USER;
+    char pass[50] = DEFAULT_HOME_PASS;
+    char database[20] = DEFAULT_HOME_DB;
+
+    // Meta user info
+    char meta_user[20] = DEFAULT_META_USER;
+    char meta_pass[50] = DEFAULT_META_PASS;
+    char meta_database[20] = DEFAULT_META_DB;
+#endif
+
+#if USE_CHORDS
+    #include "chords.h"
+    int chords_instrument_id = CHORDS_INSTRUMENT_ID;
+    int chords_write_key_enabled = CHORDS_WRITE_KEY_ENABLED; 
+    char *chords_write_key = CHORDS_WRITE_KEY;
+    int chords_is_test = CHORDS_IS_TEST;
+#endif
 
 // Defaults if service.c not used
 int main_port = DEFAULT_HOME_PORT;
@@ -142,6 +157,9 @@ int take_readings(char* labels[], float readings[], uint8* array_ix,
 }
 
 uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    #if !USE_INFLUXDB
+        return 0u;
+    #endif
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
@@ -200,13 +218,23 @@ uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
 uint8 send_readings(char* body, char* send_str, char* response_str, char* socket_dial_str,
                     char *labels[], float readings[], uint8 nvars){
     uint8 data_sent = 0u;
-    // If not using SERVICES use the following code
+    #if USE_INFLUXDB
 	// Construct the data body
-    construct_default_body(body, labels, readings, nvars);
+    construct_influxdb_body(body, labels, readings, nvars);
 	// Construct POST request
 	construct_generic_request(send_str, body, main_host, write_route,
 		                      main_port, "POST", "Close",
 				              "", 0, "1.1");
+    #endif
+    
+    #if USE_CHORDS
+        construct_chords_route(write_route, labels, readings,
+                        nvars, chords_instrument_id, chords_write_key_enabled, 
+                        chords_write_key, chords_is_test);
+        construct_generic_request(send_str, body, main_host, write_route,
+                               main_port, "GET", "Close",
+	                           "", 0, "1.1");
+    #endif
 				
     // This sends the data
     modem_socket_dial(socket_dial_str, main_host, main_port, 1, ssl_enabled);
@@ -216,6 +244,7 @@ uint8 send_readings(char* body, char* send_str, char* response_str, char* socket
 }
 
 uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 get_device_meid){
+    #if USE_INFLUXDB    
     uint8 status;
     // Only run if meta_trigger and meta_flag are both active
     if ((meta_trigger == 0u) || (meta_flag == 0u)) {
@@ -231,13 +260,17 @@ uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 
             return 1u;
         }
     }
+    #endif
 return 0u;
 }
 
 int update_meta(char* meid, char* send_str, char* response_str){
-	// Assumes that send_str and response_str are empty
-        
     int result = 0;
+    #if USE_INFLUXDB
+	if (meta_flag == 0u){
+        return 0u;
+    }
+	// Assumes that send_str and response_str are empty        
     int response_code = 0;
     int true_response_code = 15;
     if (modem_startup(&connection_attempt_counter)) {
@@ -290,15 +323,18 @@ int update_meta(char* meid, char* send_str, char* response_str){
     // If we get to here, "result" will be an integer less than 0
     // Based on the value of "result", we should be able to find 
     // which parameter didn't parse
+    #endif
     return result;
 }
 
 int update_triggers(char* body, char* send_str, char* response_str){
+    int result = 0u;
+    #if USE_INFLUXDB
 	if (trigger_flag == 0u){
         return 0u;
     }
 	// Assumes that body, send_str and response_str are empty
-    int response_code = 0, true_response_code = 0, result = 0; 
+    int response_code = 0, true_response_code = 0; 
     if (modem_startup(&connection_attempt_counter)) {
         // Dial socket
         if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
@@ -376,12 +412,13 @@ int update_triggers(char* body, char* send_str, char* response_str){
     
     // If we get to here, "result" will be an integer less than 0
     // Based on the value of "result", we should be able to find 
-    // which trigger didn't parse    
+    // which trigger didn't parse
+    #endif
     return result;
-    
 }
 							
 int update_params(char* body, char* send_str, char* response_str){
+    #if USE_INFLUXDB
 	if (param_flag == 0u){
         return 0u;
     }	
@@ -447,32 +484,7 @@ int update_params(char* body, char* send_str, char* response_str){
 		}
         modem_socket_close(ssl_enabled);
 	}
-    return 1u;
-}
-
-void construct_route(char* route, char* base, char* user, char* pass, char* database){
-    memset(route, '\0', sizeof(*route));
-    sprintf(route, "%s%s?u=%s&p=%s&db=%s", route, base, user, pass, database); 
-}
-
-void construct_default_body(char *data_packet, char *labels[], float readings[],
-                        int nvars){
-	int i = 0; // iterator through labels and readings
-	
-	// Default to influxdb line protocol
-    for (i = 0; i < nvars; i++){
-		if (labels[i] && labels[i][0]){
-            sprintf(data_packet, "%s%s,node_id=%s,%s value=%f\n",
-                    data_packet, labels[i],
-                    node_id, main_tags,
-                    readings[i]);
-		}
-    }
-}
-
-uint8 append_tags(char *main_tags, char *appended_label, char *appended_value)
-{
-    sprintf(main_tags, "%s,%s=%s", main_tags, appended_label, appended_value);
+    #endif
     return 1u;
 }                        
                         
