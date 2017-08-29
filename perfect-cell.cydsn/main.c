@@ -23,6 +23,7 @@
 #include "extern.h"
 #include "modem.h"
 #include "startup.h"
+#include "config.h"
 // Uncomment to use the SERVICES script to create requests
 // #include "services.h"
 
@@ -86,8 +87,10 @@ void main() {
 
     // Update metadata (node_id, user, pass, database
     if (modem_startup(&connection_attempt_counter)) {
+        // Enable/disable sprint updates
+        status = modem_updates_toggle(ALLOW_DM_UPDATES);
         // Initialize SSL if enabled
-        initialize_ssl(&ssl_enabled, &ssl_initialized);
+        status = initialize_ssl(&ssl_enabled, &ssl_initialized);
         // Update metadata if enabled
         status = run_meta_subroutine(meid, send_str, response_str, 1u);
         modem_shutdown();
