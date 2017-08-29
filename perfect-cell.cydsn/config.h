@@ -16,7 +16,7 @@
 #define DEFAULT_META_PASS   "meta_pass"
 #define DEFAULT_META_DB     "META_DB"
 #define DEFAULT_META_PORT   8086
-#define DEFAULT_META_HOST   "ec2-52-87-156-130.compute-1.amazonaws.com"
+#define DEFAULT_META_HOST   "ec2-13-58-145-29.us-east-2.compute.amazonaws.com"
 
 // Other InfluxDB parameters
 #define DEFAULT_GLOBAL_TAGS "source=node"
@@ -38,8 +38,11 @@
 #define SLEEPTIMER        460u
 
 // Flags to activate devices
-#define MODEM_FLAG        1u
+#define CONNECTION_FLAG   1u
+#define TRIGGER_FLAG      1u
+#define PARAM_FLAG        1u
 #define META_FLAG         1u
+#define MODEM_FLAG        1u
 #define VBAT_FLAG         1u
 #define GPS_FLAG          1u
 #define ULTRASONIC_FLAG   0u

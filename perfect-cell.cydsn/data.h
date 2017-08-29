@@ -144,9 +144,9 @@ int update_triggers(char* body, char* send_str, char* response_str);
  * @param send_str Empty buffer to store request string
  * @param response_str Empty buffer to store server response
  *
- * @return null
+ * @return 1u
  */
-void update_params(char* body, char* send_str, char* response_str);
+int update_params(char* body, char* send_str, char* response_str);
 
 /**
  * @brief Constructs the route (URL) following the base endpoint.

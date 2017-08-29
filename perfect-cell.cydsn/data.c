@@ -48,8 +48,11 @@ uint8 enable_ssl_sec_config = ENABLE_SSL_SEC_CONFIG;
 uint8 ssl_enabled = SSL_ENABLED;
 
 // Flags to activate devices
-int modem_flag = MODEM_FLAG;
+int connection_flag = CONNECTION_FLAG;
+int trigger_flag = TRIGGER_FLAG;
+int param_flag = PARAM_FLAG;
 int meta_flag  = META_FLAG;
+int modem_flag = MODEM_FLAG;
 int vbat_flag  = VBAT_FLAG;
 int gps_flag = GPS_FLAG;
 int ultrasonic_flag   = ULTRASONIC_FLAG;
@@ -174,7 +177,7 @@ uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size
     }
     labels[*array_ix] = "meta_trigger";
     readings[*array_ix] = meta_trigger;
-    (*array_ix)++;
+    (*array_ix) += nvars;
     return *array_ix;
 }
 
@@ -190,7 +193,7 @@ uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
     readings[*array_ix] = connection_attempt_counter;
     readings[*array_ix + 1] = rssi;
     readings[*array_ix + 2] = fer;
-    (*array_ix) += 3;
+    (*array_ix) += nvars;
     return *array_ix;
 }
 
@@ -291,9 +294,10 @@ int update_meta(char* meid, char* send_str, char* response_str){
 }
 
 int update_triggers(char* body, char* send_str, char* response_str){
-	
+	if (trigger_flag == 0u){
+        return 0u;
+    }
 	// Assumes that body, send_str and response_str are empty
-
     int response_code = 0, true_response_code = 0, result = 0; 
     if (modem_startup(&connection_attempt_counter)) {
         // Dial socket
@@ -377,8 +381,10 @@ int update_triggers(char* body, char* send_str, char* response_str){
     
 }
 							
-void update_params(char* body, char* send_str, char* response_str){
-	
+int update_params(char* body, char* send_str, char* response_str){
+	if (param_flag == 0u){
+        return 0u;
+    }	
 	// Assumes that body, send_str and response_str are empty    
     
     if (modem_startup(&connection_attempt_counter)) {
@@ -441,6 +447,7 @@ void update_params(char* body, char* send_str, char* response_str){
 		}
         modem_socket_close(ssl_enabled);
 	}
+    return 1u;
 }
 
 void construct_route(char* route, char* base, char* user, char* pass, char* database){
