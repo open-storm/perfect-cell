@@ -48,6 +48,9 @@ extern int rssi;
 extern int fer;
 
 // Flags to trigger devices
+extern int connection_flag;
+extern int trigger_flag;
+extern int param_flag;
 extern int modem_flag;
 extern int meta_flag;
 extern int vbat_flag;

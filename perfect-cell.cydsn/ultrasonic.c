@@ -97,11 +97,17 @@ uint8 ultrasonic_get_reading(UltrasonicReading *reading,
     sensors_uart_set_baud(9600u);
     sensors_uart_start();
 
+    if (which_ultrasonic == 2u) {
+    Senix_Comp_Start();
+    }
     ultrasonic_power_on(which_ultrasonic);  // Power on the sensor
     CyDelay(800u);  // Wait for UART to get readings from sensor
     ultrasonic_power_off(which_ultrasonic);  // Power off the sensor
 
     sensors_uart_stop();
+    if (which_ultrasonic == 2u) {
+    Senix_Comp_Stop();
+    }
     char *uart_string = sensors_uart_get_string();
 
     if (which_ultrasonic == 2u) {

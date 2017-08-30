@@ -8,7 +8,15 @@
 #ifndef STARTUP_H
 #define STARTUP_H
 #include <project.h>
-
+    
+ /**
+ * @brief Initialize modem parameters (updates and ssl) as well as device metadata.
+ *
+ * @return 1u on success, 0u otherwise
+ */
+uint8 initialize_modem_params(char *send_str, char *response_str, 
+    uint8 ssl_enabled, uint8 ssl_initialized);
+    
 /**
  * @brief Initialize counter-type sensors that must remain on during the sleep cycle.
  * Currently only the optical rain sensor requires this behavior
