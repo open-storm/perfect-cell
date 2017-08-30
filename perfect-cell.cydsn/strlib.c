@@ -16,34 +16,54 @@ Searches InfluxDB json packet, "packet", for name and
 returns the associated value as a char array.
 Returns 1 if successful, and 0 if there was an error.
 
-This is ported from packet_get_value() from packet.c in kLabUM/IoT
+Example packet (pretty printed, real packets exclude whitespace):
+{
+    "results": [
+        {
+            "statement_id": 0,
+            "series": [
+                {
+                    "name": "sleeptimer",
+                    "columns": [
+                        "time",
+                        "last"
+                    ],
+                    "values": [
+                        [
+                            "2017-07-28T11:25:48.739261924Z",
+                            4600
+                        ]
+                    ]
+                },
+                {
+                    "name": "v_bat",
+                    "columns": [
+                        "time",
+                        "last"
+                    ],
+                    "values": [
+                        [
+                            "2017-07-31T16:49:49.060877063Z",
+                            -0.004576
+                        ]
+                    ]
+                }
+            ]
+        }
+    ]
+}
 */
 uint8_t parse_influxdb(char *value, char *packet, char *name) {
-    char *a, *b;
+    char *name_ptr;
 
     // Find the first occurence of "name" in "packet"
-    a = strstr(packet, name);
-    if (a == NULL) {
+    name_ptr = strstr(packet, name);
+    if (name_ptr == NULL) {
         return 0u;
     }
 
-    // Move the pointer to the timestamp after the first occurence of "name"
-    // This marks where the value is
-    a = strstr(a, "Z\",") + strlen("Z\",");
-    if (a == NULL) {
-        return 0u;
-    }
-
-    // Find the closing bracket that follows the timestamp, marking the end of
-    // the value
-    b = strstr(a, "]");
-    if (b == NULL) {
-        return 0u;
-    }
-
-    strncpy(value, a, b - a);
-    value[b - a] = '\0';
-    return 1u;
+    // Extract the value after the first occurence of "name"
+    return strextract(name_ptr, value, "Z\",", "]") != NULL;
 }
 
 /*
@@ -56,13 +76,11 @@ uint8_t strparse_influxdb(char *param, char *packet, char *name) {
     // assume a string no longer than 100 bytes is stored
     char value_str[100] = {'\0'};
 
-    if (parse_influxdb(value_str, packet, name) == 1u) {
+    if (parse_influxdb(value_str, packet, name)) {
         if (strstr(value_str, "null") == NULL) {
-            // Copy the result into "param"
-            strncpy(param, value_str + 1, strlen(value_str) - 2);
-            param[strlen(value_str) - 2] = '\0';
-
-            return 1u;
+            // Copy the double quoted string into "param" by searching for the
+            // double quotes.
+            return strextract(value_str, param, "\"", "\"") != NULL;
         }
     }
 
@@ -118,7 +136,14 @@ char *strextract(const char input_str[], char output_str[],
     if (input_str == NULL) return NULL;
     char *begin, *end = NULL;
 
-    if ((begin = strstr(input_str, search_start))) {
+    if (search_end == NULL) {
+        if ((begin = strstr(input_str, search_start))) {
+            begin += strlen(search_start);
+            strcpy(output_str, begin);
+        }
+    }
+
+    else if ((begin = strstr(input_str, search_start))) {
         begin += strlen(search_start);
         if ((end = strstr(begin, search_end))) {
             strncpy(output_str, begin, end - begin);
@@ -221,4 +246,3 @@ uint8_t parse_http_status(char *http_status, char *version, char *status_code,
 }
 
 /* [] END OF FILE */
-

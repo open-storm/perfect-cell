@@ -14,7 +14,7 @@
 CY_ISR_PROTO(isr_SampleCounter);
 
 // Declare variables
-uint8 SampleCount = 0, SampleCount1 = 0, autosampler_state;;
+volatile uint8 SampleCount = 0, SampleCount1 = 0, autosampler_state;;
 
 uint8 autosampler_start(){
     isr_SampleCounter_StartEx(isr_SampleCounter);
