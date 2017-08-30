@@ -82,7 +82,7 @@ Set the following parameters in `config.h` to match your server settings:
 ...
 
 // SSL parameters
-#define SSL_ENABLED            1u
+#define SSL_ENABLED            0u
 ```
 
 ## Overview
