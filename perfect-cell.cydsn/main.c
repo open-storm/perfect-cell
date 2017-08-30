@@ -78,7 +78,9 @@ void main() {
     init_pins();
 
     // Update influxdb tags
+    #if USE_INFLUXDB
     status = append_tags(main_tags, "commit_hash", CURRENT_COMMIT);
+    #endif
 
     // Update metadata (node_id, user, pass, database
     if (connection_flag){

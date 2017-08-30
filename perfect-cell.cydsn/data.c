@@ -28,25 +28,25 @@
     char meta_user[20] = DEFAULT_META_USER;
     char meta_pass[50] = DEFAULT_META_PASS;
     char meta_database[20] = DEFAULT_META_DB;
+    
+    int main_port = DEFAULT_HOME_PORT;
+    char main_host[100] = DEFAULT_HOME_HOST;
+    char main_tags[200] = DEFAULT_GLOBAL_TAGS;
 #endif
 
 #if USE_CHORDS
     #include "chords.h"
+    int main_port = CHORDS_PORT;
+    char main_host[100] = CHORDS_HOST;
+    char main_tags[200] = "";
     int chords_instrument_id = CHORDS_INSTRUMENT_ID;
     int chords_write_key_enabled = CHORDS_WRITE_KEY_ENABLED; 
     char *chords_write_key = CHORDS_WRITE_KEY;
     int chords_is_test = CHORDS_IS_TEST;
 #endif
 
-// Defaults if service.c not used
-int main_port = DEFAULT_HOME_PORT;
-char main_host[100] = DEFAULT_HOME_HOST;
-char main_tags[200] = DEFAULT_GLOBAL_TAGS;
-char write_route[60] = "";
-char main_query[300]= {'\0'};
-
-// Set service to use here
-int service_flag = 1u;
+char write_route[MAX_ROUTE_SIZE] = "";
+char main_query[MAX_QUERY_SIZE]= {'\0'};
 
 // Sleeptimer
 int sleeptimer = SLEEPTIMER; // Number of wakeups before full power: 1172 @ 256ms ~5 min
@@ -157,9 +157,7 @@ int take_readings(char* labels[], float readings[], uint8* array_ix,
 }
 
 uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
-    #if !USE_INFLUXDB
-        return 0u;
-    #endif
+    #if USE_INFLUXDB
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
@@ -184,6 +182,7 @@ uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 
     if ( meta_flag == 1u ){
         zip_meta(labels, readings, array_ix, max_size);
     }
+    #endif
     return (*array_ix);
 }
 
