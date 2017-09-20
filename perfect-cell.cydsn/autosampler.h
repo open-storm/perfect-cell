@@ -7,7 +7,6 @@
  */
 #ifndef AUTOSAMPLER_H
 #define AUTOSAMPLER_H
-#endif
 
 #include <project.h>
 #include <stdio.h>
@@ -74,4 +73,5 @@ uint8 autosampler_take_sample(uint8 *count);
  */
 uint8 zip_autosampler(char *labels[], float readings[], uint8 *array_ix, int *autosampler_trigger, uint8 *bottle_count, uint8 max_size);
 
+#endif
 /* [] END OF FILE */

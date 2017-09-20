@@ -6,31 +6,47 @@
  * @date 2017-06-01
  */
 #include "data.h"
+#include "gps.h"
 #include "extern.h"
 #include "config.h"
 
-// Node ID
-char node_id[20] = DEFAULT_NODE_ID;
+#if (USE_INFLUXDB && USE_CHORDS)
+    #error Must select only one of USE_INFLUXDB, USE_CHORDS
+#endif
 
-// Default user info
-char user[20] = DEFAULT_HOME_USER;
-char pass[50] = DEFAULT_HOME_PASS;
-char database[20] = DEFAULT_HOME_DB;
+#if USE_INFLUXDB
+    #include "influxdb.h"
+    // Node ID
+    char node_id[20] = DEFAULT_NODE_ID;
 
-// Meta user info
-char meta_user[20] = DEFAULT_META_USER;
-char meta_pass[50] = DEFAULT_META_PASS;
-char meta_database[20] = DEFAULT_META_DB;
+    // Default user info
+    char user[20] = DEFAULT_HOME_USER;
+    char pass[50] = DEFAULT_HOME_PASS;
+    char database[20] = DEFAULT_HOME_DB;
 
-// Defaults if service.c not used
-int main_port = DEFAULT_HOME_PORT;
-char main_host[100] = DEFAULT_HOME_HOST;
-char main_tags[200] = DEFAULT_GLOBAL_TAGS;
-char write_route[60] = "";
-char main_query[300]= {'\0'};
+    // Meta user info
+    char meta_user[20] = DEFAULT_META_USER;
+    char meta_pass[50] = DEFAULT_META_PASS;
+    char meta_database[20] = DEFAULT_META_DB;
+    
+    int main_port = DEFAULT_HOME_PORT;
+    char main_host[100] = DEFAULT_HOME_HOST;
+    char main_tags[200] = DEFAULT_GLOBAL_TAGS;
+#endif
 
-// Set service to use here
-int service_flag = 1u;
+#if USE_CHORDS
+    #include "chords.h"
+    int main_port = CHORDS_PORT;
+    char main_host[100] = CHORDS_HOST;
+    char main_tags[200] = "";
+    int chords_instrument_id = CHORDS_INSTRUMENT_ID;
+    int chords_write_key_enabled = CHORDS_WRITE_KEY_ENABLED; 
+    char *chords_write_key = CHORDS_WRITE_KEY;
+    int chords_is_test = CHORDS_IS_TEST;
+#endif
+
+char write_route[MAX_ROUTE_SIZE] = "";
+char main_query[MAX_QUERY_SIZE]= {'\0'};
 
 // Sleeptimer
 int sleeptimer = SLEEPTIMER; // Number of wakeups before full power: 1172 @ 256ms ~5 min
@@ -47,12 +63,16 @@ uint8 enable_ssl_sec_config = ENABLE_SSL_SEC_CONFIG;
 uint8 ssl_enabled = SSL_ENABLED;
 
 // Flags to activate devices
-int modem_flag = MODEM_FLAG;
+int connection_flag = CONNECTION_FLAG;
+int trigger_flag = TRIGGER_FLAG;
+int param_flag = PARAM_FLAG;
 int meta_flag  = META_FLAG;
+int modem_flag = MODEM_FLAG;
 int vbat_flag  = VBAT_FLAG;
 int gps_flag = GPS_FLAG;
 int ultrasonic_flag   = ULTRASONIC_FLAG;
 int ultrasonic_2_flag = ULTRASONIC_2_FLAG;
+int senix_flag = SENIX_FLAG;
 int optical_rain_flag = OPTICAL_RAIN_FLAG;
 int decagon_flag      = DECAGON_FLAG;
 int autosampler_flag  = AUTOSAMPLER_FLAG;
@@ -85,8 +105,8 @@ uint8 array_ix = 0u;
 
 // Functions
 
-int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_average, uint8 max_size){
-
+int take_readings(char* labels[], float readings[], uint8* array_ix,
+                  uint8 take_average, uint8 max_size) {
     /*
     // Check if the signal strength and number of attempts modem took
     //  to connect during the last transmission is to be reported
@@ -96,38 +116,48 @@ int take_readings(char *labels[], float readings[], uint8 *array_ix, uint8 take_
     */
 
     // Take battery voltage measurement
-    if ( vbat_flag == 1u ){
+    if (vbat_flag == 1u) {
         zip_vbat(labels, readings, array_ix, max_size);
     }
-    
-    // Take ultrasonic measurement
-    if ( ultrasonic_flag == 1u ) {
-        zip_ultrasonic(labels, readings, array_ix, 0u, take_average, ultrasonic_loops, max_size);
-    }    
 
-    // Take ultrasonic 2 measurement     
-    if ( ultrasonic_2_flag == 1u ) {
-        zip_ultrasonic(labels, readings, array_ix, 1u, take_average, ultrasonic_loops, max_size);
-    }    
-    
+    // Take ultrasonic measurement
+    if (ultrasonic_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 0u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
+    // Take ultrasonic 2 measurement
+    if (ultrasonic_2_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 1u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
+    // Take toughsonic measurement
+    if (senix_flag == 1u) {
+        zip_ultrasonic(labels, readings, array_ix, 2u, take_average,
+                       ultrasonic_loops, max_size);
+    }
+
     // Take optical rain measurement
-    if ( optical_rain_flag == 1u ) {
+    if (optical_rain_flag == 1u) {
         zip_optical_rain(labels, readings, array_ix, max_size);
     }
 
     // Take soil moisture measurement
-    if ( decagon_flag == 1u ) {
-        zip_decagon(labels, readings, array_ix, take_average, decagon_loops, max_size);
+    if (decagon_flag == 1u) {
+        zip_decagon(labels, readings, array_ix, take_average, decagon_loops,
+                    max_size);
     }
-    
+
     // Take water quality measurement
-    if (atlas_wq_flag == 1u){
+    if (atlas_wq_flag == 1u) {
         zip_atlas_wq(labels, readings, array_ix, max_size);
     }
     return (*array_ix);
 }
 
 uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+    #if USE_INFLUXDB
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
@@ -152,6 +182,7 @@ uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 
     if ( meta_flag == 1u ){
         zip_meta(labels, readings, array_ix, max_size);
     }
+    #endif
     return (*array_ix);
 }
 
@@ -163,7 +194,7 @@ uint8 zip_meta(char *labels[], float readings[], uint8 *array_ix, uint8 max_size
     }
     labels[*array_ix] = "meta_trigger";
     readings[*array_ix] = meta_trigger;
-    (*array_ix)++;
+    (*array_ix) += nvars;
     return *array_ix;
 }
 
@@ -179,20 +210,30 @@ uint8 zip_modem(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
     readings[*array_ix] = connection_attempt_counter;
     readings[*array_ix + 1] = rssi;
     readings[*array_ix + 2] = fer;
-    (*array_ix) += 3;
+    (*array_ix) += nvars;
     return *array_ix;
 }
 
 uint8 send_readings(char* body, char* send_str, char* response_str, char* socket_dial_str,
                     char *labels[], float readings[], uint8 nvars){
     uint8 data_sent = 0u;
-    // If not using SERVICES use the following code
+    #if USE_INFLUXDB
 	// Construct the data body
-    construct_default_body(body, labels, readings, nvars);
+    construct_influxdb_body(body, labels, readings, nvars);
 	// Construct POST request
 	construct_generic_request(send_str, body, main_host, write_route,
 		                      main_port, "POST", "Close",
 				              "", 0, "1.1");
+    #endif
+    
+    #if USE_CHORDS
+        construct_chords_route(write_route, labels, readings,
+                        nvars, chords_instrument_id, chords_write_key_enabled, 
+                        chords_write_key, chords_is_test);
+        construct_generic_request(send_str, body, main_host, write_route,
+                               main_port, "GET", "Close",
+	                           "", 0, "1.1");
+    #endif
 				
     // This sends the data
     modem_socket_dial(socket_dial_str, main_host, main_port, 1, ssl_enabled);
@@ -202,6 +243,7 @@ uint8 send_readings(char* body, char* send_str, char* response_str, char* socket
 }
 
 uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 get_device_meid){
+    #if USE_INFLUXDB    
     uint8 status;
     // Only run if meta_trigger and meta_flag are both active
     if ((meta_trigger == 0u) || (meta_flag == 0u)) {
@@ -217,13 +259,17 @@ uint8 run_meta_subroutine(char* meid, char* send_str, char* response_str, uint8 
             return 1u;
         }
     }
+    #endif
 return 0u;
 }
 
 int update_meta(char* meid, char* send_str, char* response_str){
-	// Assumes that send_str and response_str are empty
-        
     int result = 0;
+    #if USE_INFLUXDB
+	if (meta_flag == 0u){
+        return 0u;
+    }
+	// Assumes that send_str and response_str are empty        
     int response_code = 0;
     int true_response_code = 15;
     if (modem_startup(&connection_attempt_counter)) {
@@ -276,14 +322,18 @@ int update_meta(char* meid, char* send_str, char* response_str){
     // If we get to here, "result" will be an integer less than 0
     // Based on the value of "result", we should be able to find 
     // which parameter didn't parse
+    #endif
     return result;
 }
 
 int update_triggers(char* body, char* send_str, char* response_str){
-	
+    int result = 0u;
+    #if USE_INFLUXDB
+	if (trigger_flag == 0u){
+        return 0u;
+    }
 	// Assumes that body, send_str and response_str are empty
-
-    int response_code = 0, true_response_code = 0, result = 0; 
+    int response_code = 0, true_response_code = 0; 
     if (modem_startup(&connection_attempt_counter)) {
         // Dial socket
         if (modem_socket_dial(send_str, main_host, main_port, 1, ssl_enabled)){
@@ -361,13 +411,16 @@ int update_triggers(char* body, char* send_str, char* response_str){
     
     // If we get to here, "result" will be an integer less than 0
     // Based on the value of "result", we should be able to find 
-    // which trigger didn't parse    
+    // which trigger didn't parse
+    #endif
     return result;
-    
 }
 							
-void update_params(char* body, char* send_str, char* response_str){
-	
+int update_params(char* body, char* send_str, char* response_str){
+    #if USE_INFLUXDB
+	if (param_flag == 0u){
+        return 0u;
+    }	
 	// Assumes that body, send_str and response_str are empty    
     
     if (modem_startup(&connection_attempt_counter)) {
@@ -387,7 +440,8 @@ void update_params(char* body, char* send_str, char* response_str){
             sprintf(body, "%s%s,", body, "valve_flag");
             sprintf(body, "%s%s,", body, "valve_2_flag");
             sprintf(body, "%s%s,",  body, "autosampler_flag");
-            sprintf(body, "%s%s",  body, "atlas_wq_flag");
+            sprintf(body, "%s%s,",  body, "atlas_wq_flag");
+            sprintf(body, "%s%s",  body, "senix_flag");
 
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
@@ -424,35 +478,12 @@ void update_params(char* body, char* send_str, char* response_str){
                 intparse_influxdb(&valve_2_flag, response_str, "valve_2_flag");
                 intparse_influxdb(&autosampler_flag, response_str, "autosampler_flag");
                 intparse_influxdb(&atlas_wq_flag, response_str, "atlas_wq_flag");
+                intparse_influxdb(&senix_flag, response_str, "senix_flag");
             }
 		}
         modem_socket_close(ssl_enabled);
 	}
-}
-
-void construct_route(char* route, char* base, char* user, char* pass, char* database){
-    memset(route, '\0', sizeof(*route));
-    sprintf(route, "%s%s?u=%s&p=%s&db=%s", route, base, user, pass, database); 
-}
-
-void construct_default_body(char *data_packet, char *labels[], float readings[],
-                        int nvars){
-	int i = 0; // iterator through labels and readings
-	
-	// Default to influxdb line protocol
-    for (i = 0; i < nvars; i++){
-		if (labels[i] && labels[i][0]){
-            sprintf(data_packet, "%s%s,node_id=%s,%s value=%f\n",
-                    data_packet, labels[i],
-                    node_id, main_tags,
-                    readings[i]);
-		}
-    }
-}
-
-uint8 append_tags(char *main_tags, char *appended_label, char *appended_value)
-{
-    sprintf(main_tags, "%s,%s=%s", main_tags, appended_label, appended_value);
+    #endif
     return 1u;
 }                        
                         

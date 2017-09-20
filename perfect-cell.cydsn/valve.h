@@ -5,10 +5,11 @@
  * @version TODO
  * @date 2017-06-19
  */
-
+#ifndef VALVE_H
+#define VALVE_H
 #include <project.h>
 #include "misc.h"
-
+    
 /**
  * @brief Move valve to the position indicated by @p valve
  *
@@ -61,4 +62,5 @@ uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_tr
 
 uint8 zip_valve_2(char *labels[], float readings[], uint8 *array_ix, int *valve_2_trigger, uint8 max_size);
 
+#endif
 /* [] END OF FILE */

@@ -5,6 +5,8 @@
  * @version TODO
  * @date 2017-06-19
  */
+#ifndef DATA_H
+#define DATA_H
 #include <device.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +19,7 @@
 #include "valve.h"
 #include "misc.h"
 #include "modem.h"
-#include "updater.h"
+#include "strlib.h"
 #include "commit.h"
 
 // Function prototypes
@@ -142,35 +144,9 @@ int update_triggers(char* body, char* send_str, char* response_str);
  * @param send_str Empty buffer to store request string
  * @param response_str Empty buffer to store server response
  *
- * @return null
+ * @return 1u
  */
-void update_params(char* body, char* send_str, char* response_str);
-
-/**
- * @brief Constructs the route (URL) following the base endpoint.
- *
- * @param route Empty buffer to store route information
- * @param base Base endpoint
- * @param user Influxdb username
- * @param pass Influxdb password
- * @param database Influxdb database
- *
- * @return null
- */
-void construct_route(char* route, char* base, char* user, char* pass, char* database);
-
-/**
- * @brief Parses label and readings arrays into an influxdb line protocol body. 
- *
- * @param data_packet Empty buffer to store POST request body
- * @param labels Buffer to store labels corresponding to each trigger result
- * @param readings Buffer to store trigger results as floating point values
- * @param nvars Number of variables (entries) in the readings array
- *
- * @return null
- */
-void construct_default_body(char *data_packet, char *labels[], float readings[],
-                        int nvars);
+int update_params(char* body, char* send_str, char* response_str);
 
 /**
  * @brief Send readings to influxdb.
@@ -189,17 +165,6 @@ uint8 send_readings(char* body, char* send_str, char* response_str, char* socket
                     char *labels[], float readings[], uint8 nvars);
 
 /**
- * @brief Append new tags to existing influxdb tags.
- *
- * @param main_tags Existing tag string (comma-separated) 
- * @param appended_label Tag label to append
- * @param appended_value Tag value to append
- *
- * @return 1
- */
-uint8 append_tags(char *main_tags, char *appended_label, char *appended_value);
-
-/**
  * @brief Return a URL-encoded version of the input string.
  *
  * @param str String to URL-encode
@@ -208,5 +173,5 @@ uint8 append_tags(char *main_tags, char *appended_label, char *appended_value);
  */
 char *url_encode(char *str);
 
+#endif
 /* [] END OF FILE */
-
