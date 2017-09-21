@@ -44,6 +44,7 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
     uint8 command[] = "R";
     uint8 command_buffer_size = 7;
     uint8 status;
+    uint8 temp_status;
     int write_iter, read_iter, inner_iter;
     int delay=1000;
     uint8 raw_reading[8u] = {0};
@@ -51,6 +52,7 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
     
     for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
         status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        
         if (!status){
             break;
         }
@@ -58,16 +60,16 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
     CyDelay(delay);
    
     for(read_iter=0; read_iter < ATLAS_MAX_ITER; read_iter++){
-        if (I2C_MasterGetReadBufSize() == command_buffer_size){
-            break;
-        }
-        else{
             for (inner_iter=0; inner_iter < ATLAS_MAX_ITER; inner_iter++){
-                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT);
+                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER));
+                CyDelay(100);
+                temp_status = (status & I2C_MSTAT_RD_CMPLT);
                 if (!status){
                     break;
                 }
             }
+        if (I2C_MasterGetReadBufSize() == command_buffer_size){
+            break;
         }
     }
 
@@ -87,6 +89,7 @@ uint8 atlas_take_con_reading(con_reading *reading){
     uint8 sensor_address = CONDUCTIVITY;
     uint8 command_buffer_size = 19;
     uint8 status;
+    uint8 temp_status;
     int read_iter, write_iter, inner_iter;
     int delay = 1000;
     uint8 raw_reading[19u] = {0};
@@ -98,6 +101,7 @@ uint8 atlas_take_con_reading(con_reading *reading){
     
     for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
         status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        
         if (!status){
             break;
         }
@@ -105,16 +109,16 @@ uint8 atlas_take_con_reading(con_reading *reading){
     CyDelay(delay);
    
     for(read_iter=0; read_iter < ATLAS_MAX_ITER; read_iter++){
-        if (I2C_MasterGetReadBufSize() == command_buffer_size){
-            break;
-        }
-        else{
             for (inner_iter=0; inner_iter < ATLAS_MAX_ITER; inner_iter++){
-                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT);
-                if (!status){
+                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER));
+                CyDelay(100);
+                temp_status = (status & I2C_MSTAT_RD_CMPLT);
+                if (!temp_status){
                     break;
                 }
             }
+        if (I2C_MasterGetReadBufSize() == command_buffer_size){
+            break;
         }
     }
     
