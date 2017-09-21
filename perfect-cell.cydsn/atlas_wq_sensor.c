@@ -10,46 +10,72 @@
 #include <stdlib.h>
 
 int atlas_sensor_sleep(uint8 sensor_address){
-    uint8 com[] = "Sleep";
-    uint8 COMMAND_BUFFER=7;
-    int iter;
+    uint8 command[] = "Sleep";
+    uint8 command_buffer_size = 7;
+    uint8 status;
+    int write_iter;
     
-    for(iter=0; iter<3;iter++){
-    I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER);
+    for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
+        status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        if (!status){
+            break;
+        }
     }
     return 1;
 }
 
-int atlas_sensor_wake(uint8 sensor_address){
-    uint8 com[] = "W";
-    uint8 COMMAND_BUFFER=7;
-    int iter;
+int atlas_sensor_calibrate(uint8 sensor_address){
+    // This can probably be combined with the previous function into a single "send command" function
+    uint8 command[] = "Cal,1";
+    uint8 command_buffer_size = 7;
+    uint8 status;
+    int write_iter;
     
-    for(iter=0; iter<3;iter++){
-    while(I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT){}}
+    for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
+        status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        if (!status){
+            break;
+        }
+    }
     return 1;
 }
 
 uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
-    uint8 com[] = "R";
-    uint8 COMMAND_BUFFER=7;
-    uint8 temp_var;
-    int write_iter, read_iter;
+    uint8 command[] = "R";
+    uint8 command_buffer_size = 7;
+    uint8 status;
+    uint8 temp_status;
+    int write_iter, read_iter, inner_iter;
     int delay=1000;
-    uint8 raw_reading[8u]={0};
-//    float reading = -9999.0;
+    uint8 raw_reading[8u] = {0};
     char *reading_start;
     
-    for(write_iter=0; write_iter<3;write_iter++){
-    while(I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT){}
+    for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
+        status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        
+        if (!status){
+            break;
+        }
+    }
     CyDelay(delay);
-    while(I2C_MasterReadBuf(sensor_address, raw_reading, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT){};
-    for(read_iter=0;read_iter<100;read_iter++)
-    {
-        if (I2C_MasterGetReadBufSize()==7){break;}
-        else{while(I2C_MasterReadBuf(sensor_address, raw_reading, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT){};}
-    }}
-    reading_start = strchr(raw_reading, 1);
+   
+    for(read_iter=0; read_iter < ATLAS_MAX_ITER; read_iter++){
+        {
+            for (inner_iter=0; inner_iter < ATLAS_MAX_ITER; inner_iter++){
+                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER));
+                CyDelay(100);
+                temp_status = (status & I2C_MSTAT_RD_CMPLT);
+                if (!status){
+                    break;
+                }
+            }
+        }
+        if (I2C_MasterGetReadBufSize() == command_buffer_size){
+            break;
+        }
+    }
+
+    reading_start = strchr((const char*)raw_reading, 1u);
     if (reading_start == NULL){
         return 0u;
     }
@@ -61,29 +87,46 @@ uint8 atlas_take_single_reading(uint8 sensor_address, float *reading){
 }
 
 uint8 atlas_take_con_reading(con_reading *reading){
-    uint8 com[] = "R";
-    uint8 sensor_address=CONDUCTIVITY;
-    uint8 COMMAND_BUFFER=19;
-    int read_iter, write_iter;
-    int delay=1000;
-    uint8 raw_reading[19u]={0};
-//    con_reading reading;
+    uint8 command[] = "R";
+    uint8 sensor_address = CONDUCTIVITY;
+    uint8 command_buffer_size = 19;
+    uint8 status;
+    uint8 temp_status;
+    int read_iter, write_iter, inner_iter;
+    int delay = 1000;
+    uint8 raw_reading[19u] = {0};
     char *reading_start;
     char *ec;
     char *tds;
     char *sal;
     char *sg;
     
-    for(write_iter=0; write_iter<3;write_iter++){
-    while(I2C_MasterWriteBuf(sensor_address, com, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT){}
+    for (write_iter=0; write_iter < ATLAS_MAX_ITER; write_iter ++){
+        status = (I2C_MasterWriteBuf(sensor_address, command, command_buffer_size, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_WR_CMPLT);
+        
+        if (!status){
+            break;
+        }
+    }
     CyDelay(delay);
-    while(I2C_MasterReadBuf(sensor_address, raw_reading, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT){};
-    for(read_iter=0;read_iter<100;read_iter++)
-    {
-        if (I2C_MasterGetReadBufSize()==19){break;}
-        else{while(I2C_MasterReadBuf(sensor_address, raw_reading, COMMAND_BUFFER, I2C_MODE_COMPLETE_XFER) & I2C_MSTAT_RD_CMPLT){};}
-    }}
-    reading_start = strchr(raw_reading, 1);
+   
+    for(read_iter=0; read_iter < ATLAS_MAX_ITER; read_iter++){
+        {
+            for (inner_iter=0; inner_iter < ATLAS_MAX_ITER; inner_iter++){
+                status = (I2C_MasterReadBuf(sensor_address, raw_reading, command_buffer_size, I2C_MODE_COMPLETE_XFER));
+                CyDelay(100);
+                temp_status = (status & I2C_MSTAT_RD_CMPLT);
+                if (!temp_status){
+                    break;
+                }
+            }
+        }
+        if (I2C_MasterGetReadBufSize() == command_buffer_size){
+            break;
+        }
+    }
+    
+    reading_start = strchr((const char*)raw_reading, 1u);
     // This should probably be redone to write to an input rather than return struct
     if (reading_start == NULL){
         return 0u;
@@ -108,7 +151,6 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
     if(*array_ix + nvars >= max_size){
         return *array_ix;
     }
-        uint8 valid;
         con_reading atlas_conductivity = {-9999, -9999, -9999, -9999};
         float atlas_water_temp = -9999;
         float atlas_do = -9999;
@@ -153,7 +195,6 @@ uint8 zip_atlas_wq(char *labels[], float readings[], uint8 *array_ix, uint8 max_
         readings[*array_ix + 5] = atlas_conductivity.tds;
         readings[*array_ix + 6] = atlas_conductivity.sal;
         readings[*array_ix + 7] = atlas_conductivity.sg;
-
         I2C_Sleep();
         CyDelay(100);
         WQ_Power_Write(0u);
