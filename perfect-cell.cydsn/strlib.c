@@ -7,7 +7,7 @@
  */
 
 #include "strlib.h"
-#include <stdarg.h>
+#include <stdarg.h> /* va_list, va_start, va_arg, va_end */
 #include <stdlib.h>
 #include <string.h>
 
@@ -91,6 +91,16 @@ uint8_t clear_str(char *str) {
     return 1u;
 }
 
+/**
+ * @brief Append a variable number of strings to the array of measurement labels 
+ *
+ * @param begin Array of strings (used as a string pointer) to store labels corresponding to each sensor reading.
+ *        begin starts by pointing to where the first string in the variable-length list will be inserted.
+ * @param end Array to strings (used as a string pointer) to indicate when to stop inserting labels
+ * @param ... comma-separated list of strings. The list is of variable length
+ *
+ * @return none
+ */
 void zips(char *begin[], char *end[], ...) {
     va_list args;
     va_start(args, end);
@@ -100,7 +110,22 @@ void zips(char *begin[], char *end[], ...) {
     }
 
     va_end(args);
+    
 }
+
+/** Possible edit, where n_labels is the number of labels to be added
+ * (Uses a for-loop to replace while-loop)
+ * void zips(char *labels[], int n_labels, ...)
+ * va_list args;
+ * va_start(args, n_labels);
+ * int i;
+ *
+ * for(i = 0; i < n_labels; i++) {
+ *      *labels++ = va_arg(args, char *);
+ * }
+ *
+ * va_end(args);
+ */
 
 void zipf(float begin[], float end[], ...) {
     va_list args;
