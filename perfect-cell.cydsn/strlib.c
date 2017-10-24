@@ -86,6 +86,13 @@ uint8_t intparse_influxdb(int *param, char *packet, char *name) {
     return 0u;
 }
 
+/**
+ * @brief Clear a string by using memset() to replace all characters with '\0' (null char)
+ * 
+ * @param str String to be cleared
+ *
+ * @return 1u 
+ */
 uint8_t clear_str(char *str) {
     memset(str, '\0', strlen(str));
     return 1u;
