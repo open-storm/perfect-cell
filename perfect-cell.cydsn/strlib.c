@@ -127,6 +127,17 @@ void zips(char *begin[], char *end[], ...) {
  * va_end(args);
  */
 
+
+/**
+ * @brief Append a variable number of floats to the array of measurement values 
+ *
+ * @param begin Array of floats to store values corresponding to each sensor reading.
+ *        begin starts by pointing to where the first value in the variable-length list will be inserted.
+ * @param end   Array to floats (used as a pointer) to indicate when to stop inserting values
+ * @param ... comma-separated list of values. The list is of variable length
+ *
+ * @return none
+ */
 void zipf(float begin[], float end[], ...) {
     va_list args;
     va_start(args, end);
@@ -137,6 +148,11 @@ void zipf(float begin[], float end[], ...) {
 
     va_end(args);
 }
+
+/** Possible edit is similar to the suggestion above, 
+ *  where the number of readings is declared explicitly
+ *  allowing us to replace the while-loop with a for-loop
+ */
 
 char *strextract(const char input_str[], char output_str[],
                  const char search_start[], const char search_end[]) {
