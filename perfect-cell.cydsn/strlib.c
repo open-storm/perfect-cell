@@ -110,7 +110,6 @@ void zips(char *begin[], char *end[], ...) {
     }
 
     va_end(args);
-    
 }
 
 /** Possible edit, where n_labels is the number of labels to be added
