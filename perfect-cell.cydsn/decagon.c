@@ -17,9 +17,9 @@ uint8_t Decagon_Take_Reading(DecagonGS3* decagon_reading) {
     sensors_uart_start();
 
     // Power cycle sensor to gather readings
-    Decagon_Power_Write(1u);
+    SDI12_Power_Write(1u);
     CyDelay(300u);
-    Decagon_Power_Write(0u);
+    SDI12_Power_Write(0u);
 
     sensors_uart_stop();
     char *raw_serial_data_d = sensors_uart_get_string();
