@@ -106,7 +106,6 @@ uint8_t clear_str(char *str) {
  * @param end Array to strings (used as a string pointer) to indicate when to stop inserting labels
  * @param ... comma-separated list of strings. The list is of variable length
  *
- * @return none
  */
 void zips(char *begin[], char *end[], ...) {
     va_list args;
@@ -118,7 +117,6 @@ void zips(char *begin[], char *end[], ...) {
 
     va_end(args);
 }
-
 /** Possible edit, where n_labels is the number of labels to be added
  * (Uses a for-loop to replace while-loop)
  * void zips(char *labels[], int n_labels, ...)
@@ -154,11 +152,11 @@ void zipf(float begin[], float end[], ...) {
 
     va_end(args);
 }
-
 /** Possible edit is similar to the suggestion above, 
  *  where the number of readings is declared explicitly
  *  allowing us to replace the while-loop with a for-loop
  */
+
 
 char *strextract(const char input_str[], char output_str[],
                  const char search_start[], const char search_end[]) {
