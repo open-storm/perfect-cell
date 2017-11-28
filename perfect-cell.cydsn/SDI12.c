@@ -8,6 +8,33 @@
 
 #include "SDI12.h"
 
+//*========== #BEGIN Define SDI12 sensors ==========//
+//----------   SDI12 Array   ----------//
+SDI12_sensor sensors[2];   // GOTO zip_SDI12()
+
+//----------  (1/2) Solinst  ----------//
+char* labels[] = {"solinst_T","solinst_P"};
+float values[] = {-99.0, -98.0};
+SDI12_sensor solinst = { 
+    .nvars   = 2,
+    .address = "0",
+    .labels  = labels,
+    .values  = values
+    // additional metadata should initialize to 0 or '\0' //
+}; 
+
+//----------  (2/2) Decagon  ----------//
+char* GS3_labels[] = {"GS3_1","GS3_2","GS3_3"};
+float GS3_values[] = {-99.0, -98.0, -99.9};
+SDI12_sensor GS3 = {
+    .nvars   = 3,
+    .address = "1",
+    .labels  = GS3_labels,
+    .values  = GS3_values        
+    // additional metadata should initialize to 0 or '\0' //
+};  
+// ========== #END   Define SDI12 sensors ==========//*/
+
 
 
 // ========== Global Variables ========== //
@@ -318,7 +345,8 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
 }
 
 uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size) {
-
+    sensors[0] = solinst;
+    sensors[1] = GS3;
     return *array_ix;
 }
 
