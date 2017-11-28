@@ -13,7 +13,25 @@
 #include <stdlib.h> /* strtod */
 #include "strlib.h" /* strextract */
 
+/*
+  Define useful commands for SDI-12
+  See Table 5 <www.sdi-12.org/archives/SDI-12 Specification 1.3 April 7 2000.pdf>
     
+    - The first character of all commands and responses is always a device address (e.g., 0-9, a-z, A-Z)
+    - The last character of a command is the "!" character
+    - the last two bytes of a response are <CR><LF>
+*/
+#define TAKE_MEASUREMENT    "M"  // Request Single Measurement
+#define CONC_MEASUREMENT    "C"  // Request Concurrent Measurement
+#define READ_MEASUREMENT    "D0" // Read Completed Measurement
+#define ADDR_QUERY          "?"  // Get Sensor Address
+#define ACK_ACTIVE          ""   // Check if the sensor is active
+#define CHANGE_ADDR         "A"  // Change the addreess of the sensor
+#define INFO                "I"  // Get sensor info
+
+/* 
+ * Define a struct to be used for each sensor
+ */
 struct {
     /* core variables used for taking measurements */
     char*  address;     // String for the sensor address, should be 1 char (e.g. 0-9, a-z, A-Z)
@@ -28,10 +46,10 @@ struct {
     char   serial[14];  // Extra sensor data
 } typedef SDI12_sensor;
 
-void  SDI12_start();
-void  SDI12_stop();
-void  SDI12_uart_clear_string();
-char* SDI12_uart_get_string();
+void SDI12_start();
+void SDI12_stop();
+void SDI12_uart_clear_string();
+char* sensors_uart_get_string();
 
 /**
  * @brief Send an SDI12-formatted command. A command always starts with

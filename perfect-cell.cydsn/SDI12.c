@@ -8,6 +8,9 @@
 
 #include "SDI12.h"
 
+
+
+// ========== Global Variables ========== //
 // The buffer and index are dependent on eachother. This buffer is implemented
 // as a circular buffer to avoid overflow.
 static char SDI12_uart_buf[257] = {'\0'};
@@ -22,24 +25,10 @@ char command[100] = {'\0'};
 
 // string and pointer to store and parse SDI12 measurement results
 char value_str[100] = {'\0'}, delay_str[10] = {'\0'}, *ptr_end, *sign; 
-    
-/*
-  Define useful commands for SDI-12
-  See Table 5 <www.sdi-12.org/archives/SDI-12 Specification 1.3 April 7 2000.pdf>
-    
-    - The first character of all commands and responses is always a device address (e.g., 0-9, a-z, A-Z)
-    - The last character of a command is the "!" character
-    - the last two bytes of a response are <CR><LF>
-*/
-const char take_measurement[] = "M";
-const char read_measurement[] = "D0";
-const char concurrent_measurement[] = "C";
-const char addr_query[] = "?";
-const char ack_active[] = "";
-const char change_addr[] = "A";
-const char info[] = "I";
 
 
+
+// ========== Functions ========== //
 void SDI12_start(){
     SDI12_UART_Start();
     isr_SDI12_StartEx(isr_SDI12_data); 
@@ -59,7 +48,7 @@ void SDI12_uart_clear_string() {
     SDI12_buf_idx = 0u;
 }
 
-char* SDI12_uart_get_string() {
+char* sensors_uart_get_string() {
     return SDI12_uart_buf; 
 }
 
@@ -98,7 +87,7 @@ uint8 SDI12_is_active(SDI12_sensor* sensor) {
     clear_str(command);
     
     /* 2. Construct the command <address><command><!> */
-    sprintf(command,"%s%s%s",(*sensor).address,ack_active,"!");
+    sprintf(command,"%s%s%s",(*sensor).address,ACK_ACTIVE,"!");
     SDI12_uart_clear_string();
     
     /* 3. Send the command to the sensor */
@@ -131,7 +120,7 @@ uint8 SDI12_change_address(SDI12_sensor* sensor, char new_address[]) {
  
     /* 1. Request measurement from addressed SDI12 sensor */
     clear_str(command);
-    sprintf(command,"%s%s%s%s",(*sensor).address,change_addr,new_address,"!");
+    sprintf(command,"%s%s%s%s",(*sensor).address,CHANGE_ADDR,new_address,"!");
     
     SDI12_uart_clear_string();
     SDI12_send_command(command);    
@@ -163,7 +152,7 @@ uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
         
     /* 1. Request measurement from addressed SDI12 sensor */
     clear_str(command);
-    sprintf(command,"%s%s%s",(*sensor).address,take_measurement,"!");
+    sprintf(command,"%s%s%s",(*sensor).address,TAKE_MEASUREMENT,"!");
     
     SDI12_uart_clear_string();
     SDI12_send_command(command);
@@ -203,7 +192,7 @@ uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
     /* 3. Request data from SDI12 sensor */
     clear_str(command);    
     clear_str(value_str);
-    sprintf(command,"%s%s%s",(*sensor).address,read_measurement,"!");   
+    sprintf(command,"%s%s%s",(*sensor).address,READ_MEASUREMENT,"!");   
     
     SDI12_uart_clear_string();
     SDI12_send_command(command);
@@ -282,7 +271,7 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
 
     /* 1. Request measurement from addressed SDI12 sensor */
     clear_str(command);
-    sprintf(command,"%s%s%s",(*sensor).address,info,"!");
+    sprintf(command,"%s%s%s",(*sensor).address,INFO,"!");
     
     SDI12_uart_clear_string();
     SDI12_send_command(command);    
@@ -329,6 +318,7 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
 }
 
 uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size) {
+
     return *array_ix;
 }
 
