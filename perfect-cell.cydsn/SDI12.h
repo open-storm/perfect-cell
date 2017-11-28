@@ -89,6 +89,20 @@ uint8 SDI12_take_concurrent_measurement(SDI12_sensor* sensor);
  */
 uint8 SDI12_info(SDI12_sensor* sensor);
 
+/**
+ * @brief Inserts current values of all SDI12 sensors into labels and
+ * readings arrays.
+ *
+ * @param labels Array to store labels corresponding to each sensor reading
+ * @param readings Array to store sensor readings as floating point values
+ * @param array_ix Array index to label and readings
+ * @param max_size Maximum size of label and reading arrays (number of
+ * entries)
+ *
+ * @return (*array_ix) + number of entries filled
+ */
+uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size);
+
 CY_ISR_PROTO(isr_SDI12_data);
 
 #endif

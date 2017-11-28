@@ -79,6 +79,7 @@ int autosampler_flag  = AUTOSAMPLER_FLAG;
 int valve_flag   = VALVE_FLAG;
 int valve_2_flag = VALVE_2_FLAG;
 int atlas_wq_flag = ATLAS_WQ_FLAG;
+int SDI12_flag = SDI12_FLAG;
 
 // Flags to trigger devices
 int autosampler_trigger = AUTOSAMPLER_TRIGGER;
@@ -152,6 +153,11 @@ int take_readings(char* labels[], float readings[], uint8* array_ix,
     // Take water quality measurement
     if (atlas_wq_flag == 1u) {
         zip_atlas_wq(labels, readings, array_ix, max_size);
+    }
+    
+    // Take SDI-12 measurements
+    if (SDI12_flag == 1u) {
+        zip_SDI12(labels, readings, array_ix, max_size);
     }
     return (*array_ix);
 }

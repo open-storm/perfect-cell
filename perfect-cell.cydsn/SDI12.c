@@ -328,6 +328,10 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
     return 0u;
 }
 
+uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size) {
+    return *array_ix;
+}
+
 CY_ISR(isr_SDI12_data) {
     // hold the next char in the rx register as a temporary variable
     char rx_char = SDI12_UART_GetChar();
