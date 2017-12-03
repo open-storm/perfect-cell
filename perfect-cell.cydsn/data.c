@@ -156,6 +156,10 @@ int take_readings(char* labels[], float readings[], uint8* array_ix,
     }
     
     // Take SDI-12 measurements
+    // In the future, SDI_flag can be used to say which addresses to read from
+    //   by assigning each bit to an address (e.g. '0' = 0b1 = 1, '9' = 0b0100000000 = 512, 'a' = 0b100000000 = 1024
+    //   and to read from all three, SDI12_flag would be 1537 = 0b11000000001 = 1 + 512 + 1024)
+    //   Then, each bit would serve as a "flag" for each SDI12 sensor
     if (SDI12_flag == 1u) {
         zip_SDI12(labels, readings, array_ix, max_size);
     }

@@ -17,6 +17,7 @@
 #include "atlas_wq_sensor.h"
 #include "autosampler.h"
 #include "valve.h"
+#include "SDI12.h"    
 #include "misc.h"
 #include "modem.h"
 #include "strlib.h"
