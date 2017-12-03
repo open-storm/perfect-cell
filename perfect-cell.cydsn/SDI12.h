@@ -46,10 +46,10 @@ struct {
     char   serial[14];  // Extra sensor data
 } typedef SDI12_sensor;
 
-void SDI12_start();
-void SDI12_stop();
-void SDI12_uart_clear_string();
-char* sensors_uart_get_string();
+void  SDI12_start();
+void  SDI12_stop();
+void  SDI12_uart_clear_string();
+char* SDI12_uart_get_string();
 
 /**
  * @brief Send an SDI12-formatted command. A command always starts with

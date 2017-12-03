@@ -10,42 +10,40 @@
 
 //*========== #BEGIN Define SDI12 sensors ==========//
 //----------   SDI12 Array   ----------//
-SDI12_sensor sensors[2];   // GOTO zip_SDI12()
+#define N_SDI12_SENSORS     2           // Total number of sensors defined
+SDI12_sensor sensors[N_SDI12_SENSORS];  
 
+//!\ WARNING: labels[] and values[] are variable names used in data.c /!\
 //----------  (1/2) Solinst  ----------//
-char* labels[] = {"solinst_T","solinst_P"};
-float values[] = {-99.0, -98.0};
+char* solinst_labels[] = {"solinst_T","solinst_P"};
+float solinst_values[] = {-99.0, -98.0};
 SDI12_sensor solinst = { 
     .nvars   = 2,
     .address = "0",
-    .labels  = labels,
-    .values  = values
+    .labels  = solinst_labels,
+    .values  = solinst_values
     // additional metadata should initialize to 0 or '\0' //
 }; 
 
 //----------  (2/2) Decagon  ----------//
 char* GS3_labels[] = {"GS3_1","GS3_2","GS3_3"};
-float GS3_values[] = {-99.0, -98.0, -99.9};
+float GS3_values[] = {-97.0, -95.0, -94.9};
 SDI12_sensor GS3 = {
     .nvars   = 3,
     .address = "1",
     .labels  = GS3_labels,
     .values  = GS3_values        
     // additional metadata should initialize to 0 or '\0' //
-};  
+};      
+    
+//---------- GOTO zip_SDI12()----------//
+    
 // ========== #END   Define SDI12 sensors ==========//*/
 
-
-
-// ========== Global Variables ========== //
 // The buffer and index are dependent on eachother. This buffer is implemented
 // as a circular buffer to avoid overflow.
 static char SDI12_uart_buf[257] = {'\0'};
 static uint8_t SDI12_buf_idx = 0u;
-
-// unsigned ints for taking measurements
-uint8         i = 0u; // for iterating through sensor measurements
-uint32 ms_delay = 0u; // for delaying the code while measurements are being taken
 
 // string for constructing the command sent to the SDI12 sensor
 char command[100] = {'\0'};
@@ -54,8 +52,6 @@ char command[100] = {'\0'};
 char value_str[100] = {'\0'}, delay_str[10] = {'\0'}, *ptr_end, *sign; 
 
 
-
-// ========== Functions ========== //
 void SDI12_start(){
     SDI12_UART_Start();
     isr_SDI12_StartEx(isr_SDI12_data); 
@@ -75,7 +71,7 @@ void SDI12_uart_clear_string() {
     SDI12_buf_idx = 0u;
 }
 
-char* sensors_uart_get_string() {
+char* SDI12_uart_get_string() {
     return SDI12_uart_buf; 
 }
 
@@ -89,17 +85,20 @@ char* sensors_uart_get_string() {
  *
  */
 void SDI12_send_command(char command[]) {
-    // Wake up the sensors
-    // Pull the Data pin high for 12 milliseconds
+    // Wake up the sensors 
+    // Pull the Data pin high to send 12.5 millisecond break
     SDI12_control_reg_Write(1u);
-    CyDelayUs(12000u);  // 12 milliseconds = 12 x 10^3 microseconds
+    CyDelayUs(12500u);  // 12.5 milliseconds = 12.5 x 10^3 microseconds
 
-    // Pull the Data pin low for 8.4 milliseconds
+    // Pull the Data pin low for 8.4 milliseconds to indicate marking
     SDI12_control_reg_Write(0u);
     CyDelayUs(8400u);   // 8.4 milliseconds = 8.4 x 10^3 microseconds
         
     // Write the command to the Data pin
     SDI12_UART_PutString(command);
+    
+    // Release control of the Data line
+    SDI12_control_reg_Write(0u);
 }
 
 /**
@@ -144,7 +143,10 @@ uint8 SDI12_is_active(SDI12_sensor* sensor) {
  * @return 1u if successful, 0u if unsuccessful
  */
 uint8 SDI12_change_address(SDI12_sensor* sensor, char new_address[]) {
- 
+
+    // unsigned ints for taking measurements
+    uint8         i = 0u; // for iterating through sensor measurements
+        
     /* 1. Request measurement from addressed SDI12 sensor */
     clear_str(command);
     sprintf(command,"%s%s%s%s",(*sensor).address,CHANGE_ADDR,new_address,"!");
@@ -176,95 +178,130 @@ uint8 SDI12_change_address(SDI12_sensor* sensor, char new_address[]) {
  * @ return 1u if measurements were successfully taken, 0u if there was a communication error
  */
 uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
+
+    // unsigned ints for taking measurements
+    uint8 valid = 0u;
+    uint8 inner = 0u, outer = 0u, MAX_INNER = 5u, MAX_OUTER = 5u;    
+    uint8         i = 0u; // for iterating through sensor measurements
+    uint32 ms_delay = 0u; // for delaying the code while measurements are being taken    
+
+
+    // <http://www.sdi-12.org/current_specification/SDI-12_version-1_4-Dec-1-2017.pdf>
+    // See Sect 7.0 and Appendix B-1 for more details on retries and flow control
+    for (outer = 0u; outer < MAX_OUTER; outer++) {
+        /* 1. Request measurement from addressed SDI12 sensor */    
+        clear_str(command);
+        clear_str(value_str); 
+        clear_str(delay_str);      
+        sprintf(command,"%s%s%s",(*sensor).address,TAKE_MEASUREMENT,"!");
         
-    /* 1. Request measurement from addressed SDI12 sensor */
-    clear_str(command);
-    sprintf(command,"%s%s%s",(*sensor).address,TAKE_MEASUREMENT,"!");
-    
-    SDI12_uart_clear_string();
-    SDI12_send_command(command);
-    
-    /* 2. Delay for measurement to be taken */
-    /*
-     * The address sensor responds within 15.0 ms, returning the
-     * maximum time until the measurement data will be ready and the
-     * number of data values it will return
-     */
-    clear_str(value_str); 
-    clear_str(delay_str);
-    
-    // supposedly response time is 15 ms, but delaying max 1000 ms to be safe
-    // TODO: When taking concurrent measurements, look for <address><CR><LF>
-    for (i = 0; i < 200; i++) { 
-        CyDelay(5u);
-        if ( strextract(SDI12_uart_buf, value_str, "!","\r\n") ) {
-            break;
-        }
-    }
-    
-    /* Delay while measurements are being prepared */
-    /*
-     * The returned format for <address>M! is atttn<CR><LF>
-     * (NOTE: The returned format for <address>C! is atttnn<CR><LF> -- this will be useful when requesting 
-     *        concurrent measurements in the future)
-     * Where,
-     * -    a: sensor address
-     * -  ttt: maximum time until measurement is ready
-     * - n(n): number of data values that will be returned
-     */
-    strncpy(delay_str, value_str+strlen((*sensor).address), 3); // shift ptr by strlen(...) to skip address byte
-    ms_delay = ( (uint32) strtod(delay_str,(char**) NULL) ) * 1000u;
-    CyDelay(ms_delay);
-    
-    /* 3. Request data from SDI12 sensor */
-    clear_str(command);    
-    clear_str(value_str);
-    sprintf(command,"%s%s%s",(*sensor).address,READ_MEASUREMENT,"!");   
-    
-    SDI12_uart_clear_string();
-    SDI12_send_command(command);
-    
-    // Delay a maximum of 1000 ms as readings are transmitted
-    for (i = 0; i < 200; i++) {
-        CyDelay(5u);
+        SDI12_uart_clear_string();
+        CyDelay(100u);
+        SDI12_send_command(command);
         
-        // Copy the SDI12 UART buffer into temporary buffer, value_str
-        // and break once "\r\n" is returned
-        if ( strextract(SDI12_uart_buf, value_str, "!","\r\n") ) {
-            break;
-        }
-    }
-    
-    
-    /* 4. Parse the received data */    
-    // Check for "+" or "-" signs to ensure data was sent
-    // First check for "+"
-    sign = strstr(value_str,"+");
-    if (sign == NULL) {
-        // If there is no + sign, check for "-"
-        sign = strstr(value_str,"-");
+        /* 2. Delay for measurement to be taken */
+        /*
+         * The address sensor responds within 15.0 ms, returning the
+         * maximum time until the measurement data will be ready and the
+         * number of data values it will return
+         */
         
-        // The absence of "+" or "-" indicates no data was sent yet
-        // Return 0 and try querying the sensor again later
-        if (sign == NULL) {
-            for (i = 0; i < (*sensor).nvars; i++) {
-                (*sensor).values[i] = -9999.0f;
+        // supposedly response time is 15 ms, but delaying max 1000 ms to be safe
+        // TODO: When taking concurrent measurements, look for <address><CR><LF>
+        for (i = 0; i < 200; i++) { 
+            CyDelay(5u);
+            if ( strextract(SDI12_uart_buf, value_str, "!","\r\n") ) {
+                break;
             }
-            return 0u;
+        }
+        
+        /* Delay while measurements are being prepared */
+        /*
+         * The returned format for <address>M! is atttn<CR><LF>
+         * (NOTE: The returned format for <address>C! is atttnn<CR><LF> -- this will be useful when requesting 
+         *        concurrent measurements in the future)
+         * Where,
+         * -    a: sensor address
+         * -  ttt: maximum time until measurement is ready
+         * - n(n): number of data values that will be returned
+         */
+        strncpy(delay_str, value_str+strlen((*sensor).address), 3); // shift ptr by strlen(...) to skip address byte
+        ms_delay = ( (uint32) strtod(delay_str,(char**) NULL) ) * 1000u;
+        CyDelay(ms_delay);
+        
+        for (inner = 0u; inner < MAX_INNER; inner++) {
+            /* 3. Request data from SDI12 sensor */
+            clear_str(command);    
+            clear_str(value_str);
+            sprintf(command,"%s%s%s",(*sensor).address,READ_MEASUREMENT,"!");   
+            
+            SDI12_uart_clear_string(); 
+            SDI12_send_command(command);
+            
+            // Delay a maximum of 200 ms as readings are transmitted
+            for (i = 0; i < 10; i++) {
+                CyDelay(20u);
+                
+                // Copy the SDI12 UART buffer into temporary buffer, value_str
+                // and break once "\r\n" is returned
+                if ( strextract(SDI12_uart_buf, value_str, "!","\r\n") ) {
+                    break;
+                }
+            }
+            
+            
+            /* 4. Parse the received data */    
+            // Check for "+" or "-" signs to ensure data was sent
+            // First check for "+"
+            sign = strstr(value_str,"+");
+            if (sign == NULL) {
+                // If there is no + sign, check for "-"
+                sign = strstr(value_str,"-");
+                
+                // The absence of "+" or "-" indicates no data was sent yet
+                // This has particularly been an issue with Solinst Levelogger 3001
+                // Leaving notes below to potentially help future fix
+                //
+                // Notes:
+                // <http://www.sdi-12.org/current_specification/SDI-12_version-1_4-Dec-1-2017.pdf>
+                // (Page 15, Sect 4.4.8, after Table 11)
+                // If the response to a D command is valid, but no data are returned, 
+                // the sensor has aborted the measurement. 
+                // To obtain data the recorder must issue another M, C, or V command.
+                //
+                // <https://www.solinst.com/products/dataloggers-and-telemetry/3001-levelogger-series/operating-instructions/sdi-12-user-guide/6-trouble-shooting/6-trouble-shooting.php>
+                // **Recorder Receives Invalid Response to D command e.g. 0000<CR><LF>**
+                //
+                // Retry the Command. The Levelogger may have been busy or 
+                // the Levelogger is not connected to the SDI-12 Interface Cable.
+                // If your recorder supports automatic retries, consider enabling that function.
+                // If necessary, check all connections in the field.
+                //
+                if (sign == NULL) {
+                    for (i = 0; i < (*sensor).nvars; i++) {
+                        (*sensor).values[i] = -9999.0f;
+                    }
+                    valid = 0u;
+                    
+                }
+            }
+            
+            if (sign != NULL) {
+                // Set the pointer to the start of the returned results
+                // and shift forward past the address byte
+                ptr_end = value_str + strlen((*sensor).address);
+                
+                // Parse and store all values returned from the sensor
+                for (i = 0; i < (*sensor).nvars; i++) {
+                    (*sensor).values[i] = (float) strtod(ptr_end, &ptr_end);
+                }
+                
+                valid = 1u;
+                return valid;
+            }
         }
     }
-    
-    // Set the pointer to the start of the returned results
-    // and shift forward past the address byte
-    ptr_end = value_str + strlen((*sensor).address);
-    
-    // Parse and store all values returned from the sensor
-    for (i = 0; i < (*sensor).nvars; i++) {
-        (*sensor).values[i] = (float) strtod(ptr_end, &ptr_end);
-    }
-    
-    return 1u;
-    
+    return valid;
 }
 
 /**
@@ -295,7 +332,9 @@ uint8 SDI12_take_concurrent_measurement(SDI12_sensor* sensor) {
  * @ return 1u if successful, 0u if unsuccessful
  */
 uint8 SDI12_info(SDI12_sensor* sensor) {
-
+    // unsigned ints for taking measurements
+    uint8         i = 0u; // for iterating through sensor measurements
+    
     /* 1. Request measurement from addressed SDI12 sensor */
     clear_str(command);
     sprintf(command,"%s%s%s",(*sensor).address,INFO,"!");
@@ -345,8 +384,84 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
 }
 
 uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size) {
+    
+    //----------   Create Array  ----------//
     sensors[0] = solinst;
-    sensors[1] = GS3;
+    sensors[1] = GS3;    
+    
+    // Define local variables 
+    //char output[100] = {'\0'}; // For debugging
+    uint8 i, j, k, valid;
+    
+    SDI12_start();
+    SDI12_Power_Write(1u);
+      
+    // Iterate through each SDI12 sensor
+    // TODO: Reconstruct to go thorugh each bit of SDI12_flag if
+    //       SDI12_flag is used to flag multiple SDI-12 sensors
+    //       (This assumes the number of bits < N_SDI12_SENSORS)
+    for (k = 0; k < N_SDI12_SENSORS;  k++) {
+     
+        // Ensure we don't access nonexistent array index
+        if(*array_ix + (sensors[k]).nvars >= max_size){
+            return *array_ix;
+        }    
+        //*/
+        
+        //* ---------- Take measurement(s) from k'th SDI-12 sesnor ---------- //
+        valid = 0; // Reinitialize sensor status
+        
+        // Let the sensor power up max 10000 ms = 50 * 200 ms
+        for (i = 0; i < 50; i++) {
+            CyDelay(200u);
+            
+            valid = SDI12_is_active(&sensors[k]);
+            if (valid == 1u){  
+                
+                
+                //valid = SDI12_change_address(&sensors[0],"0");
+                valid = SDI12_info(&sensors[k]); CyDelay(1000u);
+                valid = SDI12_take_measurement(&sensors[k]);
+
+                if (valid == 1u) {
+                    // Successfully took a measurement                 
+                } else {
+                    /*/ SDI12 sensor powered on, but unable to parse response
+                    valid = -2;                    
+                    for (j = 0; j < (sensors[k]).nvars; j++) {
+                        (sensors[k]).values[j] = -9999.2;
+                    }
+                    //*/
+                }    
+                break;
+                                        
+            } else {
+                // SDI12 sensor not responding. It may be powered off or have a different address
+                valid = -1;
+                for (j = 0; j < (sensors[k]).nvars; j++) {
+                    (sensors[k]).values[j] = -9999.1;
+                }
+            }
+        }
+        
+        //* ---------- Insert measurement(s) from k'th SDI-12 sesnor ---------- //
+        // char[] output is used for debugging purposes
+        //clear_str(output); 
+        
+        // Insert current values in labels[] and readings[]
+        for (j = 0; j < (sensors[k]).nvars; j++) {
+            // char[] output is used for debugging purposes
+            //sprintf(output,"%s %s %f", output, (sensors[k]).labels[j], (sensors[k]).values[j]);
+            
+            labels[*array_ix] = (sensors[k]).labels[j];
+            readings[*array_ix] = (sensors[k]).values[j];
+            (*array_ix) += 1;
+        }            
+    }
+                
+    SDI12_Power_Write(0u);
+    SDI12_stop(); 
+    
     return *array_ix;
 }
 
