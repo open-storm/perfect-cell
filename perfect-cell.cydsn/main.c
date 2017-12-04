@@ -76,6 +76,9 @@ void main() {
 
     // Initialize Pins
     init_pins();
+    
+    // Test valve pins
+    test_valve();
 
     // Update influxdb tags
     #if USE_INFLUXDB
