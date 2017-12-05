@@ -7,9 +7,11 @@
  */
 
 #include "SDI12.h"
+#include "misc.h"
 
 //*========== #BEGIN Define SDI12 sensors ==========//
 //----------   SDI12 Array   ----------//
+#define DEBUG_SDI12         1
 #define N_SDI12_SENSORS     2           // Total number of sensors defined
 SDI12_sensor sensors[N_SDI12_SENSORS];  
 
@@ -44,13 +46,6 @@ SDI12_sensor GS3 = {
 // as a circular buffer to avoid overflow.
 static char SDI12_uart_buf[257] = {'\0'};
 static uint8_t SDI12_buf_idx = 0u;
-
-// string for constructing the command sent to the SDI12 sensor
-char command[100] = {'\0'};
-
-// string and pointer to store and parse SDI12 measurement results
-char value_str[100] = {'\0'}, delay_str[10] = {'\0'}, *ptr_end, *sign; 
-
 
 void SDI12_start(){
     SDI12_UART_Start();
@@ -109,6 +104,13 @@ void SDI12_send_command(char command[]) {
  * @return 1u if active, 0u if inactive
  */
 uint8 SDI12_is_active(SDI12_sensor* sensor) {
+    /* 0. Define Local Variables: */
+    // string for constructing the command sent to the SDI12 sensor
+    char command[100] = {'\0'};
+
+    // string to store and parse SDI12 measurement results
+    char value_str[100] = {'\0'};
+    
     /* 1. Request if SDI12 sensor is active */
     clear_str(command);
     
@@ -143,7 +145,13 @@ uint8 SDI12_is_active(SDI12_sensor* sensor) {
  * @return 1u if successful, 0u if unsuccessful
  */
 uint8 SDI12_change_address(SDI12_sensor* sensor, char new_address[]) {
+    /* 0. Define Local Variables: */
+    // string for constructing the command sent to the SDI12 sensor
+    char command[100] = {'\0'};
 
+    // string to store and parse SDI12 measurement results
+    char value_str[100] = {'\0'};
+    
     // unsigned ints for taking measurements
     uint8         i = 0u; // for iterating through sensor measurements
         
@@ -178,7 +186,13 @@ uint8 SDI12_change_address(SDI12_sensor* sensor, char new_address[]) {
  * @ return 1u if measurements were successfully taken, 0u if there was a communication error
  */
 uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
+    /* 0. Define Local Variables: */
+    // string for constructing the command sent to the SDI12 sensor
+    char command[100] = {'\0'};
 
+    // string and pointer to store and parse SDI12 measurement results
+    char value_str[100] = {'\0'}, delay_str[10] = {'\0'}, *ptr_end, *sign; 
+    
     // unsigned ints for taking measurements
     uint8 valid = 0u;
     uint8 inner = 0u, outer = 0u, MAX_INNER = 5u, MAX_OUTER = 5u;    
@@ -188,6 +202,7 @@ uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
 
     // <http://www.sdi-12.org/current_specification/SDI-12_version-1_4-Dec-1-2017.pdf>
     // See Sect 7.0 and Appendix B-1 for more details on retries and flow control
+    // (BW)   2017/12/04 - Solinst Levelogger 3000 can still fail
     for (outer = 0u; outer < MAX_OUTER; outer++) {
         /* 1. Request measurement from addressed SDI12 sensor */    
         clear_str(command);
@@ -332,6 +347,13 @@ uint8 SDI12_take_concurrent_measurement(SDI12_sensor* sensor) {
  * @ return 1u if successful, 0u if unsuccessful
  */
 uint8 SDI12_info(SDI12_sensor* sensor) {
+    /* 0. Define Local Variables: */
+    // string for constructing the command sent to the SDI12 sensor
+    char command[100] = {'\0'};
+
+    // string and pointer to store and parse SDI12 measurement results
+    char value_str[100] = {'\0'}, *ptr_end; 
+    
     // unsigned ints for taking measurements
     uint8         i = 0u; // for iterating through sensor measurements
     
@@ -383,16 +405,17 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
     return 0u;
 }
 
-uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size) {
+uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size, uint SDI12_flag) {
     
     //----------   Create Array  ----------//
     sensors[0] = solinst;
     sensors[1] = GS3;    
     
-    // Define local variables 
-    //char output[100] = {'\0'}; // For debugging
+    // Define local variables     
     uint8 i, j, k, valid;
-    uint8 MAX_RETRIES = 5u;
+    if (DEBUG_SDI12 == 1u) {
+        char output[100] = {'\0'}; // For debugging
+    }
     
     SDI12_start();
     SDI12_Power_Write(1u);
@@ -402,77 +425,76 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
     //       SDI12_flag is used to flag multiple SDI-12 sensors
     //       (This assumes the number of bits < N_SDI12_SENSORS)
     for (k = 0; k < N_SDI12_SENSORS;  k++) {
+        if (0x00000001 & SDI12_flag>>k)  {
      
-        // Ensure we don't access nonexistent array index
-        if(*array_ix + (sensors[k]).nvars >= max_size){
-            return *array_ix;
-        }    
-        //*/
-        
-        //* ----------  Check if k'th SDI-12 sensor is responding  ---------- //
-        valid = 0; // Reinitialize sensor status
-        
-        // Let the sensor power up max 10000 ms = 50 * 200 ms
-        for (i = 0; i < 50; i++) {
-            CyDelay(200u);
+            // Ensure we don't access nonexistent array index
+            if(*array_ix + (sensors[k]).nvars >= max_size){
+                return *array_ix;
+            }    
+            //*/
             
-            valid = SDI12_is_active(&sensors[k]);
-            if (valid == 1u){  
-   
-                break;
-                                        
-            } else {
-                // SDI12 sensor not responding. It may be powered off or have a different address
-                valid = -1;
-                for (j = 0; j < (sensors[k]).nvars; j++) {
-                    (sensors[k]).values[j] = -9999.1;
-                }
-            }
-        }
-        
-                        
-        //* ---------- Take measurement(s) from k'th SDI-12 sensor ---------- // 
-        
-        if (valid == 1u) {
-             //valid = SDI12_change_address(&sensors[0],"0");
-            valid = SDI12_info(&sensors[k]); CyDelay(1000u);
+            //* ---------- Take measurement(s) from k'th SDI-12 sesnor ---------- //
+            valid = 0; // Reinitialize sensor status
             
-            for(j = 0; j < MAX_RETRIES; j++){
-                valid = SDI12_take_measurement(&sensors[k]);
+            // Let the sensor power up max 10000 ms = 50 * 200 ms
+            for (i = 0; i < 50; i++) {
+                CyDelay(200u);
+                
+                valid = SDI12_is_active(&sensors[k]); CyDelay(200u);
+                if (valid == 1u){  
+                    
+                    if (DEBUG_SDI12 == 1u) {
+                        LED_Write(0u);
+                    }
+                    
+                    //valid = SDI12_change_address(&sensors[0],"0"); CyDelay(200u);
+                    valid = SDI12_info(&sensors[k]); CyDelay(200u);
+                    valid = SDI12_take_measurement(&sensors[k]);
 
-                if (valid == 1u) {
-                    // Successfully took a measurement  
+                    if (valid == 1u) {
+                        // Successfully took a measurement 
+                        if (DEBUG_SDI12 == 1u) {
+                            blink_LED(1u);    
+                        }
+                    } else {
+                        /*/ SDI12 sensor powered on, but unable to parse response
+                        valid = -2;                    
+                        for (j = 0; j < (sensors[k]).nvars; j++) {
+                            (sensors[k]).values[j] = -9999.2;
+                        }
+                        //*/
+                        if (DEBUG_SDI12 == 1u) {
+                            blink_LED(4u);
+                        }
+                    }    
                     break;
+                                            
                 } else {
-                    /*/ SDI12 sensor powered on, but unable to parse response                    
-                    // Power cycle the sensor */
-                    SDI12_Power_Write(0u);
-                    SDI12_stop(); 
-                    
-                    // Use the loop from above to determine how long to delay
-                    CyDelay(i * 200u);
-                    
-                    SDI12_start();
-                    SDI12_Power_Write(1u);
-
+                    // SDI12 sensor not responding. It may be powered off or have a different address
+                    valid = -1;
+                    for (j = 0; j < (sensors[k]).nvars; j++) {
+                        (sensors[k]).values[j] = -9999.1;
+                    }
+                    if (DEBUG_SDI12 == 1u) {
+                        LED_Write(1u);
+                    }
                 }
             }
-        }
- 
-        
-        //* ---------- Insert measurement(s) from k'th SDI-12 sensor ---------- //
-        // char[] output is used for debugging purposes
-        //clear_str(output); 
-        
-        // Insert current values in labels[] and readings[]
-        for (j = 0; j < (sensors[k]).nvars; j++) {
-            // char[] output is used for debugging purposes
-            //sprintf(output,"%s %s %f", output, (sensors[k]).labels[j], (sensors[k]).values[j]);
             
-            labels[*array_ix] = (sensors[k]).labels[j];
-            readings[*array_ix] = (sensors[k]).values[j];
-            (*array_ix) += 1;
-        }            
+            //* ---------- Insert measurement(s) from k'th SDI-12 sensor ---------- //
+            // char[] output is used for debugging purposes
+            //clear_str(output); 
+            
+            // Insert current values in labels[] and readings[]
+            for (j = 0; j < (sensors[k]).nvars; j++) {
+                // char[] output is used for debugging purposes
+                //sprintf(output,"%s %s %f", output, (sensors[k]).labels[j], (sensors[k]).values[j]);
+                
+                labels[*array_ix] = (sensors[k]).labels[j];
+                readings[*array_ix] = (sensors[k]).values[j];
+                (*array_ix) += 1;
+            }
+        }
     }
                 
     SDI12_Power_Write(0u);
