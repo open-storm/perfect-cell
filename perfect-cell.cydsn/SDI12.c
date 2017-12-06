@@ -57,6 +57,15 @@ void SDI12_stop(){
     SDI12_UART_Stop();
 }
 
+void SDI12_sleep(){
+    SDI12_UART_Sleep();   
+}
+
+void SDI12_wakeup() {
+    SDI12_UART_Wakeup();
+    SDI12_uart_clear_string();
+}
+
 /**
  * @brief 
  */
@@ -405,7 +414,7 @@ uint8 SDI12_info(SDI12_sensor* sensor) {
     return 0u;
 }
 
-uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size, uint SDI12_flag) {
+uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size, int SDI12_flag) {
     
     //----------   Create Array  ----------//
     sensors[0] = solinst;
@@ -413,17 +422,14 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
     
     // Define local variables     
     uint8 i, j, k, valid;
-    if (DEBUG_SDI12 == 1u) {
-        char output[100] = {'\0'}; // For debugging
-    }
+    //char output[100] = {'\0'}; // For debugging
     
     SDI12_start();
     SDI12_Power_Write(1u);
       
-    // Iterate through each SDI12 sensor
-    // TODO: Reconstruct to go thorugh each bit of SDI12_flag if
-    //       SDI12_flag is used to flag multiple SDI-12 sensors
-    //       (This assumes the number of bits < N_SDI12_SENSORS)
+    // Iterate through each SDI12 sensor, using SDI12_flag 
+    // where each bit is a flag to an SDI-12 sensor
+    //  (This assumes the number of bits < N_SDI12_SENSORS)
     for (k = 0; k < N_SDI12_SENSORS;  k++) {
         if (0x00000001 & SDI12_flag>>k)  {
      
@@ -440,7 +446,7 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
             for (i = 0; i < 50; i++) {
                 CyDelay(200u);
                 
-                valid = SDI12_is_active(&sensors[k]); CyDelay(200u);
+                valid = SDI12_is_active(&sensors[k]); //CyDelay(200u);
                 if (valid == 1u){  
                     
                     if (DEBUG_SDI12 == 1u) {
@@ -448,7 +454,7 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
                     }
                     
                     //valid = SDI12_change_address(&sensors[0],"0"); CyDelay(200u);
-                    valid = SDI12_info(&sensors[k]); CyDelay(200u);
+                    valid = SDI12_info(&sensors[k]); //CyDelay(200u);
                     valid = SDI12_take_measurement(&sensors[k]);
 
                     if (valid == 1u) {
@@ -483,7 +489,7 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
             
             //* ---------- Insert measurement(s) from k'th SDI-12 sensor ---------- //
             // char[] output is used for debugging purposes
-            //clear_str(output); 
+            //clear_str(output);
             
             // Insert current values in labels[] and readings[]
             for (j = 0; j < (sensors[k]).nvars; j++) {

@@ -1,4 +1,5 @@
 #include "misc.h"
+#include "SDI12.h"
 
 uint8 blink_LED(uint8 n_blinks) {
 	uint8 k;

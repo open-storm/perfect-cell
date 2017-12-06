@@ -48,6 +48,8 @@ struct {
 
 void  SDI12_start();
 void  SDI12_stop();
+void  SDI12_sleep();
+void  SDI12_wakeup();
 void  SDI12_uart_clear_string();
 char* SDI12_uart_get_string();
 
@@ -119,7 +121,7 @@ uint8 SDI12_info(SDI12_sensor* sensor);
  *
  * @return (*array_ix) + number of entries filled
  */
-uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size, uint SDI12_flag);
+uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_size, int SDI12_flag);
 
 CY_ISR_PROTO(isr_SDI12_data);
 

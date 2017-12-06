@@ -119,9 +119,16 @@ void main() {
             // Take readings and fill output arrays with labels and values
 
             numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
-
+            
+            /*/ SDI12 testing only
+            // Remember to reset SLEEPTIMER to 460u and CONNECTION_FLAG to 1u            
+            clear_all_arrays(0u);
+            array_ix = 0u;
+            //*/
+            
             // Connect to network
             if (connection_flag){
+                
                 if (modem_startup(&connection_attempt_counter)) {
                     // Get modem connection attempts
                     if (modem_flag == 1u) {
