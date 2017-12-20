@@ -204,7 +204,7 @@ uint8 SDI12_take_measurement(SDI12_sensor* sensor) {
     
     // unsigned ints for taking measurements
     uint8 valid = 0u;
-    uint8 inner = 0u, outer = 0u, MAX_INNER = 5u, MAX_OUTER = 5u;    
+    uint8 inner = 0u, outer = 0u, MAX_INNER = 3u, MAX_OUTER = 3u;    
     uint8         i = 0u; // for iterating through sensor measurements
     uint32 ms_delay = 0u; // for delaying the code while measurements are being taken    
 
@@ -441,10 +441,11 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
             
             //* ---------- Take measurement(s) from k'th SDI-12 sesnor ---------- //
             valid = 0; // Reinitialize sensor status
+            LED_Write(0u);
             
             // Let the sensor power up max 10000 ms = 50 * 200 ms
-            for (i = 0; i < 50; i++) {
-                CyDelay(200u);
+            for (i = 0; i < 10; i++) {
+                //CyDelay(200u); // Currently, there's 1 second delay each time to check if active
                 
                 valid = SDI12_is_active(&sensors[k]); //CyDelay(200u);
                 if (valid == 1u){  
@@ -502,7 +503,8 @@ uint8 zip_SDI12(char *labels[], float readings[], uint8 *array_ix, uint8 max_siz
             }
         }
     }
-                
+         
+    LED_Write(0u);
     SDI12_Power_Write(0u);
     SDI12_stop(); 
     
