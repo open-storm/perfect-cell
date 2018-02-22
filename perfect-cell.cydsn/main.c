@@ -18,6 +18,7 @@
  */
 #include <device.h>
 #include <project.h>
+#include "USBUART.h"
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
@@ -76,6 +77,18 @@ void main() {
 
     // Initialize Pins
     init_pins();
+    
+    // Initialize USB UART
+    USBUART_Start(0,USBUART_DWR_POWER_OPERATION);
+    for(int timeout = 0; timeout < 200; timeout++) {
+        if (USBUART_bGetConfiguration()) {
+            USBUART_CDC_Init();
+            USBUART_PutString("Sup \n\r");
+            break;
+        }
+        LED_Write(!LED_Read());
+        CyDelay(50); // Delay 5 milliseconds
+    }
     
     // Test valve pins
     test_valve();
