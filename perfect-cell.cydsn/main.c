@@ -78,7 +78,8 @@ void main() {
     // Initialize Pins
     init_pins();
     
-    // Initialize USB UART
+    // Initialize USB UART  
+    /* // Doesn't seem to work over 5-pin connector
     USBUART_Start(0,USBUART_DWR_POWER_OPERATION);
     for(int timeout = 0; timeout < 200; timeout++) {
         if (USBUART_bGetConfiguration()) {
@@ -89,6 +90,7 @@ void main() {
         LED_Write(!LED_Read());
         CyDelay(50); // Delay 5 milliseconds
     }
+    */
     
     // Test valve pins
     test_valve();
