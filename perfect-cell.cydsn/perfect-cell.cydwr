@@ -695,6 +695,7 @@
       <Data key="8477dac3-9389-436d-a7d9-625d79d10361" value="Pin_Sampler_Power" />
       <Data key="22863ebe-a37b-476f-b252-6e49a8c00b12" value="SDA_1" />
       <Data key="32529dad-e9ea-4858-b902-dfcfbe03a8fe" value="Pin31" />
+      <Data key="54910f3b-3473-4f5e-8420-ec9e73e73a7c" value="P3_0" />
       <Data key="1425177d-0d0e-4468-8bcc-e638e5509a9b" value="Telit_rx" />
       <Data key="02317902-776e-4659-9a7e-32300499839d" value="Pin7" />
       <Data key="a0b7e575-5a11-4d86-95c3-851970e72338/16a808f6-2e13-45b9-bce0-b001c8655113" value="ADC_SAR_1_Bypass" />
@@ -729,7 +730,7 @@
       <Data key="e851a3b9-efb8-48be-bbb8-b303b216c393" value="LED" />
       <Data key="eaaddd37-78fc-4b0b-b837-af3403a26f50" value="WQ_Power_1" />
       <Data key="ec3a0f57-5f45-446c-96a8-64a96cce8cf4" value="Cond_Vx" />
-      <Data key="f18a85f9-10d7-48be-9968-5402af3254c7" value="P2_5" />
+      <Data key="f18a85f9-10d7-48be-9968-5402af3254c7" value="V_420mA" />
       <Data key="f26e686f-f660-48d4-a0a4-3c3e92434189" value="Valve_OUT" />
       <Data key="f534d43e-a4eb-48dd-9793-d0c8ce20326a" value="Telit_RST" />
       <Data key="f543ec28-b78a-49af-affe-8a22e17ba4af" value="Pin1" />
@@ -3828,7 +3829,7 @@
     </Group>
     <Group key="2a5cffd0-e8c3-4118-befe-dffa8d40cc0a">
       <Group key="0">
-        <Data key="Port Format" value="3,0" />
+        <Data key="Port Format" value="0,3" />
       </Group>
     </Group>
     <Group key="2bc438f7-6865-4993-8fbe-c9af94416720">
@@ -4004,6 +4005,11 @@
     <Group key="32529dad-e9ea-4858-b902-dfcfbe03a8fe">
       <Group key="0">
         <Data key="Port Format" value="2,7" />
+      </Group>
+    </Group>
+    <Group key="54910f3b-3473-4f5e-8420-ec9e73e73a7c">
+      <Group key="0">
+        <Data key="Port Format" value="3,0" />
       </Group>
     </Group>
     <Group key="1425177d-0d0e-4468-8bcc-e638e5509a9b">

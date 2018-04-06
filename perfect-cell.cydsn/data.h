@@ -18,6 +18,7 @@
 #include "autosampler.h"
 #include "valve.h"
 #include "SDI12.h"    
+#include "four20.h"
 #include "misc.h"
 #include "modem.h"
 #include "strlib.h"

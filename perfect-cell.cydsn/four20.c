@@ -62,7 +62,7 @@ uint8 read_420mA(float32 *v_420mA) {
  *
  * @return (*array_ix) + number of entries filled
  */
-uint8 zip_4_20mA(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
+uint8 zip_420mA(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
     // Ensure we don't access nonexistent array index
     uint8 nvars = 1;
     if(*array_ix + nvars >= max_size){
