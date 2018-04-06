@@ -649,7 +649,7 @@
     <Group key="Pin">
       <Data key="0f24d8b2-4a7f-483d-9d23-948960692025" value="Valve_IN" />
       <Data key="1b437085-ae34-426b-8f5d-ef8e097a517f" value="optical_rain_pwr" />
-      <Data key="1dcc84ce-279f-4b24-9ca6-9d367c25f998" value="WQ_Power_1" />
+      <Data key="1dcc84ce-279f-4b24-9ca6-9d367c25f998" value="P0_3" />
       <Data key="1e95a1c8-f244-4fc4-bfa2-afac7ccce90f" value="Cond_PWM_out" />
       <Data key="2a5cffd0-e8c3-4118-befe-dffa8d40cc0a" value="SDI12_Power" />
       <Data key="2bc438f7-6865-4993-8fbe-c9af94416720" value="Pin21" />
@@ -675,7 +675,7 @@
       <Data key="8f327fed-75a1-4316-8403-d71df626d1f2" value="Telit_PWR" />
       <Data key="9b9f3737-fc95-4a0e-8de4-2cc2cfeefae2" value="Pin39" />
       <Data key="9e58532f-ab4d-4d1f-8667-8cde8668f1f8" value="Temp_Vout" />
-      <Data key="10feecd3-ed47-4ac5-8d39-029b903bc7f3" value="Pin5" />
+      <Data key="10feecd3-ed47-4ac5-8d39-029b903bc7f3" value="P12_2" />
       <Data key="032a2528-7530-4412-a611-ad78b8dab923" value="Valve_2_OUT" />
       <Data key="40a398d7-7ac1-4d5c-a86d-d2469f5f3d28" value="Decagon_RX" />
       <Data key="42c850e2-73b3-497a-8f3e-e0f79556de55" value="toughsonic_rs485_pos" />
@@ -729,6 +729,7 @@
       <Data key="e851a3b9-efb8-48be-bbb8-b303b216c393" value="LED" />
       <Data key="eaaddd37-78fc-4b0b-b837-af3403a26f50" value="WQ_Power_1" />
       <Data key="ec3a0f57-5f45-446c-96a8-64a96cce8cf4" value="Cond_Vx" />
+      <Data key="f18a85f9-10d7-48be-9968-5402af3254c7" value="P2_5" />
       <Data key="f26e686f-f660-48d4-a0a4-3c3e92434189" value="Valve_OUT" />
       <Data key="f534d43e-a4eb-48dd-9793-d0c8ce20326a" value="Telit_RST" />
       <Data key="f543ec28-b78a-49af-affe-8a22e17ba4af" value="Pin1" />
@@ -3937,7 +3938,7 @@
     </Group>
     <Group key="42c850e2-73b3-497a-8f3e-e0f79556de55">
       <Group key="0">
-        <Data key="Port Format" value="2,1" />
+        <Data key="Port Format" value="0,6" />
       </Group>
     </Group>
     <Group key="54c43c4c-50aa-475b-9d9a-9ea8fe20ef0c">
@@ -4113,6 +4114,11 @@
     <Group key="eaaddd37-78fc-4b0b-b837-af3403a26f50">
       <Group key="0">
         <Data key="Port Format" value="0,2" />
+      </Group>
+    </Group>
+    <Group key="f18a85f9-10d7-48be-9968-5402af3254c7">
+      <Group key="0">
+        <Data key="Port Format" value="2,1" />
       </Group>
     </Group>
     <Group key="f26e686f-f660-48d4-a0a4-3c3e92434189">
