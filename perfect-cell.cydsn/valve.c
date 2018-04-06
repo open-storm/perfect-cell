@@ -173,7 +173,11 @@ uint8 zip_valve(char *labels[], float readings[], uint8 *array_ix, int *valve_tr
                 
         float32 valve_pos;
 		*valve_trigger = move_valve(*valve_trigger);
-		valve_pos = 100. * read_Valve_POS();
+        
+        if (potentiometer_enabled == 1u) {
+		    valve_pos = 100. * read_Valve_POS();
+        }
+        
 		labels[*array_ix] = "valve_trigger";
 		labels[*array_ix + 1] = "valve_pos";
 		readings[*array_ix] = -1;

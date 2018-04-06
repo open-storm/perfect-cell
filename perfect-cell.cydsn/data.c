@@ -187,7 +187,7 @@ uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 
 		
 	}
     // TODO: Valve 1 and Valve 2 should probably handled using a mux
-	if ((valve_flag == 1u) && (valve_trigger >= 0)){
+	if (valve_flag == 1u){
 		zip_valve(labels, readings, array_ix, &valve_trigger, max_size);
 	}
     
