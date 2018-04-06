@@ -19,8 +19,9 @@ uint8 read_420mA(float32 *v_420mA) {
 	int32 reading;
     uint8 status = 0u;
     
-	/* flip on the ADC pin */
+	/* flip on the ADC pin & 12V pin */
 	VBAT_READ_EN_Write(1u);
+    SDI12_Power_Write(1u);
 	CyDelay(100u);	
     
 	/* Start the ADC */
@@ -39,8 +40,9 @@ uint8 read_420mA(float32 *v_420mA) {
 	/* Stop the conversion */
 	VBAT_ADC_Sleep();
     
-	/* flip off the ADC pin */
-	VBAT_READ_EN_Write(3u);	
+	/* flip off the ADC pin & 12V pin*/
+	VBAT_READ_EN_Write(0u);	
+    SDI12_Power_Write(0u);
     
     /* Turn of the Analog MUX */
     AMux_Stop();
