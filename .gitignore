@@ -15,6 +15,8 @@ perfect-cell.cydsn/*.cywrk.*
 perfect-cell.cydsn/config.h
 perfect-cell.cydsn/commit.h
 perfect-cell.cydsn/*.log
+perfect-cell.cydsn/config.h
+
 
 # Vim
 *.un~
