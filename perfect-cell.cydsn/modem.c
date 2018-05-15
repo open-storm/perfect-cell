@@ -491,6 +491,11 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
             "\r\n\r\n", body); // 13 14 15
 	}
 	sprintf(send_str, "%s%s", send_str, "\r\n"); 
+    
+    //char tmp_buffer[4000];
+    //sprintf(tmp_buffer, "%s", send_str);
+    
+    return;
 }
 
 int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char){

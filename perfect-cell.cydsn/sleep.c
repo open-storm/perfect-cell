@@ -33,14 +33,14 @@ void go_to_sleep(int sleeptimer, uint8 *awake){
         if (sleeptimer == wakeup_interval_counter) {
             wakeup_interval_counter = 0u;
                 *awake = 1u;
-            } else {
-            wakeup_interval_counter++;
-            }
+        } else {
+        wakeup_interval_counter++;
+        }
 
-        } while (wakeup_interval_counter != 0u);
+    } while (wakeup_interval_counter != 0u);
 
-            // Restore clock configuration
-            CyPmRestoreClocks();
+    // Restore clock configuration
+    CyPmRestoreClocks();
 }
 
 /* [] END OF FILE */

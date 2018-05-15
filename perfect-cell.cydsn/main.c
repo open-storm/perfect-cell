@@ -18,6 +18,7 @@
  */
 #include <device.h>
 #include <project.h>
+#include "USBUART.h"
 #include "autosampler.h"
 #include "data.h"
 #include "extern.h"
@@ -76,6 +77,23 @@ void main() {
 
     // Initialize Pins
     init_pins();
+    
+    // Initialize USB UART  
+    /* // Doesn't seem to work over 5-pin connector
+    USBUART_Start(0,USBUART_DWR_POWER_OPERATION);
+    for(int timeout = 0; timeout < 200; timeout++) {
+        if (USBUART_bGetConfiguration()) {
+            USBUART_CDC_Init();
+            USBUART_PutString("Sup \n\r");
+            break;
+        }
+        LED_Write(!LED_Read());
+        CyDelay(50); // Delay 5 milliseconds
+    }
+    */
+    
+    // Test valve pins
+    test_valve();
 
     // Update influxdb tags
     #if USE_INFLUXDB
@@ -116,9 +134,16 @@ void main() {
             // Take readings and fill output arrays with labels and values
 
             numFilled = take_readings(labels, readings, &array_ix, 0u, NVARS);
-
+            
+            /*/ SDI12 testing only
+            // Remember to reset SLEEPTIMER to 460u and CONNECTION_FLAG to 1u            
+            clear_all_arrays(0u);
+            array_ix = 0u;
+            //*/
+            
             // Connect to network
             if (connection_flag){
+                
                 if (modem_startup(&connection_attempt_counter)) {
                     // Get modem connection attempts
                     if (modem_flag == 1u) {

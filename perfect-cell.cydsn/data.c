@@ -79,6 +79,8 @@ int autosampler_flag  = AUTOSAMPLER_FLAG;
 int valve_flag   = VALVE_FLAG;
 int valve_2_flag = VALVE_2_FLAG;
 int atlas_wq_flag = ATLAS_WQ_FLAG;
+int SDI12_flag = SDI12_FLAG;
+int v240_flag  = V420_FLAG;
 
 // Flags to trigger devices
 int autosampler_trigger = AUTOSAMPLER_TRIGGER;
@@ -153,6 +155,26 @@ int take_readings(char* labels[], float readings[], uint8* array_ix,
     if (atlas_wq_flag == 1u) {
         zip_atlas_wq(labels, readings, array_ix, max_size);
     }
+    
+    // Take SDI-12 measurements
+    // SDI_flag is be used to say which sensors to read from, 
+    //   where each bit serves as a "flag" for each SDI12 sensor
+    // (e.g., by assigning each bit to an address (e.g. '0' = 0b1 = 1, '9' = 0b0100000000 = 512, 'a' = 0b100000000 = 1024
+    //   to read from all three, SDI12_flag would be 1537 = 0b11000000001 = 1 + 512 + 1024)
+    //   
+    if (SDI12_flag > 0) {
+        //int counter;
+        //for (counter = 0; counter < 3; counter++) {
+            zip_SDI12(labels, readings, array_ix, max_size, SDI12_flag);
+        //    CyDelay(5000u);
+        //}
+    }
+    
+    // Take 4-20 mA measurement
+    if (v240_flag == 1u) {
+        zip_420mA(labels, readings, array_ix, max_size);
+    }
+    
     return (*array_ix);
 }
 
@@ -165,7 +187,7 @@ uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 
 		
 	}
     // TODO: Valve 1 and Valve 2 should probably handled using a mux
-	if ((valve_flag == 1u) && (valve_trigger >= 0)){
+	if (valve_flag == 1u){
 		zip_valve(labels, readings, array_ix, &valve_trigger, max_size);
 	}
     
@@ -439,9 +461,10 @@ int update_params(char* body, char* send_str, char* response_str){
 	        sprintf(body, "%s%s,", body, "decagon_flag");
             sprintf(body, "%s%s,", body, "valve_flag");
             sprintf(body, "%s%s,", body, "valve_2_flag");
-            sprintf(body, "%s%s,",  body, "autosampler_flag");
-            sprintf(body, "%s%s,",  body, "atlas_wq_flag");
-            sprintf(body, "%s%s",  body, "senix_flag");
+            sprintf(body, "%s%s,", body, "autosampler_flag");
+            sprintf(body, "%s%s,", body, "atlas_wq_flag");            
+            sprintf(body, "%s%s,", body, "SDI12_flag");
+            sprintf(body, "%s%s",  body, "senix_flag"); // Note: No trailing comma
 
             // Build the GET request
             sprintf(main_query,"query?u=%s&p=%s&db=%s&q="
@@ -478,6 +501,7 @@ int update_params(char* body, char* send_str, char* response_str){
                 intparse_influxdb(&valve_2_flag, response_str, "valve_2_flag");
                 intparse_influxdb(&autosampler_flag, response_str, "autosampler_flag");
                 intparse_influxdb(&atlas_wq_flag, response_str, "atlas_wq_flag");
+                intparse_influxdb(&SDI12_flag, response_str, "SDI12_flag");
                 intparse_influxdb(&senix_flag, response_str, "senix_flag");
             }
 		}
