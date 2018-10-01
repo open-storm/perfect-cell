@@ -18,6 +18,9 @@ CY_ISR(isr_optical_rain){
     // This interrupt is triggered by two events when using a tipping bucket
     // 1) Rising edge caused by an actual tip 
     // 2) A series of rising edges caused by bouncing as the tipping mechanism settles
+    //
+    // See https://www.allaboutcircuits.com/technical-articles/switch-bounce-how-to-deal-with-it/ 
+    // for suggested fixes using an RC circuit or firmware
     
     // Increment each time an interrupt is triggered by the rain gage
     event++;   
