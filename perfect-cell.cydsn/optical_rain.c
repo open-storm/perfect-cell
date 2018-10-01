@@ -16,8 +16,8 @@ CY_ISR_PROTO(isr_optical_rain);
 
 CY_ISR(isr_optical_rain){
     // This interrupt is triggered by two events when using a tipping bucket
-    // 1) Rising edge caused by an actual tip 
-    // 2) A series of rising edges caused by bouncing as the tipping mechanism settles
+    // 1) Rising edge caused by an actual tip (~ 100 ms long)
+    // 2) A series of rising edges caused by bouncing as the tipping mechanism settles (~ 0.25 ms long)
     //
     // See https://www.allaboutcircuits.com/technical-articles/switch-bounce-how-to-deal-with-it/ 
     // for suggested fixes using an RC circuit or firmware
