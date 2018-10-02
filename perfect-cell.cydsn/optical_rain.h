@@ -35,7 +35,7 @@ void optical_rain_reset_count();
  *
  * @return @p count of optical rain sensor counter
  */
-uint8 optical_rain_get_count();
+uint16 optical_rain_get_count();
 
 /**
  * @brief Inserts current values of optical rain sensor counter into labels and readings arrays.

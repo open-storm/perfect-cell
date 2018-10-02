@@ -40,7 +40,7 @@ CY_ISR(isr_optical_rain){
     }
 }
 
-uint8 optical_rain_get_count() {
+uint16 optical_rain_get_count() {
 	return count;
 }
 
@@ -65,9 +65,9 @@ uint8 zip_optical_rain(char *labels[], float readings[], uint8 *array_ix, uint8 
     if(*array_ix + nvars >= max_size){
         return *array_ix;
     }
-    float optical_rain_reading = 0;
-    optical_rain_reading = 0.01 * optical_rain_get_count();
-    labels[*array_ix] = "hydreon_prcp";
+    float optical_rain_reading = 0.0;
+    optical_rain_reading = 1.0 * optical_rain_get_count();
+    labels[*array_ix] = "rain_count";
     readings[*array_ix] = optical_rain_reading;
 	(*array_ix)++;
     return *array_ix;
