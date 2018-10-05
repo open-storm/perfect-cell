@@ -130,6 +130,27 @@ uint8 modem_get_meid(char* meid);
 uint8 modem_check_signal_quality(int *rssi, int *fer);
 
 /**
+ * @brief Set Access Point Name (APN)
+ *
+ * @return 1u on success, 0u otherwise.
+ */
+uint8 modem_set_apn();
+
+/**
+ * @brief Set Functionality. 
+ *
+ * @param param One of the following ints:
+ * - 0 minimum functionality
+ * - 1 full functionality
+ * - 2 disable phone transmit RF circuits only
+ * - 3 disable phone receive RF circuits only
+ * - 4 disable phone both transmit and receive RF circuits
+ *
+ * @return 1u on success, 0u otherwise.
+ */
+uint8 modem_set_fun(uint8 param);
+
+/**
  * @brief Set Flow Control. Set command controls the RS232 flow control behaviour.
  *
  * @param param One of the following ints:
@@ -284,3 +305,4 @@ void uart_string_reset();
 
 #endif
 //[] END OF FILE
+
