@@ -8,8 +8,8 @@
 
 #include "optical_rain.h"
 
-uint8  event = 0; // Keep track of each time the rain gage triggers an interrupt
-uint16 count = 0; // Number of "tips" 
+uint8  tip_event = 0; // Keep track of each time the rain gage triggers an interrupt
+uint16 tip_count = 0; // Number of "tips" 
 
 // prototype modem interrupt
 CY_ISR_PROTO(isr_optical_rain);
@@ -23,7 +23,7 @@ CY_ISR(isr_optical_rain){
     // for suggested fixes using an RC circuit or firmware
     
     // Increment each time an interrupt is triggered by the rain gage
-    event++;   
+    tip_event++;   
     
     // Delay 500 microseconds to allow bouncing signal to pass
     // /!\ NOTE: This is not good practice and should either be fixed 
@@ -33,15 +33,15 @@ CY_ISR(isr_optical_rain){
   
     // Update the number of "tips". This code double counts each tip, so 
     // use this if-statement to increment the actual number of tips once every 2 times
-    if (event%2 == 0) {
-        event = 0;
-        count++;
+    if (tip_event%2 == 0) {
+        tip_event = 0;
+        tip_count++;
         //LED_Write(!LED_Read());
     }
 }
 
 uint16 optical_rain_get_count() {
-	return count;
+	return tip_count;
 }
 
 void optical_rain_start() {
@@ -56,7 +56,7 @@ void optical_rain_stop() {
 }
 
 void optical_rain_reset_count() {
-	count = 0u;
+	tip_count = 0u;
 }
 
 uint8 zip_optical_rain(char *labels[], float readings[], uint8 *array_ix, uint8 max_size){
