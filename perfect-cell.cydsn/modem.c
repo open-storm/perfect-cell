@@ -12,6 +12,7 @@
 #include "modem.h"
 #include "strlib.h"
 #include "extern.h"
+//#include "config.h"
 
 // declare variables
 int	   iter = 0;
@@ -20,7 +21,8 @@ uint16 uart_string_index = 0u;
 uint32 feed_id;
 char   modem_received_buffer[MODEM_BUFFER_LENGTH] = {'\0'};
 char   request_chunk[CHUNK_SIZE] = {'\0'};
-char*  modem_apn = "epc.tmobile.com";
+char   modem_apn[50] = "wireless.twilio.com"; // "epc.tmobile.com";
+//char   modem_apn[50] = MODEM_APN; // "epc.tmobile.com";
 
 // prototype modem interrupt
 CY_ISR_PROTO(Telit_isr_rx);
@@ -48,7 +50,7 @@ uint8	modem_startup(int *conn_attempts) {
 
 		/* Set up the modem */
 		ready = modem_power_on();
-		modem_set_flow_control(0u);	
+		
 		modem_setup();
 		
 		if ( ready == 1u ) {
@@ -163,9 +165,11 @@ uint8 modem_power_on(){
     
     // "Push" the ON button for 2 seconds
     Telit_ON_Write(1u); 
-    CyDelay(2000u);     // the pad ON# must be tied low for at least 1 second and then released.
+    //CyDelay(2000u);     // the pad ON# must be tied low for at least 1 second and then released.
     //CyDelay(1500u);     // At least 3 seconds if VBAT < 3.4 for GC 864
-    Telit_ON_Write(0u); 
+    
+    // Leave pin high as long as we want to keep Nimbelink modules ON
+    //Telit_ON_Write(0u); 
     
     CyDelay(5000u);  
     /* NOTE:
@@ -194,7 +198,12 @@ uint8 modem_power_off(){
     modem_disconnect();
     
 
-    if(at_write_command("AT#SHDN","OK",1000u) != 1){  
+    if(at_write_command("AT#SHDN","OK",1000u) == 1){
+        // Once we get the OK, immediately pull down the Power pin
+        // to prevent turning the Nimbelink module back on
+        Telit_ON_Write(0u);
+    }
+    else {
         // If the command fails, issue a hard reset  
         // "Push" the ON button for 
         Telit_ON_Write(1u);
@@ -233,12 +242,29 @@ uint8 modem_reset(){
 
 uint8 modem_setup() {
 /* Initialize configurations for the modem */
+    uint8 status = 0u;
+    
+    // Set APN
+    if (modem_set_apn()) {
+        status += 1u;
+    }
+    
+    // Set modem functionality to full functionality
+	if (modem_set_fun(1u)) {
+		status += 2u;
+	}
+    
+    // Set flow control to 0; bypass requirement for CTS, RTS between microprocessor and  module
+    if ( modem_set_flow_control(0u) ) {
+        status += 4u;   
+    }
+    
 	// Set Error Reports to verbose mode
-	if (modem_set_error_reports(2u) != 1u) {
-		return 0u;
+	if (modem_set_error_reports(2u)) {
+		status += 8u;
 	}
 	
-	return 1u;
+	return status;
 }
 
 uint8 modem_connect(){
@@ -320,11 +346,13 @@ uint8 modem_get_meid(char *meid) {
     */
 
     // Check for valid response from cellular module
-    if (at_write_command("AT#MEID?\r", "OK", 1000u) == 1u) {
+    if (at_write_command("AT+CCID?\r", "OK", 1000u) == 1u) { // Read SIM like for Nimbelink NL-SW-HSPA
+    //if (at_write_command("AT#MEID?\r", "OK", 1000u) == 1u) {
         // Expect the UART to contain something like
         // "\r\n#MEID: A10000,32B9F1C0\r\n\r\nOK"
         char *terminator =
-            strextract(modem_received_buffer, meid, "#MEID: ", "\r\n");
+            strextract(modem_received_buffer, meid, "+CCID: ", "\r\n"); // Read SIM like for Nimbelink NL-SW-HSPA
+            //strextract(modem_received_buffer, meid, "#MEID: ", "\r\n");
 
         // In the case for modules like CC864-DUAL where "," is in the middle of
         // the MEID, remove the comma
@@ -389,6 +417,28 @@ int modem_get_socket_status() {
     }
 
     return -1;
+}
+
+uint8 modem_set_apn(){
+    char cmd[100];
+    sprintf(cmd,"AT+CGDCONT=1,\"IP\",\"%s\"\r",modem_apn);
+    
+    if(at_write_command(cmd,"OK",1000u) == 1u){
+        return 1u;
+    }
+    
+    return 0u;
+    
+}
+
+uint8 modem_set_fun(uint8 param){
+    char cmd[100];
+    sprintf(cmd,"AT+CFUN=%u\r",param);
+    if(at_write_command(cmd,"OK",1000u) == 1u){      
+        return 1u;
+    }
+
+    return 0u;  
 }
 
 uint8 modem_set_flow_control(uint8 param){

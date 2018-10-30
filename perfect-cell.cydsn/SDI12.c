@@ -32,7 +32,7 @@ char* GS3_labels[] = {"GS3_1","GS3_2","GS3_3"};
 float GS3_values[] = {-97.0, -95.0, -94.9};
 SDI12_sensor GS3 = {
     .nvars   = 3,
-    .address = "1",
+    .address = "0",
     .labels  = GS3_labels,
     .values  = GS3_values        
     // additional metadata should initialize to 0 or '\0' //
