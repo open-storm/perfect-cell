@@ -306,15 +306,21 @@ uint8 modem_connect(){
 uint8 modem_disconnect(){
 /* Close modem connection to network */
 	
+    // Override the check below for modem_state and attempt to close the pdp context
+    // modem_pdp_context_toggle(0u) already checks if the PDP context is in the correct state
+    return (modem_pdp_context_toggle(0u));
+    
+    /*
     // Proceed if modem is not connected to network.  Otherwise, try to disconnect from the network and proceed.
     if(modem_state != MODEM_STATE_READY) {
-        /* Can use this statement instead for GSM (ATT, TMobile)
-		return (at_write_command("AT#GPRS=0\r","OK",5000u) == 1u);
-		*/
+        // Can use this statement instead for GSM (ATT, TMobile)
+		// return (at_write_command("AT#GPRS=0\r","OK",5000u) == 1u);
+		//
 		return (modem_pdp_context_toggle(0u));
 			
     }
     return 0u; // failed to disconnect
+    */
 }
 
 uint8 modem_check_network() {
