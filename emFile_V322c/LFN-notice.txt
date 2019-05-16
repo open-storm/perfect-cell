@@ -1,0 +1,1 @@
+IMPORTANT NOTICE REGARDING LONG FILE NAMES: If you configure the software to support long file names on FAT file systems, you should determine whether a license from Microsoft is required. Cypress and its suppliers grant no license under Microsoft's intellectual property rights and assume no liability for any use of the software without obtaining any license that may be required.

@@ -671,7 +671,7 @@
       <Data key="8c2275df-70e6-4d7d-a652-6ee3ab666d68" value="Pin15" />
       <Data key="8c419210-f1b9-4d89-9fc7-45a59d4e71ff" value="VBAT_READ_EN" />
       <Data key="8d47b6e8-182d-4bb2-95c0-5d903820ee01" value="Ultrasonic_2_ON" />
-      <Data key="8d318d8b-cf7b-4b6b-b02c-ab1c5c49d0ba" value="P0_4" />
+      <Data key="8d318d8b-cf7b-4b6b-b02c-ab1c5c49d0ba" value="Telit_PWR" />
       <Data key="8f327fed-75a1-4316-8403-d71df626d1f2" value="Telit_PWR" />
       <Data key="9b9f3737-fc95-4a0e-8de4-2cc2cfeefae2" value="Pin39" />
       <Data key="9e58532f-ab4d-4d1f-8667-8cde8668f1f8" value="Temp_Vout" />
@@ -3959,7 +3959,7 @@
     </Group>
     <Group key="63cc61b4-1f44-41ce-b02b-fc30a1a6603b">
       <Group key="0">
-        <Data key="Port Format" value="3,6" />
+        <Data key="Port Format" value="3,7" />
       </Group>
     </Group>
     <Group key="66b27423-8749-45bd-8b67-43430f75b58c">
@@ -4024,7 +4024,7 @@
     </Group>
     <Group key="1425177d-0d0e-4468-8bcc-e638e5509a9b">
       <Group key="0">
-        <Data key="Port Format" value="3,7" />
+        <Data key="Port Format" value="3,6" />
       </Group>
     </Group>
     <Group key="02317902-776e-4659-9a7e-32300499839d">
