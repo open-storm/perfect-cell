@@ -38,9 +38,9 @@ uint8	modem_startup(int *conn_attempts) {
 	iter = 0, ready = 0u;
 
 	// Modem is already connected to network
-        if( modem_state == MODEM_STATE_READY) {
-            return 1u;
-        }
+    if( modem_state == MODEM_STATE_READY) {
+        return 1u;
+    }
 	
 	modem_start();
 	
@@ -87,8 +87,9 @@ uint8 	modem_shutdown() {
 void modem_start(){
     Telit_UART_Start();
     Telit_ControlReg_Write(0u);
-	Telit_ON_Write(1u);			// Prep modem for "push button"
-	Telit_RST_Write(1u);		// Prep modem for "push button"
+    Telit_PWR_Write(1u);
+	Telit_ON_Write(0u);			// Prep modem for "push button"
+	Telit_RST_Write(0u);		// Prep modem for "push button"
     Telit_isr_rx_StartEx(Telit_isr_rx);
     modem_state = MODEM_STATE_OFF;
 }
@@ -99,6 +100,7 @@ void modem_stop(){
     Telit_ControlReg_Write(0u);
 	Telit_ON_Write(0u);			// Save energy by pulling down "push button"
 	Telit_RST_Write(0u);		// Save energy by pulling down "push button"
+    //Telit_PWR_Write(0u);
     Telit_isr_rx_Stop();
     modem_state = MODEM_STATE_OFF;
 }
@@ -188,7 +190,8 @@ uint8 modem_power_on(){
 
 uint8 modem_power_off(){
 	
-    if (modem_state == MODEM_STATE_OFF) {
+    //if (modem_state == MODEM_STATE_OFF) {
+    if(at_write_command("AT\r","OK",1000u) != 1){
         // Modem is already off
         return 1u;
     }
@@ -219,6 +222,7 @@ uint8 modem_power_off(){
         
     
     // Book keeping
+    Telit_PWR_Write(0u);
     Telit_ControlReg_Write(0u);    
     Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
     
