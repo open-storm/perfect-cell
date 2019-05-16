@@ -687,6 +687,10 @@
       <Data key="98c25912-c797-4532-95be-668f773fb40a" value="optical_rain_rx" />
       <Data key="183fa115-4040-42c7-a43d-1b3827ef0197" value="Pin11" />
       <Data key="232f1f8a-9b91-4ce4-bd8a-6419034a1e6e" value="Telit_ON" />
+      <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/6df85302-e45f-45fb-97de-4bdf3128e07b" value="emFile_SPI0_CS" />
+      <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/1425177d-0d0e-4468-8bcc-e638e5509a9b" value="emFile_miso0" />
+      <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/ae249072-87dc-41aa-9405-888517aefa28" value="emFile_sclk0" />
+      <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/ed092b9b-d398-4703-be89-cebf998501f6" value="emFile_mosi0" />
       <Data key="352ff347-bded-4614-9344-3ffa380adc5e" value="WQ_Power" />
       <Data key="555b93d5-50ad-4b61-b4ad-23355d3f7771" value="VBAT_READ" />
       <Data key="600e5e7b-f973-4db3-94bf-8ebaf40edd89" value="Pin37" />
@@ -702,7 +706,7 @@
       <Data key="a9d90236-8478-46e2-a653-5fe0b27cb6be" value="ultrasonic_2_uart_rx" />
       <Data key="a356b867-459f-4973-ba00-5ed48a9e6417" value="Pin25" />
       <Data key="a1879ad6-6ab8-4141-b9e0-b13b9d4403a0" value="Cond_Vout" />
-      <Data key="af68a187-09cf-4e17-9dd4-2236931a4ca3" value="P1_4" />
+      <Data key="af68a187-09cf-4e17-9dd4-2236931a4ca3" value="P1_5" />
       <Data key="b2b84c19-f148-4137-aef6-cebf445aaa45" value="Valve_POS" />
       <Data key="b20ee622-3295-4bb0-94a9-7d964e7fad22" value="Pin4" />
       <Data key="b41c8abe-876a-460f-af8a-b534f4d508e7" value="Pin_Sampler_Trigger" />
@@ -713,6 +717,7 @@
       <Data key="bd7ceefa-d5f6-4bde-a1a0-ac955fde448d" value="toughsonic_rs485_neg" />
       <Data key="beca5e2d-f70f-4900-a4db-7eca1ed3126e/8b77a6c4-10a0-4390-971c-672353e2a49c" value="USBUART_Dm" />
       <Data key="beca5e2d-f70f-4900-a4db-7eca1ed3126e/618a72fc-5ddd-4df5-958f-a3d55102db42" value="USBUART_Dp" />
+      <Data key="c34b31ad-19f5-43e5-a409-5c11db82256d" value="SD_ON" />
       <Data key="c48c6d09-0a00-40fd-b5b2-8d803baf45f7" value="Pin19" />
       <Data key="ce3c56ff-8c34-4dd1-b83c-bb6c0b3eb646" value="Valve_2_POS" />
       <Data key="d7ee0e5d-7398-42c1-8997-3cc887270ea4" value="Valve_POS_EN" />
@@ -3982,6 +3987,26 @@
         <Data key="Port Format" value="15,1" />
       </Group>
     </Group>
+    <Group key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/6df85302-e45f-45fb-97de-4bdf3128e07b">
+      <Group key="0">
+        <Data key="Port Format" value="2,4" />
+      </Group>
+    </Group>
+    <Group key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/1425177d-0d0e-4468-8bcc-e638e5509a9b">
+      <Group key="0">
+        <Data key="Port Format" value="2,1" />
+      </Group>
+    </Group>
+    <Group key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/ae249072-87dc-41aa-9405-888517aefa28">
+      <Group key="0">
+        <Data key="Port Format" value="3,5" />
+      </Group>
+    </Group>
+    <Group key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/ed092b9b-d398-4703-be89-cebf998501f6">
+      <Group key="0">
+        <Data key="Port Format" value="3,4" />
+      </Group>
+    </Group>
     <Group key="352ff347-bded-4614-9344-3ffa380adc5e">
       <Group key="0">
         <Data key="Port Format" value="0,3" />
@@ -4085,6 +4110,11 @@
     <Group key="beca5e2d-f70f-4900-a4db-7eca1ed3126e/618a72fc-5ddd-4df5-958f-a3d55102db42">
       <Group key="0">
         <Data key="Port Format" value="15,6" />
+      </Group>
+    </Group>
+    <Group key="c34b31ad-19f5-43e5-a409-5c11db82256d">
+      <Group key="0">
+        <Data key="Port Format" value="2,5" />
       </Group>
     </Group>
     <Group key="c48c6d09-0a00-40fd-b5b2-8d803baf45f7">

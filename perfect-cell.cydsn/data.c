@@ -182,10 +182,13 @@ uint8 execute_triggers(char *labels[], float readings[], uint8 *array_ix, uint8 
     #if USE_INFLUXDB
     //// Execute triggers
 	// Check if autosampler measurement is to be taken
+    /*    
+    // Remove to test SD Card
 	if ((autosampler_flag == 1u) && (autosampler_trigger > 0)){
         zip_autosampler(labels, readings, array_ix, &autosampler_trigger, &bottle_count, max_size);
 		
 	}
+    */
     // TODO: Valve 1 and Valve 2 should probably handled using a mux
 	if (valve_flag == 1u){
 		zip_valve(labels, readings, array_ix, &valve_trigger, max_size);

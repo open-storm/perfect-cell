@@ -19,7 +19,7 @@
 #include <device.h>
 #include <project.h>
 #include "USBUART.h"
-#include "autosampler.h"
+//#include "autosampler.h"
 #include "data.h"
 #include "extern.h"
 #include "modem.h"
