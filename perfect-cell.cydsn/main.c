@@ -112,9 +112,6 @@ void main() {
     if (connection_flag){
         initialize_modem_params(send_str, response_str, ssl_enabled, ssl_initialized);
     }
-    
-    SD_mkdir(node_id);
-
 
 #ifdef DEBUG
 
@@ -135,6 +132,8 @@ void main() {
     // Initialize loop
     for (;;) {
         if (awake) {
+            LED_Write(!LED_Read());
+            
             // Reset arrays
             clear_all_arrays(1u);
 
