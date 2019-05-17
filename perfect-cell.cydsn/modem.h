@@ -8,6 +8,7 @@
 #ifndef MODEM_H
 #define MODEM_H
 #include <project.h>
+#include "sdcard.h"    
 
 #define MODEM_STATE_OFF         0
 #define MODEM_STATE_IDLE        1

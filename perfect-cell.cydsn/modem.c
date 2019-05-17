@@ -12,6 +12,7 @@
 #include "modem.h"
 #include "strlib.h"
 #include "extern.h"
+#include "sdcard.h"
 //#include "config.h"
 
 // declare variables
@@ -20,6 +21,7 @@ uint8  modem_state, lock_acquired = 0u, ready = 0u;
 uint16 uart_string_index = 0u;
 uint32 feed_id;
 char   modem_received_buffer[MODEM_BUFFER_LENGTH] = {'\0'};
+char   modem_time[25u] = {'\0'};
 char   request_chunk[CHUNK_SIZE] = {'\0'};
 char   modem_apn[50] = "wireless.twilio.com"; // "epc.tmobile.com";
 //char   modem_apn[50] = MODEM_APN; // "epc.tmobile.com";
@@ -77,9 +79,10 @@ uint8	modem_startup(int *conn_attempts) {
 // and power down the modem
 uint8 	modem_shutdown() {
 	if (modem_power_off()){
+        Telit_PWR_Write(0u);
 		return 1u;	
 	}
-	
+	Telit_PWR_Write(0u);
 	return 0u;
 }
 
@@ -129,6 +132,31 @@ uint8 modem_updates_toggle(uint8 updates_enabled){
     return 0u;
 }
 
+uint8 modem_get_time(char *time)
+{
+    /*
+    uint8 modem_get_time(char *time)
+
+    Return the CCID of the cell module
+
+    Example HE910/NL-SW-HSPA Conversation:
+    [Board] AT#CCLK
+    [Modem] AT#CCLK?\r\r\n#CCLK: "00/01/01,00:00:55+00"\r\n\r\nOK
+    */
+
+    // Check for valid response from cellular module
+    if (at_write_command("AT+CCLK?\r", "OK", 1000u) == 1u) {
+        // Expect the UART to contain something like
+        // "#CCLK: "00/01/01,00:00:55+00"\r\n\r\nOK"
+        char *terminator =
+            strextract(modem_received_buffer, time, "+CCLK: ", "\r\n");
+
+        return terminator != NULL;
+    }
+
+    return 0u;
+}
+
 // send at-command to modem
 uint8 at_write_command(char* uart_string, char* expected_response, uint32 uart_timeout){
     uint8 response = 0u;
@@ -147,6 +175,25 @@ uint8 at_write_command(char* uart_string, char* expected_response, uint32 uart_t
             CyDelay(delay);
         }
     }
+    
+    // Back up the modem buffer to the SD card
+    uint8 sd_status = 9;
+    char debug_label[6] = "MODEM";
+    
+    sd_status = SD_mkdir(node_id);
+    
+    sd_status = 9;
+    
+    //sprintf((char*) SD_filename,"\\%.8s\\%.8s.txt", node_id, debug_label);
+    sprintf((char*) SD_filename,"%.8s.txt", debug_label);
+    
+    sd_status = 10;
+    sprintf((char*) SD_body,"%s,%s,%s,%s\r\n",modem_time,debug_label, node_id, uart_string);
+    sd_status = SD_write(SD_filename,SD_filemode,SD_body);  
+    
+    sd_status = 11;
+    sprintf((char*) SD_body,"%s,%s,%s,%s\r\n",modem_time,debug_label, node_id, modem_received_buffer);
+    sd_status = SD_write(SD_filename,SD_filemode,SD_body);  
     
     return response;
 }
@@ -247,6 +294,11 @@ uint8 modem_reset(){
 uint8 modem_setup() {
 /* Initialize configurations for the modem */
     uint8 status = 0u;
+	
+    // Get Latest Time from Modem
+    if (modem_get_time(modem_time)) {
+        status += 16u;
+    }
     
     // Set APN
     if (modem_set_apn()) {
@@ -267,7 +319,6 @@ uint8 modem_setup() {
 	if (modem_set_error_reports(2u)) {
 		status += 8u;
 	}
-	
 	return status;
 }
 
