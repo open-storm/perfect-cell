@@ -26,6 +26,7 @@
 #include "sleep.h"
 #include "startup.h"
 #include "config.h"
+#include "sdcard.h"
 
 #if USE_INFLUXDB
     #include "influxdb.h"
@@ -78,6 +79,9 @@ void main() {
     // Initialize Pins
     init_pins();
     
+    // Initialize SD Card
+    SD_init();
+    
     // Initialize USB UART  
     /* // Doesn't seem to work over 5-pin connector
     USBUART_Start(0,USBUART_DWR_POWER_OPERATION);
@@ -99,11 +103,17 @@ void main() {
     #if USE_INFLUXDB
     status = append_tags(main_tags, "commit_hash", CURRENT_COMMIT);
     #endif
-
+    
+    // Testing the sdcard library
+    //int status;
+    //status = SD_mkdir(node_id);
+    
     // Update metadata (node_id, user, pass, database
     if (connection_flag){
         initialize_modem_params(send_str, response_str, ssl_enabled, ssl_initialized);
     }
+    
+    SD_mkdir(node_id);
 
 
 #ifdef DEBUG
