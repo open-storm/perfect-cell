@@ -20,9 +20,10 @@
 #include "sdcard.h"
 
 // Preallocate card
-char    dir[10]      = {'\0'};
-char    filename[30] = "Filename.txt";
-char    filemode[5]  = "a+";
+char    SD_dir[10]      = {'\0'};
+char    SD_body[3000]   = {'\0'};
+char    SD_filename[30] = "Filename.txt";
+char    SD_filemode[5]  = "a+";
 
 void SD_init()
 {
@@ -52,8 +53,8 @@ uint8 SD_mkdir(char* dir_name)
     // Turn on the SD Card
     SD_ON_Write(1u);
     
-    sprintf(dir,"%.8s",dir_name); 
-    status = (uint8) ( 1+FS_MkDir(dir) );
+    sprintf(SD_dir,"%.8s",dir_name); 
+    status = (uint8) ( 1+FS_MkDir(SD_dir) );
     // The arithmetic makes it 0 if a failure, 1 if successful
     
     // Turn off the SD Card
@@ -76,6 +77,9 @@ uint8 SD_write(const char * fileName, const char * pMode, const void * pData)
     uint8 status = 9u; // initialize to a value not 0 or 1
     FS_FILE *pFile;
 
+    // Turn on the SD Card
+    SD_ON_Write(1u);
+    
     pFile = FS_FOpen(fileName, pMode);
     
     // If the SD card doesn't open, try reinitializing the filesystem
@@ -93,6 +97,9 @@ uint8 SD_write(const char * fileName, const char * pMode, const void * pData)
         // FS_FClose returns 1 if there's a failure, 0 if successful
         // The arithmetic makes it 0 if a failure, 1 if successful
     }
+    
+    // Turn off the SD Card
+    SD_ON_Write(0u);      
     
     return status;
 }

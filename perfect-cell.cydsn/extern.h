@@ -28,6 +28,13 @@ extern uint8 array_ix;
 
 // Buffer for cell module
 extern char modem_received_buffer[MODEM_BUFFER_LENGTH];
+extern char modem_time[25u];
+
+// Buffer for SD card
+extern char	    SD_dir[10];
+extern char     SD_body[3000];
+extern char     SD_filename[30];
+extern char     SD_filemode[5];
 
 // SSL/TLS enabled?
 extern uint8 ssl_enabled;

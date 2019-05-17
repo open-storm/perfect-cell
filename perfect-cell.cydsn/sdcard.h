@@ -21,10 +21,7 @@
 #define SDCARD_H
 #include <project.h>
 #include <FS.h>
-
-extern char	    dir[10];
-extern char     filename[30];
-char            filemode[5];
+#include "extern.h"
 
 /**
  * @brief Initialize the file system for the SD card
