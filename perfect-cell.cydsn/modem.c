@@ -40,10 +40,11 @@ uint8	modem_startup(int *conn_attempts) {
 	iter = 0, ready = 0u;
 
 	// Modem is already connected to network
+    /*
     if( modem_state == MODEM_STATE_READY) {
         return 1u;
     }
-	
+	*/
 	modem_start();
 	
 	while( iter < max_conn_attempts ) {
@@ -199,11 +200,14 @@ uint8 at_write_command(char* uart_string, char* expected_response, uint32 uart_t
 }
 
 uint8 modem_power_on(){
+    
+    Telit_PWR_Write(1u);
 
-    if (modem_state != MODEM_STATE_OFF) {
+    //if (modem_state != MODEM_STATE_OFF) {
+    if(at_write_command("AT\r","OK",1000u) == 1){
         // Modem is already on
         return 1u;
-    }
+    }    
     
     // Set ON, PWR pins low
     Telit_ON_Write(0u); 
