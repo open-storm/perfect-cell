@@ -132,7 +132,7 @@ void main() {
     // Initialize loop
     for (;;) {
         if (awake) {
-            LED_Write(!LED_Read());
+            //LED_Write(!LED_Read());
             
             // Reset arrays
             clear_all_arrays(1u);
