@@ -4243,7 +4243,7 @@
     <Data key="CYDEV_BOOTLOADER_VERSION" value="0x0000" />
     <Data key="CYDEV_BOOTLOADER_WAIT_COMMAND" value="True" />
     <Data key="CYDEV_BOOTLOADER_WAIT_TIME" value="200" />
-    <Data key="CYDEV_CONFIG_FASTBOOT_ENABLED" value="True" />
+    <Data key="CYDEV_CONFIG_FASTBOOT_ENABLED" value="False" />
     <Data key="CYDEV_CONFIG_UNUSED_IO" value="AllowButWarn" />
     <Data key="CYDEV_CONFIGURATION_ECC" value="True" />
     <Data key="CYDEV_CONFIGURATION_MODE" value="COMPRESSED" />
