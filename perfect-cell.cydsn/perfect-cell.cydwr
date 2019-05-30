@@ -666,6 +666,7 @@
       <Data key="6ca26021-e296-4299-a44d-912edb52a8e5" value="Cond_Vs" />
       <Data key="07a3a982-785d-4135-b6ea-63f37708e980" value="P3_2" />
       <Data key="07aa2354-0a5c-4e71-89c1-4f0d736c7c74" value="ultrasonic_2_uart_rx" />
+      <Data key="7b46295b-df67-49d3-a248-bbbee5a8d70a" value="P1_0" />
       <Data key="7ba34e2d-80bd-4e11-9c39-d1651e67aa1b" value="Pin10" />
       <Data key="7d9aab8e-9c62-4b52-940a-8a290a6630d8" value="Valve_2_IN" />
       <Data key="8bcff14f-287f-435b-a7ae-7c66a3ac1d10" value="Pin38" />
@@ -688,6 +689,7 @@
       <Data key="98c25912-c797-4532-95be-668f773fb40a" value="optical_rain_rx" />
       <Data key="183fa115-4040-42c7-a43d-1b3827ef0197" value="Pin11" />
       <Data key="232f1f8a-9b91-4ce4-bd8a-6419034a1e6e" value="Telit_ON" />
+      <Data key="287a471d-0a37-481c-8c2c-3aae355ddb1a" value="P12_1" />
       <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/6df85302-e45f-45fb-97de-4bdf3128e07b" value="emFile_SPI0_CS" />
       <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/1425177d-0d0e-4468-8bcc-e638e5509a9b" value="emFile_miso0" />
       <Data key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/ae249072-87dc-41aa-9405-888517aefa28" value="emFile_sclk0" />
@@ -701,6 +703,7 @@
       <Data key="22863ebe-a37b-476f-b252-6e49a8c00b12" value="SDA_1" />
       <Data key="32529dad-e9ea-4858-b902-dfcfbe03a8fe" value="Pin31" />
       <Data key="54910f3b-3473-4f5e-8420-ec9e73e73a7c" value="P3_0" />
+      <Data key="791983d8-c6f6-4f1e-a850-ac74ad340574" value="P1_3" />
       <Data key="1425177d-0d0e-4468-8bcc-e638e5509a9b" value="Telit_rx" />
       <Data key="02317902-776e-4659-9a7e-32300499839d" value="Pin7" />
       <Data key="52479214-6433-404f-91c4-fa460c99e439" value="P1_4" />
@@ -3905,6 +3908,11 @@
         <Data key="Port Format" value="12,7" />
       </Group>
     </Group>
+    <Group key="7b46295b-df67-49d3-a248-bbbee5a8d70a">
+      <Group key="0">
+        <Data key="Port Format" value="1,0" />
+      </Group>
+    </Group>
     <Group key="7ba34e2d-80bd-4e11-9c39-d1651e67aa1b">
       <Group key="0">
         <Data key="Port Format" value="12,6" />
@@ -3917,7 +3925,7 @@
     </Group>
     <Group key="8c419210-f1b9-4d89-9fc7-45a59d4e71ff">
       <Group key="0">
-        <Data key="Port Format" value="12,1" />
+        <Data key="Port Format" value="1,1" />
       </Group>
     </Group>
     <Group key="8d47b6e8-182d-4bb2-95c0-5d903820ee01">
@@ -3995,6 +4003,11 @@
         <Data key="Port Format" value="15,1" />
       </Group>
     </Group>
+    <Group key="287a471d-0a37-481c-8c2c-3aae355ddb1a">
+      <Group key="0">
+        <Data key="Port Format" value="12,1" />
+      </Group>
+    </Group>
     <Group key="0315f99c-26f0-4ff3-b00e-f1f685e184aa/6df85302-e45f-45fb-97de-4bdf3128e07b">
       <Group key="0">
         <Data key="Port Format" value="2,4" />
@@ -4053,6 +4066,11 @@
     <Group key="54910f3b-3473-4f5e-8420-ec9e73e73a7c">
       <Group key="0">
         <Data key="Port Format" value="3,0" />
+      </Group>
+    </Group>
+    <Group key="791983d8-c6f6-4f1e-a850-ac74ad340574">
+      <Group key="0">
+        <Data key="Port Format" value="1,3" />
       </Group>
     </Group>
     <Group key="1425177d-0d0e-4468-8bcc-e638e5509a9b">
@@ -4260,7 +4278,7 @@
     <Data key="CYDEV_CONFIGURATION_ECC" value="True" />
     <Data key="CYDEV_CONFIGURATION_MODE" value="COMPRESSED" />
     <Data key="CYDEV_CUSTOM_ID" value="0x00000000" />
-    <Data key="CYDEV_DEBUGGING_DPS" value="SWD_SWV" />
+    <Data key="CYDEV_DEBUGGING_DPS" value="Disable" />
     <Data key="CYDEV_DEBUGGING_REQXRES" value="True" />
     <Data key="CYDEV_DEBUGGING_XRES" value="False" />
     <Data key="CYDEV_ECC_ENABLE" value="False" />
