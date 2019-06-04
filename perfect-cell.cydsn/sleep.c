@@ -17,6 +17,36 @@ void initialize_sleeptimer(){
 void go_to_sleep(int sleeptimer, uint8 *awake){
     int wakeup_interval_counter = 0u;
     
+    /*
+    USBUART_Suspend();
+    I2C_Sleep();
+    
+    emFile_Sleep();
+    
+    Telit_UART_Sleep();
+    Telit_ControlReg_Sleep();
+    
+    VBAT_ADC_Sleep();
+    
+    Senix_Comp_Sleep();
+    Sensors_UART_Sleep();
+    mux_controller_Sleep();
+    
+    SDI12_UART_Sleep();
+    SDI12_control_reg_Sleep();
+    */
+    
+    // Set Drive mode to Strong Drive
+    VBAT_SetDriveMode(CY_PINS_DM_STRONG);
+    Valve_POS_SetDriveMode(CY_PINS_DM_STRONG);
+    Valve_2_POS_SetDriveMode(CY_PINS_DM_STRONG);
+    SDI12_Data_SetDriveMode(CY_PINS_DM_STRONG);
+    CyPins_SetPinDriveMode(CYREG_PRT3_PC6, CY_PINS_DM_STRONG); // Telit_rx              (Hi-Z Digital)
+    CyPins_SetPinDriveMode(CYREG_PRT0_PC5, CY_PINS_DM_STRONG); // toughsonic_rs485_neg  (Hi-Z Analog)
+    CyPins_SetPinDriveMode(CYREG_PRT0_PC6, CY_PINS_DM_STRONG); // toughsonic_rs485_pos  (Hi-Z Analog)
+    CyPins_SetPinDriveMode(CYREG_PRT12_PC3,CY_PINS_DM_STRONG); // ultrasonic_uart_rx    (Hi-Z Digital)
+    CyPins_SetPinDriveMode(CYREG_PRT12_PC7,CY_PINS_DM_STRONG); // ultrasonic_uart_tx    (Hi-Z Digital)
+    
     // Prepares system clocks for the Sleep mode
     CyPmSaveClocks();
     
@@ -34,13 +64,25 @@ void go_to_sleep(int sleeptimer, uint8 *awake){
             wakeup_interval_counter = 0u;
                 *awake = 1u;
         } else {
-        wakeup_interval_counter++;
+            wakeup_interval_counter++;
         }
 
     } while (wakeup_interval_counter != 0u);
 
     // Restore clock configuration
     CyPmRestoreClocks();
+    
+    // Reset Drive mode
+    VBAT_SetDriveMode(CY_PINS_DM_ALG_HIZ);
+    Valve_POS_SetDriveMode(CY_PINS_DM_ALG_HIZ);
+    Valve_2_POS_SetDriveMode(CY_PINS_DM_ALG_HIZ);
+    SDI12_Data_SetDriveMode(CY_PINS_DM_RES_DWN);
+    CyPins_SetPinDriveMode(CYREG_PRT3_PC6, CY_PINS_DM_DIG_HIZ); // Telit_rx              (Hi-Z Digital)
+    CyPins_SetPinDriveMode(CYREG_PRT0_PC5, CY_PINS_DM_ALG_HIZ); // toughsonic_rs485_neg  (Hi-Z Analog)
+    CyPins_SetPinDriveMode(CYREG_PRT0_PC6, CY_PINS_DM_ALG_HIZ); // toughsonic_rs485_pos  (Hi-Z Analog)
+    CyPins_SetPinDriveMode(CYREG_PRT12_PC3,CY_PINS_DM_DIG_HIZ); // ultrasonic_uart_rx    (Hi-Z Digital)
+    CyPins_SetPinDriveMode(CYREG_PRT12_PC7,CY_PINS_DM_DIG_HIZ); // ultrasonic_uart_tx    (Hi-Z Digital)
+   
 }
 
 /* [] END OF FILE */

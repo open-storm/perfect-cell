@@ -27,7 +27,9 @@ char    SD_filemode[5]  = "a+";
 
 void SD_init()
 {
-    return FS_Init();  
+    FS_Init();  
+    emFile_Sleep();
+    return;
     
     /* Uncomment to enable support for long file names
      * Note: To use long file names (LFN) support on PSoC 5LP devices, you must call
@@ -47,6 +49,9 @@ uint8 SD_mkdir(char* dir_name)
 {
     uint8 status = 9; // initialize to a value not 0 or -1
     
+    // Wakeup the SD Card component
+    emFile_Wakeup();
+    
     // Make a directory for the node using its node_id //
     // We are using the "No Long File Name (LFN)" library,
     //  so names are limited to 8 characters and 3 bytes for extensions
@@ -59,6 +64,9 @@ uint8 SD_mkdir(char* dir_name)
     
     // Turn off the SD Card
     SD_ON_Write(0u);   
+    
+    // Sleep the SD Card component
+    emFile_Sleep();
     
     return status;
 }
@@ -77,6 +85,9 @@ uint8 SD_write(const char * fileName, const char * pMode, const void * pData)
     uint8 status = 9u; // initialize to a value not 0 or 1
     FS_FILE *pFile;
 
+    // Wakeup the SD Card component
+    emFile_Wakeup();
+    
     // Turn on the SD Card
     SD_ON_Write(1u);
     
@@ -99,7 +110,10 @@ uint8 SD_write(const char * fileName, const char * pMode, const void * pData)
     }
     
     // Turn off the SD Card
-    SD_ON_Write(0u);      
+    SD_ON_Write(0u);  
+    
+    // Sleep the SD Card component
+    emFile_Sleep();
     
     return status;
 }
