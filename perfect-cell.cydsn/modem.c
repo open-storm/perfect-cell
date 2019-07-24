@@ -81,9 +81,17 @@ uint8	modem_startup(int *conn_attempts) {
 uint8 	modem_shutdown() {
 	if (modem_power_off()){
         Telit_PWR_Write(0u);
+        Telit_ControlReg_Write(0u);    
+        Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
+    
+        modem_state = MODEM_STATE_OFF;
 		return 1u;	
 	}
 	Telit_PWR_Write(0u);
+    Telit_ControlReg_Write(0u);    
+    Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
+    
+    modem_state = MODEM_STATE_OFF;    
 	return 0u;
 }
 

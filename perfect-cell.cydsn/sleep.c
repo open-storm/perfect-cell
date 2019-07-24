@@ -46,6 +46,11 @@ void go_to_sleep(int sleeptimer, uint8 *awake){
     CyPins_SetPinDriveMode(CYREG_PRT0_PC6, CY_PINS_DM_STRONG); // toughsonic_rs485_pos  (Hi-Z Analog)
     CyPins_SetPinDriveMode(CYREG_PRT12_PC3,CY_PINS_DM_STRONG); // ultrasonic_uart_rx    (Hi-Z Digital)
     CyPins_SetPinDriveMode(CYREG_PRT12_PC7,CY_PINS_DM_STRONG); // ultrasonic_uart_tx    (Hi-Z Digital)
+    emFile_miso0_Write(0u);
+    emFile_mosi0_Write(0u);
+    emFile_sclk0_Write(0u);
+    emFile_SPI0_CS_Write(0u);
+    SD_Detected_Write(0u);
     
     // Prepares system clocks for the Sleep mode
     CyPmSaveClocks();
