@@ -36,7 +36,7 @@ uint8 counter_sensor_initialize(){
 uint8 initialize_ssl(uint8 *ssl_enabled, uint8 *ssl_initialized){
     // TODO: This requires the modem to connect to the network
     // But really all we need to do is flip power and activate PDP context
-    if (modem_startup(&connection_attempt_counter)){
+    /*if (modem_startup(&connection_attempt_counter)){
         modem_ssl_toggle(*ssl_enabled);
         // Initialize SSL if enabled
         if (*ssl_enabled){
@@ -49,7 +49,8 @@ uint8 initialize_ssl(uint8 *ssl_enabled, uint8 *ssl_initialized){
             }
         }
     }
-    return *ssl_initialized;
+    return *ssl_initialized;*/
+    return 1u;
 }
 
 /* [] END OF FILE */

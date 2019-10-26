@@ -68,7 +68,7 @@ uint8 ssl_initialized = 0u;
 // Misc function declarations
 void clear_all_arrays(uint8 clear_readings_and_labels);
 
-void main() {
+int main(void) {
     CyGlobalIntEnable; /* Uncomment this line to enable global interrupts. */
     // Short delay to make sure device is ready for low power entry
     CyDelay(5u);

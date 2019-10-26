@@ -23,69 +23,144 @@ uint32 feed_id;
 char   modem_received_buffer[MODEM_BUFFER_LENGTH] = {'\0'};
 char   modem_time[25u] = {'\0'};
 char   request_chunk[CHUNK_SIZE] = {'\0'};
-char   modem_apn[50] = "VZWINTERNET";
+char   modem_apn[50] = "wireless.twilio.com"; // "epc.tmobile.com";
+//char   modem_apn[50] = MODEM_APN; // "epc.tmobile.com";
 
-// modem interrupt declaration
+// prototype modem interrupt
 CY_ISR_PROTO(Telit_isr_rx);
 void uart_string_reset();
 
-uint8 modem_startup(int *conn_attempts) {
-    // Modem is already connected to network
-    if (modem_state == MODEM_STATE_READY) {
+// startup sequence to power on the modem, start modem
+// components and prepare for sending/receiving messages
+// over the network
+//
+// returns the status of the modem and stores the number
+// of connection attempts made in *conn_attempts
+uint8	modem_startup(int *conn_attempts) {
+	iter = 0, ready = 0u;
+
+	// Modem is already connected to network
+    /*
+    if( modem_state == MODEM_STATE_READY) {
         return 1u;
     }
-    
-	// Attempt to connect to network
-	for (int i = 0; i < max_conn_attempts; ++i) {
-        ++*conn_attempts;
-        if (modem_power_on()) {
-		    modem_setup();
-			modem_connect();
-			if (modem_state == MODEM_STATE_READY) {
-                return 1u;
-            }
-		} else {
+	*/
+	modem_start();
+	
+	while( iter < max_conn_attempts ) {
+		iter++;
+        *conn_attempts = *conn_attempts + 1;  //alternatively, ++*conn_attempts;
+
+		/* Set up the modem */
+		ready = modem_power_on();
+		
+		modem_setup();
+		
+		if ( ready == 1u ) {
+            
+			// Connect modem to network
+			ready = modem_connect();
+			
+			if( ready == 3u ) {
+                
+                iter = max_conn_attempts;//break;	
+				return 1u;
+			}
+		}
+		else {
 			modem_reset();
 		}
 	}
 	
-	// Failed to connect
+	// Timed out -- Failed to connect
 	return 0u;
 }
 
-uint8 modem_shutdown() {
-    modem_disconnect();
-	return modem_power_off();
+// shutdown sequence to stop modem components
+// and power down the modem
+uint8 	modem_shutdown() {
+	if (modem_power_off()){
+        Telit_PWR_Write(0u);
+        Telit_ControlReg_Write(0u);    
+        Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
+    
+        modem_state = MODEM_STATE_OFF;
+		return 1u;	
+	}
+	Telit_PWR_Write(0u);
+    Telit_ControlReg_Write(0u);    
+    Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
+    
+    modem_state = MODEM_STATE_OFF;    
+	return 0u;
 }
 
 // initialize modem
 void modem_start(){
-    /* Do nothing */
+    Telit_UART_Start();
+    Telit_ControlReg_Write(0u);
+    Telit_PWR_Write(1u);
+	Telit_ON_Write(0u);			// Prep modem for "push button"
+	Telit_RST_Write(0u);		// Prep modem for "push button"
+    Telit_isr_rx_StartEx(Telit_isr_rx);
+    modem_state = MODEM_STATE_OFF;
 }
 
 // deinitialize modem
 void modem_stop(){
-    /* Do nothing */
+    Telit_UART_Stop();
+    Telit_ControlReg_Write(0u);
+	Telit_ON_Write(0u);			// Save energy by pulling down "push button"
+	Telit_RST_Write(0u);		// Save energy by pulling down "push button"
+    //Telit_PWR_Write(0u);
+    Telit_isr_rx_Stop();
+    modem_state = MODEM_STATE_OFF;
 }
 
 uint8 modem_updates_toggle(uint8 updates_enabled){
-    /* Do nothing */
-    return 1u;
+    char cmd[20];
+    char updates_state[5] = {'\0'};
+
+    // Send AT read command to determine if updates are already enabled
+    if (at_write_command("AT#OMADMCEN?\r", "OK", 1000u)) {
+        // Extract current updates state into updates_state
+        strextract(modem_received_buffer, updates_state, "OMADMCEN: 1,", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(updates_state) != updates_enabled) {
+            // Construct AT command
+            sprintf(cmd, "AT#OMADMCEN=%u\r", updates_enabled);
+
+            // Enable/disable updates
+            return at_write_command(cmd, "OK", 5000u);
+        } else {
+            return 1u;
+        }
+    }
+
+    return 0u;
 }
 
-uint8 modem_get_time(char *time) {
+uint8 modem_get_time(char *time)
+{
     /*
-    Returns real time clock info from the cell module
+    uint8 modem_get_time(char *time)
 
-    Example Conversation:
-    [Board] AT+CCLK?
-    [Modem] +CCLK: "19/10/24,00:00:55-00"
-    
-            OK
+    Return the CCID of the cell module
+
+    Example HE910/NL-SW-HSPA Conversation:
+    [Board] AT#CCLK
+    [Modem] AT#CCLK?\r\r\n#CCLK: "00/01/01,00:00:55+00"\r\n\r\nOK
     */
-    if (at_write_command("AT+CCLK?\r", "OK", 1000u)) {
-        strextract(modem_received_buffer, time, "+CCLK: \"", "\"\r\n");
-        return time != NULL;
+
+    // Check for valid response from cellular module
+    if (at_write_command("AT+CCLK?\r", "OK", 1000u) == 1u) {
+        // Expect the UART to contain something like
+        // "#CCLK: "00/01/01,00:00:55+00"\r\n\r\nOK"
+        char *terminator =
+            strextract(modem_received_buffer, time, "+CCLK: ", "\r\n");
+
+        return terminator != NULL;
     }
 
     return 0u;
@@ -133,183 +208,285 @@ uint8 at_write_command(char* uart_string, char* expected_response, uint32 uart_t
 }
 
 uint8 modem_power_on(){
-    // Modem is already on
-    if (at_write_command("AT\r", "OK", 1000u)) {
-        return 1u;
-    }
     
-    // Initialize UART interrupts
-    Telit_UART_Start();
-    Telit_isr_rx_StartEx(Telit_isr_rx);
+    Telit_PWR_Write(1u);
+
+    //if (modem_state != MODEM_STATE_OFF) {
+    if(at_write_command("AT\r","OK",1000u) == 1){
+        // Modem is already on
+        return 1u;
+    }    
+    
+    // Set ON, PWR pins low
+    Telit_ON_Write(0u); 
+    Telit_RST_Write(0u);
+    
+    // Provide power to Telit module
     Telit_ControlReg_Write(1u);
     
-    // Start boot sequence
-    Telit_PWR_Write(1u);
-    Telit_ON_Write(0u);
-    CyDelay(100u);
-    Telit_ON_Write(1u);
+    // "Push" the ON button for 2 seconds
+    Telit_ON_Write(1u); 
+    //CyDelay(2000u);     // the pad ON# must be tied low for at least 1 second and then released.
+    //CyDelay(1500u);     // At least 3 seconds if VBAT < 3.4 for GC 864
     
-    // Wait 30 seconds for boot
-    CyDelay(30000u);
+    // Leave pin high as long as we want to keep Nimbelink modules ON
+    //Telit_ON_Write(0u); 
+    
+    CyDelay(30000u);  
+    /* NOTE:
+        "To get the desirable stability, 
+        CC864-DUAL needs at least 10 seconds 
+        after the PWRMON goes HIGH.*/
 	
-    // Check modem responds to AT
-	if (at_write_command("AT\r", "OK", 1000u)) {    
+	if(at_write_command("AT\r","OK",1000u) == 1){    
         modem_state = MODEM_STATE_IDLE;
         return modem_state;
-    }
+    }	
 	
 	// Failed to turn on
     return 0u;
 }
 
 uint8 modem_power_off(){
-    // Modem is already off
-    if (!at_write_command("AT\r", "OK", 1000u)) {
+	
+    //if (modem_state == MODEM_STATE_OFF) {
+    if(at_write_command("AT\r","OK",1000u) != 1){
+        // Modem is already off
         return 1u;
     }
+	
+    // Try to disconnect the modem.  
+    // Continue whether or not disconnect is successful
+    modem_disconnect();
     
-    // Start shutdown sequence
-    at_write_command("AT^SMSO", "OK", 5000u);
-    
-    // Deinitialize UART interrupts
-    Telit_ControlReg_Write(0u);
-    Telit_isr_rx_Stop();
-    Telit_UART_Stop();
+
+    if(at_write_command("AT#SHDN","OK",1000u) == 1){
+        // Once we get the OK, immediately pull down the Power pin
+        // to prevent turning the Nimbelink module back on
+        Telit_ON_Write(0u);
+    }
+    else {
+        // If the command fails, issue a hard reset  
+        // "Push" the ON button for 
+        Telit_ON_Write(1u);
+        CyDelay(2500u);  // To turn the CC864-DUAL off, the ON/OFF Pin must be tied low for 2 second and then released.
+        Telit_ON_Write(0u);
+        
+        CyDelay(5000u); 
+        /* wait for module to turn off
+            "Normally it will be above 10 seconds later from releasing
+            ON/OFF# and DTE should monitor the status of PWRMON to see the
+            actual power off."  */
+    }   
+        
     
     // Book keeping
-    Telit_PWR_Write(0u);  
-    Telit_RST_Write(0u);
-    Telit_ON_Write(0u);
+    Telit_PWR_Write(0u);
+    Telit_ControlReg_Write(0u);    
+    Telit_RST_Write(0u); // Make sure the RESET "button" is not pressed
     
-    // Set modem state
     modem_state = MODEM_STATE_OFF;
     return 1u;
 }
 
-uint8 modem_reset() {
-    if (modem_state == MODEM_STATE_OFF) {
-        return modem_state;
-    }
+uint8 modem_reset(){
+    if (modem_state != MODEM_STATE_OFF) { // The modem is idle/ready (powered on)
         
-    Telit_RST_Write(1u);
-    CyDelay(200u);
-    Telit_RST_Write(0u);
-    CyDelay(5000u);
-    
-    modem_state = MODEM_STATE_IDLE;
+        Telit_RST_Write(1u);
+        CyDelay(500u);  //   To reset and to reboot the module, 
+                        // the RESET pin must be tied low for at least 200 milliseconds and then released.
+        Telit_RST_Write(0u);
+        
+        CyDelay(5000u);
+        modem_state = MODEM_STATE_IDLE;
+    }
     return modem_state;
 }
 
 uint8 modem_setup() {
+/* Initialize configurations for the modem */
     uint8 status = 0u;
+	
+    // Get Latest Time from Modem
+    if (modem_get_time(modem_time)) {
+        status += 16u;
+    }
     
     // Set APN
-    status |= modem_set_apn();
-    // Set modem functionality to full
-	status |= modem_set_fun(1u) << 1;
-	// Set error message format to verbose
-	status |= modem_set_error_reports(2u) << 3;
-    // Get latest time from modem
-    // sometimes unix epoch start instead
-    status |= modem_get_time(modem_time) << 4;
-
+    if (modem_set_apn()) {
+        status += 1u;
+    }
+    
+    // Set modem functionality to full functionality
+	if (modem_set_fun(1u)) {
+		status += 2u;
+	}
+    
+    // Set flow control to 0; bypass requirement for CTS, RTS between microprocessor and  module
+    if ( modem_set_flow_control(0u) ) {
+        status += 4u;   
+    }
+    
+	// Set Error Reports to verbose mode
+	if (modem_set_error_reports(2u)) {
+		status += 8u;
+	}
 	return status;
 }
 
 uint8 modem_connect(){
-	uint8 registered = 0u;
-    
-    // Repeatedly check if modem is registered on network
-	for (int i = 0u; i < 3 * max_conn_attempts; ++i) {
-        if ((registered = modem_check_network())) break;
+/* Establish modem connection with the network */	
+	uint8 count = 0u, network_status = 0u;
+	
+	// Check if modem is registered on home network
+	// Buffer should return +CREG: 0,1
+	// modem_check_network returns 1u if buffer contains ",1"
+	network_status = modem_check_network();
+
+	while(network_status == 0u && count < 3*max_conn_attempts) {
+
+        // TODO: Investigate how many iterations we need (10/20/2016)
+        // Previously, the delay was 3000 ms, but was this loop was 
+        // changed to ping the modem more frequently over the same time period
+        network_status = modem_check_network();
 		CyDelay(1000u);
+        count++;
+
 	}
 	
-	if (registered && modem_pdp_context_toggle(1u)) {
-	    modem_state = MODEM_STATE_READY;
+	if (network_status == 1u) {		
+		// Try to activate network context
+		// #SGACT1,<0,1> is for multisocket
+		// For now, use #GPRS, which is from Enhanced Easy IP commands
+	    if(modem_pdp_context_toggle(1u)){    
+		//if(at_write_command("AT#GPRS=1\r","OK",5000u) == 1){    // Used for GSM (ATT, TMobile)
+	        modem_state = MODEM_STATE_READY;
+	        return modem_state;
+	    }		
 	}
+	
 
-    return modem_state;   
+    return modem_state;
+        
 }
 
 uint8 modem_disconnect(){
-    return modem_pdp_context_toggle(0u);
+/* Close modem connection to network */
+	
+    // Override the check below for modem_state and attempt to close the pdp context
+    // modem_pdp_context_toggle(0u) already checks if the PDP context is in the correct state
+    return (modem_pdp_context_toggle(0u));
+    
+    /*
+    // Proceed if modem is not connected to network.  Otherwise, try to disconnect from the network and proceed.
+    if(modem_state != MODEM_STATE_READY) {
+        // Can use this statement instead for GSM (ATT, TMobile)
+		// return (at_write_command("AT#GPRS=0\r","OK",5000u) == 1u);
+		//
+		return (modem_pdp_context_toggle(0u));
+			
+    }
+    return 0u; // failed to disconnect
+    */
 }
 
 uint8 modem_check_network() {
-    /*
-    Returns whether the cell module is registered to its home network
-    
-    Example Conversation:
-    [Board] AT+CEREG?
-    [Modem] +CEREG: 0,1
-    
-            OK
-    */
-    return at_write_command("AT+CEREG?\r", ",1", 1000u);      
+    if(at_write_command("AT+CREG?\r",",1",1000u) == 1u){      
+        return 1u;
+    }
+
+    return 0u;      
 }
 
 uint8 modem_get_meid(char *meid) {
     /*
+    int modem_get_meid(char* meid)
+
     Return the MEID of the cell module
-    
-    Example Conversation:
-    [Board] AT+CCID?
-    [Modem] +CCID: "A1000049AB9082",""
+    - Tested for CC864-DUAL and DE910-DUAL
+
+    Example CC864-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A10000,32B9F1C0
+
+            OK
+
+    Example DE910-DUAL Conversation:
+    [Board] AT#MEID?
+    [Modem] #MEID: A1000049AB9082
 
             OK
     */
-    if (at_write_command("AT+CCID?\r", "OK", 1000u)) {
-        char *end = strextract(modem_received_buffer, meid, "+CCID: \"", "\",\"");
-        return end != NULL;
+
+    // Check for valid response from cellular module
+    if (at_write_command("AT+CCID?\r", "OK", 1000u) == 1u) { // Read SIM like for Nimbelink NL-SW-HSPA
+    //if (at_write_command("AT#MEID?\r", "OK", 1000u) == 1u) {
+        // Expect the UART to contain something like
+        // "\r\n#MEID: A10000,32B9F1C0\r\n\r\nOK"
+        char *terminator =
+            strextract(modem_received_buffer, meid, "+CCID: ", "\r\n"); // Read SIM like for Nimbelink NL-SW-HSPA
+            //strextract(modem_received_buffer, meid, "#MEID: ", "\r\n");
+
+        // In the case for modules like CC864-DUAL where "," is in the middle of
+        // the MEID, remove the comma
+        // * Assume only 1 comma needs to be removed
+        char *comma = strstr(meid, ",");
+        if (comma != NULL) {
+            // +1 to include the null terminating character of a c string
+            memmove(comma, comma + 1, strlen(comma) + 1);
+        }
+
+        return terminator != NULL;
     }
 
     return 0u;
 }
 
-uint8 modem_check_signal_quality(int *rsrq, int *rsrp) {
+uint8 modem_check_signal_quality(int *rssi, int *fer) {
     /*
-    Returns the reference signal received quality (rsrq)
-    This value ranges from 0-34, or 255 if unknown/undetectable
+    Returns the received signal strength indication (rssi) of the modem
+    This value ranges from 0-31, or is 99 if unknown/undetectable
 
-    Also returns the reference signal received power (rsrp)
-    This value ranges from 0-97, or 255 if unknown/undetectable
+    Also returns the frame rate error (fer) of the modem.
+    This value ranges from 0-7, or is 99 if unknown/undetectable.
+    (From experience, fer is almost always 99)
 
-    Example Conversation:
-    [Board] AT+CESQ
-    [Modem] +CESQ: 99,99,255,255,27,43
+    Example conversation:
+    [Board] AT+CSQ
+    [Modem] +CSQ: 17,99
 
             OK
     */
-    if (at_write_command("AT+CESQ\r", "OK", 1000u)) {
-        char rsrq_str[4] = {'\0'}, rsrp_str[4] = {'\0'};
-        char *comma = strrchr(modem_received_buffer, ',');
-        *comma = '\0'; strncpy(rsrp_str, comma + 1, 3);
-        comma = strrchr(modem_received_buffer, ',');
-        strncpy(rsrq_str, comma + 1, 3);
 
-        *rsrq = atoi(rsrq_str);  // "27" in example
-        *rsrp = atoi(rsrp_str);  // "43" in example
-        return 1u;
+    // Check for valid response from cellular module
+    if (at_write_command("AT+CSQ\r", "OK", 1000u) == 1u) {
+        char rssi_str[4] = {'\0'};
+        char fer_str[4] = {'\0'};
+
+        // Expect the UART to contain something like "+CSQ: 17,99\r\n\r\nOK"
+        char *comma = strextract(modem_received_buffer, rssi_str, "+CSQ: ", ",");
+        char *terminator = strextract(comma, fer_str, ",", "\r\n");
+
+        *rssi = atoi(rssi_str);  // Containing "17"
+        *fer = atoi(fer_str);   // Containing "99"
+
+        return terminator != NULL;
     }
 
     return 0u;
 }
 
 int modem_get_socket_status() {
-    /*
-    Returns the status of internet service profile 3
-    
-    Example Conversation:
-    [Board] AT^SISI?
-    [Modem] ^SISI: 3,6,20,3,3,0
-    
-            OK
-    */
-    if (at_write_command("AT^SISI?\r", "OK", 1000u)) {
+    // Check for valid response from cellular module
+    if (at_write_command("AT#SS\r", "OK", 1000u) == 1u) {
         char status_str[5] = {'\0'};
-        strextract(modem_received_buffer, status_str, "^SISI: ", "\r\n");
-        return atoi(status_str); // "6" in example
+
+        // Expect the UART to contain something like "\r\n#SS: 1,0\r\n"
+        strextract(modem_received_buffer, status_str, "#SS: ", "\r\n");
+
+        // status_str should contain something like "1,0"
+        // So increment ptr by 2;
+        return atoi(status_str + 2);
     }
 
     return -1;
@@ -317,73 +494,104 @@ int modem_get_socket_status() {
 
 uint8 modem_set_apn(){
     char cmd[100];
-    sprintf(cmd, "AT+CGDCONT=3,\"IPV4V6\",\"%s\"\r",modem_apn);
-    return at_write_command(cmd,"OK",1000u);
+    sprintf(cmd,"AT+CGDCONT=1,\"IP\",\"%s\"\r",modem_apn);
+    
+    if(at_write_command(cmd,"OK",1000u) == 1u){
+        return 1u;
+    }
+    
+    return 0u;
+    
 }
 
 uint8 modem_set_fun(uint8 param){
     char cmd[100];
-    sprintf(cmd, "AT+CFUN=%u\r", param);
-    return at_write_command(cmd,"OK",1000u);
+    sprintf(cmd,"AT+CFUN=%u\r",param);
+    if(at_write_command(cmd,"OK",1000u) == 1u){      
+        return 1u;
+    }
+
+    return 0u;  
 }
 
 uint8 modem_set_flow_control(uint8 param){
-    /* Do nothing */
+    char cmd[100];
+    sprintf(cmd,"AT&K%u\r",param);
+    if(at_write_command(cmd,"OK",1000u) == 1u){      
+        return 1u;
+    }
+
+    return 0u;  
 }
 
 uint8 modem_set_error_reports(uint8 param){
     char cmd[100];
-    sprintf(cmd, "AT+CMEE=%u\r", param);
-    return at_write_command(cmd,"OK",1000u);
+    sprintf(cmd,"AT+CMEE=%u\r",param);
+    if(at_write_command(cmd,"OK",1000u) == 1u){      
+        return 1u;
+    }
+
+    return 0u;  
 }
 
 uint8 modem_pdp_context_toggle(uint8 activate_pdp) {
-    /*
-    Activate/deactivate internet service using PDP context 3
-    
-    Example Conversation:
-    [Board] AT^SICA?
-    [Modem] ^SICA: 1,1
-            ^SICA: 3,0
-    
-            OK
-    */
     char cmd[20];
     char pdp_state[5] = {'\0'};
 
-    if (at_write_command("AT^SICA?\r", "OK", 1000u)) {
-        // PDP context 3 state already matches
-        strextract(modem_received_buffer, pdp_state, "^SICA: 3,", "\r\n");
-        if (atoi(pdp_state) == activate_pdp) return 1u;
-        
-        // Set context 3 state to activate_pdp, wait 15 seconds
-        sprintf(cmd, "AT^SICA=%u,3\r", activate_pdp);
-        return at_write_command(cmd, "OK", 60000u);
+    // Send AT read command to determine if context is already enabled
+    if (at_write_command("AT#SGACT?\r", "OK", 1000u)) {
+        // Extract current pdp state into pdp_state
+        strextract(modem_received_buffer, pdp_state, "SGACT: 1,", "\r\n");
+
+        // If current state matches desired state, do nothing
+        if (atoi(pdp_state) != activate_pdp) {
+            // Construct AT command
+            sprintf(cmd, "AT#SGACT=1,%u\r", activate_pdp);
+
+            // Enable/disable context
+            return at_write_command(cmd, "OK", 5000u);
+        } else {
+            return 1u;
+        }
     }
 
     return 0u;
-}             
+}                    
 
 uint8 modem_socket_dial(char *socket_dial_str, char* endpoint, int port, 
                         int construct_new, int ssl_enabled){
-	// Create new socket_dial_Str with endpoint and port
+	
 	if (construct_new){
+		// Reset socket dial string if not empty
 	    memset(socket_dial_str, '\0', strlen(socket_dial_str));
-		sprintf(socket_dial_str, "AT^SISS=0,\"address\",\"socktcp://%s:%d\"\r", endpoint, port);
+        if (ssl_enabled){
+            sprintf(socket_dial_str, "%s%s%d%s%s%s", socket_dial_str, "AT#SSLD=1,",
+                port, ",\"", endpoint, "\",0,1,1000\r\0");
+        }
+        else {
+		    sprintf(socket_dial_str, "%s%s%d%s%s%s", socket_dial_str, "AT#SD=1,0,", port, ",\"", endpoint, "\",0,0,1\r\0");
+        }
 	}
-    
 	if( modem_state == MODEM_STATE_READY ){
+		// Reset uart for incoming data from modem
         uart_string_reset();
-        return (at_write_command("AT^SISS=0,srvType,\"Socket\"\r", "OK", 2000u) &&
-                at_write_command("AT^SISS=0,conID,\"3\"\r", "OK", 2000u) &&
-                at_write_command(socket_dial_str, "OK", 2000u) &&
-                at_write_command("AT^SISO=0\r", "^SISW: 0,1", 30000u));
+        if(at_write_command(socket_dial_str,"OK",15000u)){      
+            return 1u;
+        }
 	}
-    return 0u;
+    return 0u;  
 }
 
 uint8 modem_socket_close(int ssl_enabled){
-    return at_write_command("AT^SISC=0\r", "OK", 1000u);  
+    if (ssl_enabled){
+        if(at_write_command("AT#SSLH=1\r","OK",1000u) == 1u){      
+        return 1u;
+        }   
+    }
+    if(at_write_command("AT#SH=1\r","OK",1000u) == 1u){      
+        return 1u;
+    }
+    return 0u;  
 }
 
 void construct_generic_request(char* send_str, char* body, char* host, char* route,
@@ -424,7 +632,7 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
     char *str_end = send_str + str_len;
     
     for (i = 0; i < n_chunks; i++){
-        status = at_write_command(send_cmd,"^SISW: ",10000u);
+        status = at_write_command(send_cmd,">",10000u);
         if ( status == 0u ) {
             return status;
         }
@@ -661,11 +869,11 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
     int status = 0u;
-    char send_cmd[25];// {"\0"};
-    char recv_cmd[] = "AT^SISR=0,1500";//{"\0"};
-    char ring_cmd[] = "^SISW: 0,1";//{"\0"};
+    char send_cmd[30] = {"\0"};
+    char recv_cmd[30] = {"\0"};
+    char ring_cmd[30] = {"\0"};
     
-    /*if (ssl_enabled){
+    if (ssl_enabled){
         sprintf(send_cmd, "AT#SSLSEND=1\r");
         // numbytes > 1000 throws a CMEE ERROR: Operation not supported
         sprintf(recv_cmd, "AT#SSLRECV=1,1000\r");
@@ -675,8 +883,7 @@ uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ss
         sprintf(send_cmd, "AT#SSEND=1\r");
         sprintf(recv_cmd, "AT#SRECV=1,1500\r");
         sprintf(ring_cmd, "SRING: 1");
-    }*/
-    sprintf(send_cmd, "AT^SISW=0,%u\r", strlen(send_str));
+    }
     
     // TODO: Should request_chunk be passed in, or global?
     status = send_chunked_request(send_str, request_chunk, CHUNK_SIZE, send_cmd, ring_cmd, "\032");
