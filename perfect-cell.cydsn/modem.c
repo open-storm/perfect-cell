@@ -436,7 +436,7 @@ int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_
             // TODO: Reimplement as strncat to avoid unnecessary copying
             strncpy(chunk, a, str_end - a);
             sprintf(chunk, "%s%s", chunk, term_char);
-            status = at_write_command(chunk, ring_cmd, 10000u);
+            status = at_write_command(chunk, "OK", 10000u);
             uart_string_reset();
             return status;
         }
@@ -478,7 +478,7 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
 
     // Download the first buffer of data
     uart_string_reset();
-    int data_pending = at_write_command(recv_cmd, ring_cmd, 10000u);
+    int data_pending = at_write_command(recv_cmd, "OK", 10000u);
     
     // Check the HTTP response for valid status (200 or 204)
     parse_http_status(modem_received_buffer, (char*) NULL, status_code, (char*) NULL);
@@ -520,20 +520,21 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
     //
     // If so, then the query results are stored in the buffer, so issue
     // AT#SRECV to read the buffer
-    if (data_pending){
+    /*if (data_pending){
         // Throw out headers for now
         uart_string_reset();
         // Get the next modem buffer
         status = at_write_command(recv_cmd, "OK", 10000u);
         // Set the starting pointer to the modem buffer start
         response_start = modem_received_buffer;
-    }
+    }*/
     // If no data pending, set the starting pointer
-    else{
+    /*else{
         // If chunked, set the starting pointer right before the first chunk size
         // If fixed, set the starting pointer at the start of the message body
             response_start = strstr(modem_received_buffer, "\r\n\r\n");
-    }
+    }*/
+    response_start = strstr(modem_received_buffer, "\r\n\r\n");
 
     // Make sure response start is not a null pointer
     if (!response_start){
@@ -567,6 +568,7 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
             // Reset buffer start flag
             buffer_start = 0;
         }
+        buffer_start = 0;
         // Move the end pointer to the end of the line
         b = strstr(a, "\r\n");
         if (!b) {return 0u;}
@@ -661,21 +663,9 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
     int status = 0u;
-    char send_cmd[25];// {"\0"};
-    char recv_cmd[] = "AT^SISR=0,1500";//{"\0"};
-    char ring_cmd[] = "^SISW: 0,1";//{"\0"};
-    
-    /*if (ssl_enabled){
-        sprintf(send_cmd, "AT#SSLSEND=1\r");
-        // numbytes > 1000 throws a CMEE ERROR: Operation not supported
-        sprintf(recv_cmd, "AT#SSLRECV=1,1000\r");
-        sprintf(ring_cmd, "SSLSRING: 1");
-    }
-    else{
-        sprintf(send_cmd, "AT#SSEND=1\r");
-        sprintf(recv_cmd, "AT#SRECV=1,1500\r");
-        sprintf(ring_cmd, "SRING: 1");
-    }*/
+    char send_cmd[25] = {0};
+    char recv_cmd[] = "AT^SISR=0,1500\r";
+    char ring_cmd[] = "^SISW: 0,1";
     sprintf(send_cmd, "AT^SISW=0,%u\r", strlen(send_str));
     
     // TODO: Should request_chunk be passed in, or global?
