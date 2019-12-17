@@ -75,6 +75,8 @@
 #define VALVE_FLAG        0u
 #define VALVE_2_FLAG      0u
 #define ATLAS_WQ_FLAG     0u
+#define SDI12_FLAG        0u
+#define V420_FLAG         0u
 
 // Flags to trigger devices
 #define AUTOSAMPLER_TRIGGER 0u
