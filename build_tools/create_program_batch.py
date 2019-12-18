@@ -17,8 +17,7 @@ if __name__ == "__main__":
     hex_path = os.path.join(script_path, *hex_path_relative)
     write_path = os.path.join(script_path, *write_path_relative)
 
-    lines =
-    [
+    lines = [
         'OpenPort KitProg/0E230218001E6400 "c:/Program Files (x86)/Cypress/Programmer"',
         'HEX_ReadFile {}'.format(hex_path),
         'SetAcquireMode "Power"',
