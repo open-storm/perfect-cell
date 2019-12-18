@@ -1,20 +1,23 @@
 import os
 import sys
+import pathlib
 
 try:
     script_path = os.path.dirname(os.path.abspath(__file__))
 except:
     script_path = os.getcwd()
+    
+parent_path = str(pathlib.Path(script_path).parent)
 
 if __name__ == "__main__":
     cmd_line_args = sys.argv[1:]
     proj, build, arch = cmd_line_args
 
-    hex_path_relative = ['..', '{}.cydsn'.format(proj), 'CortexM3', arch,
+    hex_path_relative = ['{}.cydsn'.format(proj), 'CortexM3', arch,
                         build, '{}.hex'.format(proj)]
     write_path_relative = ['batch-program']
 
-    hex_path = os.path.join(script_path, *hex_path_relative)
+    hex_path = os.path.join(parent_path, *hex_path_relative)
     write_path = os.path.join(script_path, *write_path_relative)
 
     lines = [
