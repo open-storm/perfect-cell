@@ -33,4 +33,4 @@ if __name__ == "__main__":
     ]
 
     with open(write_path, 'w') as outfile:
-        outfile.writelines(lines)
+        outfile.write('\r\n'.join(lines))
