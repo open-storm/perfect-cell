@@ -7,7 +7,7 @@ try:
 except:
     script_path = os.getcwd()
     
-parent_path = str(pathlib.Path(script_path).parent)
+parent_path = str(pathlib.PureWindowsPath(script_path).parent)
 
 if __name__ == "__main__":
     cmd_line_args = sys.argv[1:]
