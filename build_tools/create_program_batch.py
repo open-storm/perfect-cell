@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     lines = [
         'OpenPort KitProg/0E230218001E6400 "c:/Program Files (x86)/Cypress/Programmer"',
-        'HEX_ReadFile {}'.format(hex_path),
+        'HEX_ReadFile "{}"'.format(hex_path),
         'SetAcquireMode "Reset"',
         'Acquire',
         'Calibrate',
@@ -33,4 +33,4 @@ if __name__ == "__main__":
     ]
 
     with open(write_path, 'w') as outfile:
-        outfile.write('\r\n'.join(lines))
+        outfile.write('\n'.join(lines))
