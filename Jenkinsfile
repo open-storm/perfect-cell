@@ -34,8 +34,7 @@ pipeline {
         stage('Program') {
         agent { label 'klab' }
             steps {
-		    bat "python build_tools\\create_program_batch.py \"${proj}\" \"${build}\" \"${arch}\""
-		    bat "${env.PPCLI} \"--runfile build_tools\\\\batch-program\" --quit"
+		    bat "python build_tools\\psoc_program.py \"${proj}.cydsn\\CortexM3\\${arch}\\${build}\\${proj}.hex\""
             }
         }
         stage('Test') {
