@@ -95,6 +95,7 @@ pipeline {
             }
             node('master') {
                 checkout scm
+		sh "whoami"
                 sh "docker logs --since \"${env.BUILD_TIMESTAMP}\" influxdb"
                 deleteDir() // clean up our workspace on master
             }
