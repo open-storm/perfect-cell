@@ -60,33 +60,33 @@ pipeline {
 
     post {
         success {
-            node('master') {
+            node('klab') {
                 checkout scm
-                sh "python3 ./build_tools/post_build.py \"SUCCESS\""
+                bat "python build_tools\\post_build.py \"SUCCESS\""
             }
         }
         unstable {
-            node('master') {
+            node('klab') {
                 checkout scm
-                sh "python3 ./build_tools/post_build.py \"UNSTABLE\""
+                bat "python build_tools\\post_build.py \"UNSTABLE\""
             }
         }
         failure {
-            node('master') {
+            node('klab') {
                 checkout scm
-                sh "python3 ./build_tools/post_build.py \"FAILURE\""
+                bat "python build_tools\\post_build.py \"FAILURE\""
             }
         }
         notBuilt {
-            node('master') {
+            node('klab') {
                 checkout scm
-                sh "python3 ./build_tools/post_build.py \"NOT_BUILT\""
+                bat "python build_tools\\post_build.py \"NOT_BUILT\""
             }
         }
         aborted {
-            node('master') {
+            node('klab') {
                 checkout scm
-                sh "python3 ./build_tools/post_build.py \"ABORTED\""
+                bat "python build_tools\\post_build.py \"ABORTED\""
             }
         }
         always {
@@ -96,7 +96,6 @@ pipeline {
             node('master') {
                 checkout scm
                 sh "docker logs --since \"${env.BUILD_TIMESTAMP}\" influxdb"
-                //sh "echo ${getBuildResult()}"
                 deleteDir() // clean up our workspace on master
             }
         }
