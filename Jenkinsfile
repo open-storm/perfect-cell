@@ -95,7 +95,7 @@ pipeline {
             }
             node('master') {
                 checkout scm
-                sh "python3 tests/read_build_log.py \"${env.BUILD_TIMESTAMP}\""
+                sh "docker logs --since \"${env.BUILD_TIMESTAMP}\" influxdb"
                 //sh "echo ${getBuildResult()}"
                 deleteDir() // clean up our workspace on master
             }
