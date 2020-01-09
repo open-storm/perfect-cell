@@ -15,7 +15,7 @@ uint8 initialize_modem_params(char *send_str, char *response_str,
         status = initialize_ssl(&ssl_enabled, &ssl_initialized);
         // Update metadata if enabled
         status = run_meta_subroutine(meid, send_str, response_str, 1u);
-        modem_shutdown();
+        //modem_shutdown();
     }
     return 1u;
 }

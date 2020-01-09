@@ -216,7 +216,7 @@ int main(void) {
                 }
             }
 
-            modem_shutdown();
+            //modem_shutdown();
             awake = 0u;  // COMMENT TO SKIP GOING TO SLEEP
         }
 
