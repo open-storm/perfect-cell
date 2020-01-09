@@ -221,7 +221,8 @@ uint8 modem_connect(){
     
     // Repeatedly check if modem is registered on network
 	for (int i = 0u; i < 3 * max_conn_attempts; ++i) {
-        if ((registered = modem_check_network())) break;
+        registered = modem_check_network();
+        if (registered) break;
 		CyDelay(1000u);
 	}
 	
@@ -413,41 +414,31 @@ void construct_generic_request(char* send_str, char* body, char* host, char* rou
     return;
 }
 
-int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char){
+int send_chunked_request(char* send_str, char *chunk, int chunk_max, char *send_pattern, char *ring_cmd){
     int i;
     int status = 0u;
-    char *a;
-    char *b;
+    char *a, *b;
     
     int str_len = strlen(send_str);
-    int n_chunks = str_len/chunk_len + (str_len % chunk_len != 0);
+    int n_chunks = (str_len + chunk_max - 1) / chunk_max;
     char *str_end = send_str + str_len;
+    char send_cmd[25] = {0};
     
-    for (i = 0; i < n_chunks; i++){
-        status = at_write_command(send_cmd,"^SISW: ",10000u);
-        if ( status == 0u ) {
-            return status;
-        }
+    for (i = 0; i < n_chunks; ++i) {
+        memset(chunk, '\0', chunk_max + 1);
+        a = send_str + i * chunk_max;
+        b = send_str + (i + 1) * chunk_max;
+        unsigned chunk_len = (b >= str_end ? str_end - a : b - a);
+        
+        sprintf(send_cmd, send_pattern, chunk_len);
+        status = at_write_command(send_cmd, "^SISW: ", 10000u);
+        if (status == 0) return status;
         uart_string_reset();
-        memset(chunk, '\0', chunk_len + 1);
-        a = send_str + i*chunk_len;
-        b = send_str + (i+1)*chunk_len;
-        if (b >= str_end){
-            // TODO: Reimplement as strncat to avoid unnecessary copying
-            strncpy(chunk, a, str_end - a);
-            sprintf(chunk, "%s%s", chunk, term_char);
-            status = at_write_command(chunk, "OK", 10000u);
-            uart_string_reset();
-            return status;
-        }
-        // TODO: Reimplement as strncat to avoid unnecessary copying
-        strncpy(chunk, a, b - a);
-        sprintf(chunk, "%s%s", chunk, term_char);
+        
+        strncpy(chunk, a, chunk_len);
         status = at_write_command(chunk, "OK", 10000u);
+        if (status == 0) return status;
         uart_string_reset();
-        if ( status == 0u ) {
-            return status;
-        }        
     }
     return status;
 }
@@ -663,13 +654,12 @@ int read_response(char message[], char *recv_cmd, char *ring_cmd, uint8 get_resp
 uint8 modem_send_recv(char* send_str, char* response, uint8 get_response, int ssl_enabled)
 {
     int status = 0u;
-    char send_cmd[25] = {0};
+    char send_pattern[] = "AT^SISW=0,%u\r";
     char recv_cmd[] = "AT^SISR=0,1500\r";
     char ring_cmd[] = "^SISW: 0,1";
-    sprintf(send_cmd, "AT^SISW=0,%u\r", strlen(send_str));
     
     // TODO: Should request_chunk be passed in, or global?
-    status = send_chunked_request(send_str, request_chunk, CHUNK_SIZE, send_cmd, ring_cmd, "\032");
+    status = send_chunked_request(send_str, request_chunk, CHUNK_SIZE, send_pattern, ring_cmd);
     
     if( status ){
         status = read_response(response, recv_cmd, ring_cmd, get_response, 100, MAX_RECV_LENGTH);

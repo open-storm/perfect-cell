@@ -56,7 +56,7 @@
 #define MAX_GPS_TRIES     6
 
 // Global parameters
-#define SLEEPTIMER        460u
+#define SLEEPTIMER        160u
 
 // Flags to activate devices
 #define CONNECTION_FLAG   1u

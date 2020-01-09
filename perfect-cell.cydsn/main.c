@@ -215,13 +215,12 @@ int main(void) {
                     }
                 }
             }
-
-            modem_shutdown();
             awake = 0u;  // COMMENT TO SKIP GOING TO SLEEP
         }
 
         /* If not ready, update the counter for the sleep timer */
         else {
+            modem_shutdown();
             go_to_sleep(sleeptimer, &awake);
         }
     }

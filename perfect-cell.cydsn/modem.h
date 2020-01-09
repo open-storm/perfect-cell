@@ -235,11 +235,10 @@ uint8 modem_socket_close(int ssl_enabled);
  * @param chenk_len The size of the chunks to send
  * @param send_cmd The AT command used to send data: SSEND, SSENDEXT or SSLSEND
  * @param ring_cmd The ring command to look for: SRING or SSLRING
- * @param term_char The termination character to use: '\032' for Telit
  *
  * @return 1u on success, 0u otherwise.
  */
-int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_cmd, char *ring_cmd, char *term_char);
+int send_chunked_request(char* send_str, char *chunk, int chunk_len, char *send_pattern, char *ring_cmd);
 
 /**
  * @brief Reads a HTTP response with a chunked of fixed-length transfer encoding over multiple modem buffers
