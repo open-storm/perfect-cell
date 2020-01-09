@@ -39,5 +39,5 @@ if __name__ == '__main__':
     #client.write_points(['{0},node_id={1},source={2} value=1'
     #                     .format(trigger, config['node_id'],
     #                             config['source']) for
-                         trigger in trigger_vars], protocol='line')
+    #                     trigger in trigger_vars], protocol='line')
 
