@@ -7,7 +7,7 @@ database : 'TEST_DB'
 ssl_enabled : False
 node_id : 'ARB000'
 fast_sleeptimer : 20
-slow_sleeptimer : 4600
+slow_sleeptimer : 160
 source : 'ci_test'
 offset_seconds : 60
 date_format : "%Y-%m-%dT%H:%M:%SZ"
@@ -19,7 +19,7 @@ var_ranges :
     'conn_attempts' : [1, 1000]
     'v_bat' : [-1, 10]
     'maxbotix_depth' : [0, 9998]
-    'maxbotix_2_depth' : [0, 9998]
+    #'maxbotix_2_depth' : [0, 9998]
     #'senix_depth' : [0, 15240]
     #'decagon_soil_conduct' : [0, 9998]
     #'decagon_soil_dielec' : [0, 9998]
