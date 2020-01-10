@@ -7,7 +7,7 @@ database : 'TEST_DB'
 ssl_enabled : False
 node_id : 'ARB000'
 fast_sleeptimer : 20
-slow_sleeptimer : 160
+slow_sleeptimer : 2300
 source : 'ci_test'
 offset_seconds : 60
 date_format : "%Y-%m-%dT%H:%M:%SZ"
